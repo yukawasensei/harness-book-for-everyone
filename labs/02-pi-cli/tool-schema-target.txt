@@ -1,0 +1,3 @@
+LESSON2_CODE=BLUE-MANGO-7319
+
+这行代码只用于第二课的工具 allowlist 对照实验。
