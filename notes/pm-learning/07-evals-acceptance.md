@@ -40,9 +40,15 @@
 
 **为什么「感觉答得更好了」不能当验收？产品要用什么向干系人证明 Harness 改动有效？**
 
-（自测提示：主观体感有偏差且不可复现；应用同一 `cases.jsonl` 的前后指标差 + 失败案例列表证明。）
+### PM 的回答
+
+Prompt 一改，行为面就变——功能可能 silently 回退、安全拒绝可能被冲掉；**小套 eval + baseline 对比**是廉价的回归门禁，比上线后再靠用户发现便宜得多。不是不信任模型，是不信任「感觉变好了」。
+
+### 小哈补充
+
+对：验收要可复现。同一 `cases.jsonl` 前后跑，看成功率 / 越权率 / 工具选择是否退化；主观体感不能进发布清单。
 
 ## 下一步
 
 - 工程：起草 `evals/cases.jsonl`（先 5～10 条再扩到 20）；runner 读 cases、跑 Agent、对照 must_* 写 `results/`。  
-- 上一课：[06 · 可观测与 Trace](./06-observability-trace.md) · 总览：[01 · 能力总览](./01-capability-overview.md)
+- 下一课：[08 · 选型](./08-selection.md) · 上一课：[06 · 可观测与 Trace](./06-observability-trace.md)

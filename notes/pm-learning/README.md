@@ -17,5 +17,6 @@ PM（产品经理）视角的 Harness 学习记录。
 | 05 | [05-turns-timeout.md](./05-turns-timeout.md) | 轮数与超时 | 已完成 |
 | 06 | [06-observability-trace.md](./06-observability-trace.md) | 可观测与 Trace | 已完成 |
 | 07 | [07-evals-acceptance.md](./07-evals-acceptance.md) | 评测与验收 | 已完成 |
+| 08 | [08-selection.md](./08-selection.md) | 选型（买 / 自建 / 组合） | 已完成 |
 
 对照仓库主线：`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/05`。
