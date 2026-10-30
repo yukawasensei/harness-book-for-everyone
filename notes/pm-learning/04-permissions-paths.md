@@ -12,7 +12,6 @@
 
 ![权限与路径](./assets/harness-permissions-paths.jpg)
 
-> 若上图暂缺文件，将 `harness-permissions-paths.jpg` 放入本目录 `assets/` 即可显示。
 
 ## 要点
 
