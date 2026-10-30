@@ -14,5 +14,6 @@ PM（产品经理）视角的 Harness 学习记录。
 | 02 | [02-tool-loop.md](./02-tool-loop.md) | 工具循环（Schema / toolCall / Executor） | 已完成 |
 | 03 | [03-session-context.md](./03-session-context.md) | 会话与上下文 | 已完成 |
 | 04 | [04-permissions-paths.md](./04-permissions-paths.md) | 权限与路径 | 已完成 |
+| 05 | [05-turns-timeout.md](./05-turns-timeout.md) | 轮数与超时 | 已完成 |
 
 对照仓库主线：`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/05`。
