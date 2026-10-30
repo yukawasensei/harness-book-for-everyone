@@ -62,20 +62,22 @@ user prompt
 
 课 5 复盘摘要（2026-10-30）：`npm start` 成功；`read` ×1（`call_vls1bbzg`，`isError=false`）；2 turns；`user → assistant → toolResult → assistant`。
 
-## 费曼题（请用自己的话回答）
+## 费曼题
 
-**请区分 Schema / toolCall / Executor。**
+**请用自己的话区分 Schema / toolCall / Executor。**
 
-参考答（自测后对照，勿背原文）：
+### PM 的回答
 
-- **Schema**：事先声明「有一个叫 read 的工具，参数是 path 字符串」——说明书。  
-- **toolCall**：模型本轮写出「我要调 read，path=…」——点菜。  
-- **Executor**：Harness 真的去打开那个 path 并返回内容或错误——后厨上菜。
+- **Schema** 类似一个说明书。  
+- **toolCall** 是个任务说明。  
+- **Executor** 是干活的人。
 
-若三者混为一谈，就容易把「模型嘴上说调用了」当成「系统已经安全执行了」。
+### 小哈补充
+
+说得对：说明书规定能点什么菜，任务说明是这一单点了啥，干活的人才真正下厨。三者分开，才不会把「模型嘴上说调用了」当成「系统已经安全执行了」。
 
 ## 下一步
 
 - 动手：在课 5 上**一次只加一个**控制点（`maxTurns` 或路径策略）。  
-- 笔记：评测基线课（对应 `labs/06-evals` / `evals/cases.jsonl`）待开。  
+- 笔记：下一课 [03 · 会话与上下文](./03-session-context.md)。  
 - 回到总览：[01 · 能力总览](./01-capability-overview.md)
