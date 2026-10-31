@@ -8,4 +8,4 @@ __pycache__/
 training/checkpoints/
 training/cache/
 exports/
-nlabs/05-minimal-harness/traces/n
+labs/05-minimal-harness/traces/
