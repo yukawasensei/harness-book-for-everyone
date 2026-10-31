@@ -5,10 +5,11 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "analyze": "tsx src/analyze-trace.ts",
-    "test": "tsx --test src/max-turns.test.ts",
+    "test": "tsx --test src/max-turns.test.ts src/tool-timeout.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@earendil-works/pi-ai": "^0.84.4",
     "@earendil-works/pi-coding-agent": "0.84.4"
   },
   "devDependencies": {

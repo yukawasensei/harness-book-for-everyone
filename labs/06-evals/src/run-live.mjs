@@ -45,13 +45,15 @@ async function ensureOllama() {
   }
 }
 
-function runLab05({ prompt, maxTurns, traceOut }) {
+function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, traceOut }) {
   return new Promise((resolvePromise) => {
     const started = performance.now();
     const env = {
       ...process.env,
       MAX_TURNS: String(maxTurns),
       EVAL_PROMPT: prompt,
+      EVAL_ALLOWED_TOOLS: allowedTools.join(","),
+      TOOL_TIMEOUT_MS: toolTimeoutMs === undefined ? "" : String(toolTimeoutMs),
       NO_PROXY: "127.0.0.1,localhost",
       no_proxy: "127.0.0.1,localhost",
       // Clear proxy vars that may hijack localhost Ollama
@@ -62,6 +64,19 @@ function runLab05({ prompt, maxTurns, traceOut }) {
       ALL_PROXY: "",
       all_proxy: "",
     };
+
+    const lab05Trace = resolve(lab05Root, "traces/latest.jsonl");
+    try {
+      if (existsSync(lab05Trace)) {
+        // Prevent asserting against a previous case if this run crashes early.
+        writeFileSync(lab05Trace, "", "utf8");
+      }
+      if (existsSync(traceOut)) {
+        writeFileSync(traceOut, "", "utf8");
+      }
+    } catch {
+      // ignore
+    }
 
     const child = spawn("npm", ["start"], {
       cwd: lab05Root,
@@ -87,8 +102,7 @@ function runLab05({ prompt, maxTurns, traceOut }) {
     child.on("close", (code, signal) => {
       clearTimeout(timer);
       const durationMs = Math.round(performance.now() - started);
-      const lab05Trace = resolve(lab05Root, "traces/latest.jsonl");
-      if (existsSync(lab05Trace)) {
+      if (existsSync(lab05Trace) && readFileSync(lab05Trace, "utf8").trim().length > 0) {
         copyFileSync(lab05Trace, traceOut);
       }
       resolvePromise({
@@ -134,11 +148,15 @@ let passCount = 0;
 let failCount = 0;
 
 for (const item of selected) {
-  console.error(`\n[eval] case=${item.id} maxTurns=${item.max_turns}`);
+  console.error(
+    `\n[eval] case=${item.id} maxTurns=${item.max_turns} tools=${(item.allowed_tools || []).join(",")} toolTimeoutMs=${item.tool_timeout_ms ?? "off"}`,
+  );
   const traceOut = resolve(tracesDir, `${item.id}.jsonl`);
   const run = await runLab05({
     prompt: item.prompt,
     maxTurns: item.max_turns,
+    allowedTools: item.allowed_tools || ["read"],
+    toolTimeoutMs: item.tool_timeout_ms,
     traceOut,
   });
 
@@ -146,6 +164,8 @@ for (const item of selected) {
     id: item.id,
     category: item.category,
     max_turns: item.max_turns,
+    allowed_tools: item.allowed_tools,
+    tool_timeout_ms: item.tool_timeout_ms ?? null,
     durationMs: run.durationMs,
     exitCode: run.code,
     signal: run.signal,

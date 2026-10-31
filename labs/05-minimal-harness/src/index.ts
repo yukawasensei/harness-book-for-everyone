@@ -11,6 +11,8 @@ import {
   parseMaxTurns,
   type StopReason,
 } from "./max-turns.js";
+import { parseAllowedTools } from "./parse-allowed-tools.js";
+import { parseToolTimeoutMs } from "./tool-timeout.js";
 
 const cwd = process.cwd();
 
@@ -22,6 +24,10 @@ const inputPath = resolve(cwd, "lesson-input.md");
 const traceDirectory = resolve(cwd, "traces");
 const tracePath = resolve(traceDirectory, "latest.jsonl");
 const maxTurns = parseMaxTurns(process.env.MAX_TURNS);
+const toolTimeoutMs = parseToolTimeoutMs(process.env.TOOL_TIMEOUT_MS);
+const allowedTools = parseAllowedTools(
+  process.env.EVAL_ALLOWED_TOOLS ?? process.env.ALLOWED_TOOLS,
+);
 
 if (!existsSync(inputPath)) {
   throw new Error(`Run this lab from its package directory; missing ${inputPath}`);
@@ -37,12 +43,38 @@ if (!model) {
   throw new Error("Model ollama/qwen3.8:27b is not configured in ~/.pi/agent/models.json");
 }
 
+const runState: { stopReason: StopReason; toolTimedOut: boolean } = {
+  stopReason: "success",
+  toolTimedOut: false,
+};
+
+const customTools = [];
+if (allowedTools.includes("slow")) {
+  const { createSlowTool } = await import("./slow-tool.js");
+  customTools.push(
+    createSlowTool({
+      timeoutMs: toolTimeoutMs,
+      onTimeout: (ms) => {
+        runState.toolTimedOut = true;
+        runState.stopReason = "tool_timeout";
+        writeTrace({
+          timestamp: new Date().toISOString(),
+          eventType: "harness_stop",
+          stop_reason: "tool_timeout",
+          timeoutMs: ms,
+        });
+      },
+    }),
+  );
+}
+
 const { session } = await createAgentSession({
   cwd,
   model,
   modelRuntime,
   thinkingLevel: "off",
-  tools: ["read"],
+  tools: allowedTools,
+  customTools,
   sessionManager: SessionManager.inMemory(cwd),
 });
 
@@ -52,7 +84,6 @@ const maxTurnsGuard = createMaxTurnsGuard(maxTurns);
 let eventCount = 0;
 let toolCallCount = 0;
 let toolErrorCount = 0;
-const runState: { stopReason: StopReason } = { stopReason: "success" };
 
 function writeTrace(row: Record<string, unknown>): void {
   appendFileSync(tracePath, `${JSON.stringify(row)}\n`, "utf8");
@@ -60,6 +91,9 @@ function writeTrace(row: Record<string, unknown>): void {
 
 // Official pi-agent-core hook: after each completed turn, decide whether to continue.
 session.agent.shouldStopAfterTurn = async () => {
+  if (runState.toolTimedOut) {
+    return true;
+  }
   const stop = maxTurnsGuard.recordCompletedTurn();
   writeTrace({
     timestamp: new Date().toISOString(),
@@ -78,6 +112,24 @@ session.agent.shouldStopAfterTurn = async () => {
     });
   }
   return stop;
+};
+
+// After a tool times out, mark isError + ask the loop to terminate this batch.
+session.agent.afterToolCall = async (context) => {
+  if (!runState.toolTimedOut) {
+    return undefined;
+  }
+  return {
+    isError: true,
+    content: [
+      {
+        type: "text",
+        text: `Harness tool timeout (${toolTimeoutMs}ms). stop_reason=tool_timeout`,
+      },
+    ],
+    details: { ...(context.result.details as object), timedOut: true, stop_reason: "tool_timeout" },
+    terminate: true,
+  };
 };
 
 const unsubscribe = session.subscribe((event) => {
@@ -124,7 +176,9 @@ const unsubscribe = session.subscribe((event) => {
 });
 
 console.error(`[harness] runtime=${process.platform} model=${model.provider}/${model.id}`);
-console.error(`[harness] tools=read session=memory maxTurns=${maxTurns}`);
+console.error(
+  `[harness] tools=${allowedTools.join(",")} session=memory maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"}`,
+);
 console.error(`[harness] trace=${tracePath}`);
 
 try {
@@ -134,7 +188,7 @@ try {
   await session.prompt(prompt);
   process.stdout.write("\n");
 
-  if (runState.stopReason !== "max_turns") {
+  if (runState.stopReason === "success" && !runState.toolTimedOut) {
     runState.stopReason = "success";
   }
 
@@ -144,26 +198,42 @@ try {
     stop_reason: runState.stopReason,
     turnCount: maxTurnsGuard.completedTurnCount,
     maxTurns,
+    toolTimeoutMs,
   });
 
   const durationMs = Math.round(performance.now() - runStartedAt);
   console.error(
-    `[harness] status=${runState.stopReason} events=${eventCount} toolCalls=${toolCallCount} toolErrors=${toolErrorCount} turns=${maxTurnsGuard.completedTurnCount} maxTurns=${maxTurns} durationMs=${durationMs}`,
+    `[harness] status=${runState.stopReason} events=${eventCount} toolCalls=${toolCallCount} toolErrors=${toolErrorCount} turns=${maxTurnsGuard.completedTurnCount} maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"} durationMs=${durationMs}`,
   );
-  if (runState.stopReason === "max_turns") {
+  if (runState.stopReason === "max_turns" || runState.stopReason === "tool_timeout") {
     process.exitCode = 2;
   }
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  runState.stopReason = "model_error";
-  writeTrace({
-    timestamp: new Date().toISOString(),
-    eventType: "harness_error",
-    stop_reason: "model_error",
-    error: message,
-  });
-  console.error(`[harness] status=model_error error=${message}`);
-  process.exitCode = 1;
+  if (runState.toolTimedOut) {
+    runState.stopReason = "tool_timeout";
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "harness_end",
+      stop_reason: "tool_timeout",
+      turnCount: maxTurnsGuard.completedTurnCount,
+      maxTurns,
+      toolTimeoutMs,
+      error: message,
+    });
+    console.error(`[harness] status=tool_timeout error=${message}`);
+    process.exitCode = 2;
+  } else {
+    runState.stopReason = "model_error";
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "harness_error",
+      stop_reason: "model_error",
+      error: message,
+    });
+    console.error(`[harness] status=model_error error=${message}`);
+    process.exitCode = 1;
+  }
 } finally {
   unsubscribe();
   session.dispose();

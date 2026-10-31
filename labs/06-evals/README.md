@@ -9,12 +9,12 @@
 | Case | 一条可重复规格：`id`、prompt、`max_turns`、`expect` |
 | Baseline | `results/baseline-latest.json` 快照；之后对比才谈提升 |
 | Pass / Fail | 对照 `expect`（工具名 / `stop_reason`），不是「感觉答得对」 |
-| 硬闸门 | Prompt 可被忽略；`maxTurns` / allowlist 必须在 Harness 强制执行 |
+| 硬闸门 | Prompt 可被忽略；`maxTurns` / allowlist / `TOOL_TIMEOUT_MS` 必须在 Harness 强制执行 |
 
 ## 工程师跑什么
 
 ```bash
-cd <repo-root>/labs/06-evals
+cd labs/06-evals
 
 # 1) schema-only（无 Ollama）
 npm test
@@ -24,10 +24,10 @@ npm test
 NO_PROXY=127.0.0.1,localhost npm run eval:live
 
 # 单条重跑
-NO_PROXY=127.0.0.1,localhost EVAL_CASE_ID=max-turns-brake npm run eval:live
+NO_PROXY=127.0.0.1,localhost EVAL_CASE_ID=tool-timeout-brake npm run eval:live
 
 # 对照已有 trace
-npm run check:trace -- results/traces/max-turns-brake.jsonl max-turns-brake
+npm run check:trace -- results/traces/tool-timeout-brake.jsonl tool-timeout-brake
 ```
 
 **禁止**：付费云模型 / 扣费 API。Ollama 未启动时 `eval:live` 会以 blocker 退出，不编造结果。
@@ -38,6 +38,8 @@ npm run check:trace -- results/traces/max-turns-brake.jsonl max-turns-brake
 |---|---|---|
 | `read-lesson-input` | live | 调用 `read` 且 `stop_reason=success` |
 | `max-turns-brake` | live | `MAX_TURNS=1` → `stop_reason=max_turns` |
+| `tool-timeout-brake` | live | `TOOL_TIMEOUT_MS=400` + `slow` → `stop_reason=tool_timeout` |
+| `allowlist-no-bash` | live | 提示词要求 bash，但 allowlist 只有 `read` → 永不出现 bash/write/edit |
 | `schema-only-no-bash` | schema_only | 文档化 allowlist；`npm test` 校验字段 |
 
 ## 目录
@@ -52,4 +54,4 @@ npm run check:trace -- results/traces/max-turns-brake.jsonl max-turns-brake
 
 ## lab05 挂钩
 
-live runner 设置 `EVAL_PROMPT` + `MAX_TURNS`，在 `labs/05-minimal-harness` 执行 `npm start`，读取 `traces/latest.jsonl` 拷到 `results/traces/<id>.jsonl`。
+live runner 设置 `EVAL_PROMPT`、`MAX_TURNS`、`EVAL_ALLOWED_TOOLS`、`TOOL_TIMEOUT_MS`，在 `labs/05-minimal-harness` 执行 `npm start`，读取 `traces/latest.jsonl` 拷到 `results/traces/<id>.jsonl`。

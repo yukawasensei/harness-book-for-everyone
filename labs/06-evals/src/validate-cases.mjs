@@ -54,7 +54,7 @@ for (const [index, item] of cases.entries()) {
     continue;
   }
 
-  const { id, category, prompt, allowed_tools, max_turns, expect } = item;
+  const { id, category, prompt, allowed_tools, max_turns, expect, tool_timeout_ms } = item;
 
   if (!isNonEmptyString(id)) {
     fail(`${label}.id must be a non-empty string`);
@@ -81,6 +81,12 @@ for (const [index, item] of cases.entries()) {
   if (!Number.isInteger(max_turns) || max_turns < 1) {
     fail(`${id}: max_turns must be an integer >= 1`);
     continue;
+  }
+  if (tool_timeout_ms !== undefined) {
+    if (!Number.isInteger(tool_timeout_ms) || tool_timeout_ms < 0) {
+      fail(`${id}: tool_timeout_ms must be an integer >= 0`);
+      continue;
+    }
   }
   if (expect === null || typeof expect !== "object" || Array.isArray(expect)) {
     fail(`${id}: expect must be an object`);

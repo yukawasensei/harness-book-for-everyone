@@ -55,7 +55,12 @@
 - `labs/06-evals`：`npm test` schema；`npm run eval:live` 真跑 lab05 + 本地 Ollama，基线写入 `results/baseline-latest.json`。
 - 产品口径不变：Prompt 不可靠，闸门看 Harness；评测看 `stop_reason` / 工具名，不看「感觉」。
 
+## 工程进度（续 · 2026-10-31）
+
+- 硬边界 live cases：`tool-timeout-brake`、`allowlist-no-bash`（详见 [11 · 硬边界评测](./11-hard-boundaries.md)）。
+- 验收仍看 `stop_reason` / 工具名，不看「感觉」。
+
 ## 下一步
 
-- 工程：起草 `evals/cases.jsonl`（先 5～10 条再扩到 20）；runner 读 cases、跑 Agent、对照 must_* 写 `results/`。  
+- 工程：继续扩充 cases 覆盖面；路径沙箱可另开增量。  
 - 下一课：[08 · 选型](./08-selection.md) · 上一课：[06 · 可观测与 Trace](./06-observability-trace.md)

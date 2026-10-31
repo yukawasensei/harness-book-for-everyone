@@ -1,6 +1,11 @@
 /** Pure maxTurns helpers — unit-testable without Ollama. */
 
-export type StopReason = "success" | "max_turns" | "model_error";
+export type StopReason =
+  | "success"
+  | "max_turns"
+  | "tool_timeout"
+  | "tool_error"
+  | "model_error";
 
 export function parseMaxTurns(
   raw: string | undefined,

@@ -18,9 +18,9 @@
 
 1. **无限循环是默认风险**：模型可反复 toolCall；没有 `maxTurns` 就会烧时间/钱/机器。  
 2. **Turn ≠ 用户句**：一轮常是「模型一次输出」；一次用户任务往往 2+ turns（toolCall + final）。  
-3. **单工具超时**：卡死的 shell/网络不能拖死整次会话（**本课仍未实现**，下一增量）。  
+3. **单工具超时**：卡死的 shell/网络不能拖死整次会话（**已落地** `TOOL_TIMEOUT_MS` + 演示工具 `slow`；见课 11）。  
 4. **终止原因要产品化**：`success | max_turns | tool_timeout | tool_error | model_error`——客服与评测都靠它。  
-5. **课 5 工程状态（2026-10-31）**：`maxTurns` **已落地**；工具仍仅 `read`；超时 / 路径策略仍延后。
+5. **课 5 工程状态（2026-10-31）**：`maxTurns` **已落地**；`TOOL_TIMEOUT_MS` **已落地**（演示工具 `slow`）；默认工具仍以 `read` 为主，可用 `EVAL_ALLOWED_TOOLS` 切换；路径沙箱仍延后。
 
 ## 产品拍板 vs 工程师实现
 
@@ -28,7 +28,7 @@
 |---|---|---|
 | 最大轮数 | 普通任务几轮？复杂任务是否可申请加码？ | `MAX_TURNS` + `shouldStopAfterTurn`、触顶写 `stop_reason=max_turns` |
 | 工具边界 | 这课只读文件够不够？ | `tools: ["read"]` allowlist（已有） |
-| 单工具超时 | 读文件 3s？跑命令 30s？ | （未做）超时包装、取消、`isError` |
+| 单工具超时 | 读文件 3s？跑命令 30s？评测演示几毫秒？ | `TOOL_TIMEOUT_MS` + `withToolTimeout`；超时写 `stop_reason=tool_timeout` |
 | 用户感知 | 「思考中」多久后提示？能否手动停？ | 进度 UI、cancel、终止文案 |
 | 评测 | 触顶算失败还是部分成功？ | cases 里 `max_turns` 字段与指标 |
 
@@ -72,5 +72,5 @@ maxTurns、工具 allowlist、路径边界——凡是安全/成本红线，都�
 
 ## 下一步
 
-- 工程：`labs/06-evals` 已有 schema stub；下一步可把 runner 接到 lab05 trace / 本地 Ollama。单工具超时仍延后。  
+- 工程：硬边界评测见 [11 · 硬边界评测](./11-hard-boundaries.md)（`tool-timeout-brake` / `allowlist-no-bash`）。路径沙箱仍可延后。  
 - 下一课笔记：[06 · 可观测与 Trace](./06-observability-trace.md) · 上一课：[04 · 权限与路径](./04-permissions-paths.md)
