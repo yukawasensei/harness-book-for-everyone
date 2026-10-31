@@ -72,4 +72,5 @@ flowchart LR
 
 - 巩固：对照 allowlist——名单挡住「不该有的工具」；HITL 挡住「该有但未获批的执行」。  
 - 可选增量：异步恢复（超时后可从 `awaiting_human` 续跑）；按工具参数分级（只读参数免确认）。  
+- 下一课：[17 · 成本与延迟预算](./17-cost-latency.md)
 - 上一课：[15 · 失败重试与降级](./15-retry-degrade.md) · 路线总览：[README](./README.md)

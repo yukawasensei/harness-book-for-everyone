@@ -35,6 +35,13 @@ import {
   parseHitlTimeoutMs,
   parseInjectHitlDecision,
 } from "./hitl-gate.js";
+import {
+  createCostLatencyBudgetGuard,
+  parseCostBudgetUnits,
+  parseInjectCostUnits,
+  parseInjectElapsedMs,
+  parseLatencyBudgetMs,
+} from "./cost-latency-budget.js";
 
 const cwd = process.cwd();
 
@@ -57,6 +64,10 @@ const injectToolFailures = parseInjectToolFailures(process.env.EVAL_INJECT_TOOL_
 const hitlRequiredTools = parseHitlRequiredTools(process.env.HITL_REQUIRED_TOOLS);
 const hitlTimeoutMs = parseHitlTimeoutMs(process.env.HITL_TIMEOUT_MS);
 const injectHitlDecision = parseInjectHitlDecision(process.env.EVAL_INJECT_HITL);
+const costBudgetUnits = parseCostBudgetUnits(process.env.COST_BUDGET_UNITS);
+const latencyBudgetMs = parseLatencyBudgetMs(process.env.LATENCY_BUDGET_MS);
+const injectCostUnits = parseInjectCostUnits(process.env.EVAL_INJECT_COST_UNITS);
+const injectElapsedMs = parseInjectElapsedMs(process.env.EVAL_INJECT_ELAPSED_MS);
 const allowedTools = parseAllowedTools(
   process.env.EVAL_ALLOWED_TOOLS ?? process.env.ALLOWED_TOOLS,
 );
@@ -83,6 +94,8 @@ const runState: {
   retryExhausted: boolean;
   humanDenied: boolean;
   awaitingHuman: boolean;
+  costBudgetHit: boolean;
+  latencyBudgetHit: boolean;
 } = {
   stopReason: "success",
   toolTimedOut: false,
@@ -91,6 +104,8 @@ const runState: {
   retryExhausted: false,
   humanDenied: false,
   awaitingHuman: false,
+  costBudgetHit: false,
+  latencyBudgetHit: false,
 };
 
 const customTools = [];
@@ -157,7 +172,7 @@ function writeTrace(row: Record<string, unknown>): void {
 
 // Official pi-agent-core hook: after each completed turn, decide whether to continue.
 session.agent.shouldStopAfterTurn = async () => {
-  if (runState.toolTimedOut || runState.pathDenied || runState.contextBudgetHit || runState.retryExhausted || runState.humanDenied || runState.awaitingHuman) {
+  if (runState.toolTimedOut || runState.pathDenied || runState.contextBudgetHit || runState.retryExhausted || runState.humanDenied || runState.awaitingHuman || runState.costBudgetHit || runState.latencyBudgetHit) {
     return true;
   }
   const stop = maxTurnsGuard.recordCompletedTurn();
@@ -260,12 +275,80 @@ const unsubscribe = session.subscribe((event) => {
 
 console.error(`[harness] runtime=${process.platform} model=${model.provider}/${model.id}`);
 console.error(
-  `[harness] tools=${allowedTools.join(",")} session=memory maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"} contextBudgetChars=${contextBudgetChars || "off"} policy=${contextBudgetPolicy} maxRetries=${maxRetries} onExhausted=${onRetryExhausted} hitlInject=${injectHitlDecision ?? "off"}`,
+  `[harness] tools=${allowedTools.join(",")} session=memory maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"} contextBudgetChars=${contextBudgetChars || "off"} policy=${contextBudgetPolicy} maxRetries=${maxRetries} onExhausted=${onRetryExhausted} hitlInject=${injectHitlDecision ?? "off"} costBudget=${costBudgetUnits || "off"} latencyBudgetMs=${latencyBudgetMs || "off"}`,
 );
 console.error(`[harness] trace=${tracePath}`);
 
 
 
+
+
+// Deterministic cost/latency budget probe (does not depend on the model).
+// Soft prompt "keep going a bit" cannot raise COST_BUDGET_UNITS / LATENCY_BUDGET_MS.
+if (injectCostUnits > 0 || injectElapsedMs > 0 || costBudgetUnits > 0 || latencyBudgetMs > 0) {
+  const budgetGuard = createCostLatencyBudgetGuard({
+    costBudgetUnits,
+    latencyBudgetMs,
+  });
+  if (injectCostUnits > 0) {
+    budgetGuard.recordUsage(injectCostUnits);
+  }
+  if (injectElapsedMs > 0) {
+    budgetGuard.recordElapsed(injectElapsedMs);
+  } else {
+    budgetGuard.recordElapsed(Math.max(0, Math.round(performance.now() - runStartedAt)));
+  }
+  const decided = budgetGuard.check();
+  writeTrace({
+    timestamp: new Date().toISOString(),
+    eventType: "budget_check",
+    costBudgetUnits,
+    latencyBudgetMs,
+    usedUnits: budgetGuard.usedUnits,
+    elapsedMs: budgetGuard.elapsedMs,
+    injectCostUnits,
+    injectElapsedMs,
+    stop: decided.stop,
+    stop_reason: decided.stopReason,
+  });
+  if (decided.stop && decided.stopReason) {
+    if (decided.stopReason === "cost_budget") {
+      runState.costBudgetHit = true;
+    } else {
+      runState.latencyBudgetHit = true;
+    }
+    runState.stopReason = decided.stopReason;
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "harness_stop",
+      stop_reason: decided.stopReason,
+      usedUnits: budgetGuard.usedUnits,
+      elapsedMs: budgetGuard.elapsedMs,
+      costBudgetUnits,
+      latencyBudgetMs,
+    });
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "harness_end",
+      stop_reason: decided.stopReason,
+      turnCount: maxTurnsGuard.completedTurnCount,
+      maxTurns,
+      toolTimeoutMs,
+      usedUnits: budgetGuard.usedUnits,
+      elapsedMs: budgetGuard.elapsedMs,
+      costBudgetUnits,
+      latencyBudgetMs,
+    });
+    const durationMs = Math.round(performance.now() - runStartedAt);
+    console.error(
+      `[harness] status=${decided.stopReason} events=${eventCount} usedUnits=${budgetGuard.usedUnits}/${costBudgetUnits || "off"} elapsedMs=${budgetGuard.elapsedMs}/${latencyBudgetMs || "off"} durationMs=${durationMs}`,
+    );
+    process.exitCode = 2;
+    unsubscribe();
+    session.dispose();
+    process.exit(process.exitCode ?? 0);
+  }
+}
 
 // Deterministic HITL confirm-gate probe (does not depend on the model).
 // Soft prompt "I already have approval" cannot bypass HITL_REQUIRED_TOOLS.
@@ -598,6 +681,10 @@ try {
     || runState.stopReason === "path_denied"
     || runState.stopReason === "context_budget"
     || runState.stopReason === "retry_exhausted"
+    || runState.stopReason === "human_denied"
+    || runState.stopReason === "awaiting_human"
+    || runState.stopReason === "cost_budget"
+    || runState.stopReason === "latency_budget"
   ) {
     process.exitCode = 2;
   }

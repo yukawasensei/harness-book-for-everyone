@@ -27,6 +27,7 @@
 | 14 | [14-context-budget.md](./14-context-budget.md) | 上下文预算（Session / Context Window） | 已完成 |
 | 15 | [15-retry-degrade.md](./15-retry-degrade.md) | 失败重试与降级（Retry & Degrade） | 已完成 |
 | 16 | [16-hitl-gate.md](./16-hitl-gate.md) | 人机确认闸门（HITL Confirm Gate） | 已完成 |
+| 17 | [17-cost-latency.md](./17-cost-latency.md) | 成本与延迟预算（Cost & Latency Budget） | 已完成 |
 
 对照仓库主线：根目录 [`README.md`](../../README.md)、[`OPEN_SOURCE.md`](../../OPEN_SOURCE.md)、`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/06`。
 

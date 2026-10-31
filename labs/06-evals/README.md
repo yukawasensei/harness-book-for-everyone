@@ -49,6 +49,9 @@ npm run check:trace -- results/traces/tool-timeout-brake.jsonl tool-timeout-brak
 | `schema-only-retry-budget` | schema_only | 文档化重试预算意图 |
 | `hitl-denied-brake` | live | 注入 HITL deny → `stop_reason=human_denied` |
 | `schema-only-hitl` | schema_only | 文档化人机确认意图 |
+| `cost-budget-brake` | live | 注入超成本 → `stop_reason=cost_budget` |
+| `latency-budget-brake` | live | 注入超延迟 → `stop_reason=latency_budget` |
+| `schema-only-cost-latency` | schema_only | 文档化成本/延迟预算意图 |
 
 ## PM acceptance report
 
@@ -71,8 +74,10 @@ npm run eval:report
 | context budget | `context-budget-brake` | `stop_reason=context_budget` |
 | retry budget | `retry-exhausted-brake` | `stop_reason=retry_exhausted` |
 | HITL confirm | `hitl-denied-brake` | `stop_reason=human_denied` |
+| cost budget | `cost-budget-brake` | `stop_reason=cost_budget` |
+| latency budget | `latency-budget-brake` | `stop_reason=latency_budget` |
 
-详见笔记：[13 · Trace 作为验收证据](../../notes/pm-learning/13-trace-acceptance.md)、[14 · 上下文预算](../../notes/pm-learning/14-context-budget.md)、[15 · 失败重试与降级](../../notes/pm-learning/15-retry-degrade.md)、[16 · 人机确认闸门](../../notes/pm-learning/16-hitl-gate.md)。
+详见笔记：[13 · Trace 作为验收证据](../../notes/pm-learning/13-trace-acceptance.md)、[14 · 上下文预算](../../notes/pm-learning/14-context-budget.md)、[15 · 失败重试与降级](../../notes/pm-learning/15-retry-degrade.md)、[16 · 人机确认闸门](../../notes/pm-learning/16-hitl-gate.md)、[17 · 成本与延迟预算](../../notes/pm-learning/17-cost-latency.md)。
 
 ## 目录
 

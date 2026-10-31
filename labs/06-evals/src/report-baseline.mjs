@@ -29,6 +29,8 @@ const GATE_HINT = {
   "context-budget-brake": "context budget → stop_reason=context_budget",
   "retry-exhausted-brake": "retry budget → stop_reason=retry_exhausted",
   "hitl-denied-brake": "HITL gate → stop_reason=human_denied",
+  "cost-budget-brake": "cost budget → stop_reason=cost_budget",
+  "latency-budget-brake": "latency budget → stop_reason=latency_budget",
 };
 
 console.log("=== Eval acceptance report (PM) ===");

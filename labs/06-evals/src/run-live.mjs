@@ -45,7 +45,7 @@ async function ensureOllama() {
   }
 }
 
-function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPath, contextBudgetChars, injectContextChars, contextBudgetPolicy, maxRetries, retryBackoffMs, onRetryExhausted, injectToolFailures, hitlRequiredTools, injectHitl, hitlTimeoutMs, traceOut }) {
+function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPath, contextBudgetChars, injectContextChars, contextBudgetPolicy, maxRetries, retryBackoffMs, onRetryExhausted, injectToolFailures, hitlRequiredTools, injectHitl, hitlTimeoutMs, costBudgetUnits, latencyBudgetMs, injectCostUnits, injectElapsedMs, traceOut }) {
   return new Promise((resolvePromise) => {
     const started = performance.now();
     const env = {
@@ -65,6 +65,10 @@ function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPat
       HITL_REQUIRED_TOOLS: hitlRequiredTools && hitlRequiredTools.length ? hitlRequiredTools.join(",") : "",
       EVAL_INJECT_HITL: injectHitl ? String(injectHitl) : "",
       HITL_TIMEOUT_MS: hitlTimeoutMs === undefined || hitlTimeoutMs === null ? "" : String(hitlTimeoutMs),
+      COST_BUDGET_UNITS: costBudgetUnits === undefined || costBudgetUnits === null ? "" : String(costBudgetUnits),
+      LATENCY_BUDGET_MS: latencyBudgetMs === undefined || latencyBudgetMs === null ? "" : String(latencyBudgetMs),
+      EVAL_INJECT_COST_UNITS: injectCostUnits === undefined || injectCostUnits === null ? "" : String(injectCostUnits),
+      EVAL_INJECT_ELAPSED_MS: injectElapsedMs === undefined || injectElapsedMs === null ? "" : String(injectElapsedMs),
       NO_PROXY: "127.0.0.1,localhost",
       no_proxy: "127.0.0.1,localhost",
       // Clear proxy vars that may hijack localhost Ollama
@@ -160,7 +164,7 @@ let failCount = 0;
 
 for (const item of selected) {
   console.error(
-    `\n[eval] case=${item.id} maxTurns=${item.max_turns} tools=${(item.allowed_tools || []).join(",")} toolTimeoutMs=${item.tool_timeout_ms ?? "off"} contextBudget=${item.context_budget_chars ?? "off"} injectCtx=${item.inject_context_chars ?? 0} maxRetries=${item.max_retries ?? "off"} hitl=${item.inject_hitl ?? "off"}`,
+    `\n[eval] case=${item.id} maxTurns=${item.max_turns} tools=${(item.allowed_tools || []).join(",")} toolTimeoutMs=${item.tool_timeout_ms ?? "off"} contextBudget=${item.context_budget_chars ?? "off"} injectCtx=${item.inject_context_chars ?? 0} maxRetries=${item.max_retries ?? "off"} hitl=${item.inject_hitl ?? "off"} costBudget=${item.cost_budget_units ?? "off"} latencyMs=${item.latency_budget_ms ?? "off"}`,
   );
   const traceOut = resolve(tracesDir, `${item.id}.jsonl`);
   const run = await runLab05({
@@ -179,6 +183,10 @@ for (const item of selected) {
     hitlRequiredTools: item.hitl_required_tools,
     injectHitl: item.inject_hitl,
     hitlTimeoutMs: item.hitl_timeout_ms,
+    costBudgetUnits: item.cost_budget_units,
+    latencyBudgetMs: item.latency_budget_ms,
+    injectCostUnits: item.inject_cost_units,
+    injectElapsedMs: item.inject_elapsed_ms,
     traceOut,
   });
 
@@ -194,6 +202,10 @@ for (const item of selected) {
     inject_tool_failures: item.inject_tool_failures ?? false,
     inject_hitl: item.inject_hitl ?? null,
     hitl_required_tools: item.hitl_required_tools ?? null,
+    cost_budget_units: item.cost_budget_units ?? null,
+    latency_budget_ms: item.latency_budget_ms ?? null,
+    inject_cost_units: item.inject_cost_units ?? null,
+    inject_elapsed_ms: item.inject_elapsed_ms ?? null,
     durationMs: run.durationMs,
     exitCode: run.code,
     signal: run.signal,

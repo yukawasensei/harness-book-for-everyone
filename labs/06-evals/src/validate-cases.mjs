@@ -18,6 +18,8 @@ const STOP_REASONS = new Set([
   "retry_exhausted",
   "human_denied",
   "awaiting_human",
+  "cost_budget",
+  "latency_budget",
   "tool_error",
   "model_error",
 ]);

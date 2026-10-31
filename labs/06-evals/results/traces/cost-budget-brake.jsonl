@@ -1,0 +1,3 @@
+{"timestamp":"2026-10-31T08:32:24.567Z","eventType":"budget_check","costBudgetUnits":100,"latencyBudgetMs":0,"usedUnits":500,"elapsedMs":0,"injectCostUnits":500,"injectElapsedMs":0,"stop":true,"stop_reason":"cost_budget"}
+{"timestamp":"2026-10-31T08:32:24.567Z","eventType":"harness_stop","stop_reason":"cost_budget","usedUnits":500,"elapsedMs":0,"costBudgetUnits":100,"latencyBudgetMs":0}
+{"timestamp":"2026-10-31T08:32:24.567Z","eventType":"harness_end","stop_reason":"cost_budget","turnCount":0,"maxTurns":4,"toolTimeoutMs":0,"usedUnits":500,"elapsedMs":0,"costBudgetUnits":100,"latencyBudgetMs":0}
