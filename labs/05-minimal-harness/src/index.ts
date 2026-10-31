@@ -29,6 +29,12 @@ import {
   parseOnRetryExhausted,
   parseRetryBackoffMs,
 } from "./retry-budget.js";
+import {
+  createHitlGate,
+  parseHitlRequiredTools,
+  parseHitlTimeoutMs,
+  parseInjectHitlDecision,
+} from "./hitl-gate.js";
 
 const cwd = process.cwd();
 
@@ -48,6 +54,9 @@ const maxRetries = parseMaxRetries(process.env.MAX_RETRIES);
 const retryBackoffMs = parseRetryBackoffMs(process.env.RETRY_BACKOFF_MS);
 const onRetryExhausted = parseOnRetryExhausted(process.env.ON_RETRY_EXHAUSTED);
 const injectToolFailures = parseInjectToolFailures(process.env.EVAL_INJECT_TOOL_FAILURES);
+const hitlRequiredTools = parseHitlRequiredTools(process.env.HITL_REQUIRED_TOOLS);
+const hitlTimeoutMs = parseHitlTimeoutMs(process.env.HITL_TIMEOUT_MS);
+const injectHitlDecision = parseInjectHitlDecision(process.env.EVAL_INJECT_HITL);
 const allowedTools = parseAllowedTools(
   process.env.EVAL_ALLOWED_TOOLS ?? process.env.ALLOWED_TOOLS,
 );
@@ -72,12 +81,16 @@ const runState: {
   pathDenied: boolean;
   contextBudgetHit: boolean;
   retryExhausted: boolean;
+  humanDenied: boolean;
+  awaitingHuman: boolean;
 } = {
   stopReason: "success",
   toolTimedOut: false,
   pathDenied: false,
   contextBudgetHit: false,
   retryExhausted: false,
+  humanDenied: false,
+  awaitingHuman: false,
 };
 
 const customTools = [];
@@ -144,7 +157,7 @@ function writeTrace(row: Record<string, unknown>): void {
 
 // Official pi-agent-core hook: after each completed turn, decide whether to continue.
 session.agent.shouldStopAfterTurn = async () => {
-  if (runState.toolTimedOut || runState.pathDenied || runState.contextBudgetHit || runState.retryExhausted) {
+  if (runState.toolTimedOut || runState.pathDenied || runState.contextBudgetHit || runState.retryExhausted || runState.humanDenied || runState.awaitingHuman) {
     return true;
   }
   const stop = maxTurnsGuard.recordCompletedTurn();
@@ -247,11 +260,103 @@ const unsubscribe = session.subscribe((event) => {
 
 console.error(`[harness] runtime=${process.platform} model=${model.provider}/${model.id}`);
 console.error(
-  `[harness] tools=${allowedTools.join(",")} session=memory maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"} contextBudgetChars=${contextBudgetChars || "off"} policy=${contextBudgetPolicy} maxRetries=${maxRetries} onExhausted=${onRetryExhausted}`,
+  `[harness] tools=${allowedTools.join(",")} session=memory maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"} contextBudgetChars=${contextBudgetChars || "off"} policy=${contextBudgetPolicy} maxRetries=${maxRetries} onExhausted=${onRetryExhausted} hitlInject=${injectHitlDecision ?? "off"}`,
 );
 console.error(`[harness] trace=${tracePath}`);
 
 
+
+
+// Deterministic HITL confirm-gate probe (does not depend on the model).
+// Soft prompt "I already have approval" cannot bypass HITL_REQUIRED_TOOLS.
+if (injectHitlDecision) {
+  const hitlGate = createHitlGate({
+    requiredTools: hitlRequiredTools,
+    timeoutMs: hitlTimeoutMs,
+  });
+  const toolName = "confirm_gate";
+  writeTrace({
+    timestamp: new Date().toISOString(),
+    eventType: "hitl_request",
+    toolName,
+    toolCallId: "eval-hitl-1",
+    requiredTools: hitlRequiredTools,
+    hitlTimeoutMs,
+    injectedDecision: injectHitlDecision,
+  });
+  writeTrace({
+    timestamp: new Date().toISOString(),
+    eventType: "tool_execution_start",
+    toolName,
+    toolCallId: "eval-hitl-1",
+    injected: true,
+    awaitingHitl: true,
+  });
+  toolCallCount += 1;
+  const outcome = hitlGate.resolve(toolName, injectHitlDecision);
+  writeTrace({
+    timestamp: new Date().toISOString(),
+    eventType: "hitl_decision",
+    toolName,
+    decision: injectHitlDecision,
+    allow: outcome.allow,
+    stop_reason: outcome.stopReason,
+  });
+  if (!outcome.allow && outcome.stopReason) {
+    if (outcome.stopReason === "human_denied") {
+      runState.humanDenied = true;
+    } else {
+      runState.awaitingHuman = true;
+    }
+    runState.stopReason = outcome.stopReason;
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "tool_execution_end",
+      toolName,
+      toolCallId: "eval-hitl-1",
+      isError: true,
+      injected: true,
+      error: `hitl ${injectHitlDecision}`,
+      stop_reason: outcome.stopReason,
+    });
+    toolErrorCount += 1;
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "harness_stop",
+      stop_reason: outcome.stopReason,
+      toolName,
+      decision: injectHitlDecision,
+    });
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "harness_end",
+      stop_reason: outcome.stopReason,
+      turnCount: maxTurnsGuard.completedTurnCount,
+      maxTurns,
+      toolTimeoutMs,
+      hitlDecision: injectHitlDecision,
+      requiredTools: hitlRequiredTools,
+    });
+    const durationMs = Math.round(performance.now() - runStartedAt);
+    console.error(
+      `[harness] status=${outcome.stopReason} events=${eventCount} tool=${toolName} decision=${injectHitlDecision} durationMs=${durationMs}`,
+    );
+    process.exitCode = 2;
+    unsubscribe();
+    session.dispose();
+    process.exit(process.exitCode ?? 0);
+  }
+  // approve path: record end of gated tool and continue into remaining probes / model.
+  writeTrace({
+    timestamp: new Date().toISOString(),
+    eventType: "tool_execution_end",
+    toolName,
+    toolCallId: "eval-hitl-1",
+    isError: false,
+    injected: true,
+    hitlApproved: true,
+  });
+}
 
 // Deterministic retry-budget probe (does not depend on the model).
 // Soft prompt "please try again" cannot override MAX_RETRIES.

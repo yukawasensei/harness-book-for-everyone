@@ -7,6 +7,8 @@ export type StopReason =
   | "path_denied"
   | "context_budget"
   | "retry_exhausted"
+  | "human_denied"
+  | "awaiting_human"
   | "tool_error"
   | "model_error";
 

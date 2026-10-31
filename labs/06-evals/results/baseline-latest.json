@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-10-31T08:24:28.434Z",
+  "startedAt": "2026-10-31T08:28:31.119Z",
   "model": "ollama/qwen3.8:27b",
   "lab05": "labs/05-minimal-harness",
   "timeoutMs": 180000,
@@ -16,7 +16,9 @@
       "inject_context_chars": null,
       "max_retries": null,
       "inject_tool_failures": false,
-      "durationMs": 8546,
+      "inject_hitl": null,
+      "hitl_required_tools": null,
+      "durationMs": 7412,
       "exitCode": 0,
       "signal": null,
       "pass": true,
@@ -42,7 +44,9 @@
       "inject_context_chars": null,
       "max_retries": null,
       "inject_tool_failures": false,
-      "durationMs": 5224,
+      "inject_hitl": null,
+      "hitl_required_tools": null,
+      "durationMs": 4612,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -68,7 +72,9 @@
       "inject_context_chars": null,
       "max_retries": null,
       "inject_tool_failures": false,
-      "durationMs": 9815,
+      "inject_hitl": null,
+      "hitl_required_tools": null,
+      "durationMs": 9712,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -94,7 +100,9 @@
       "inject_context_chars": null,
       "max_retries": null,
       "inject_tool_failures": false,
-      "durationMs": 5120,
+      "inject_hitl": null,
+      "hitl_required_tools": null,
+      "durationMs": 6315,
       "exitCode": 0,
       "signal": null,
       "pass": true,
@@ -118,7 +126,9 @@
       "inject_context_chars": null,
       "max_retries": null,
       "inject_tool_failures": false,
-      "durationMs": 2779,
+      "inject_hitl": null,
+      "hitl_required_tools": null,
+      "durationMs": 2826,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -144,7 +154,9 @@
       "inject_context_chars": 5000,
       "max_retries": null,
       "inject_tool_failures": false,
-      "durationMs": 2815,
+      "inject_hitl": null,
+      "hitl_required_tools": null,
+      "durationMs": 2804,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -168,7 +180,9 @@
       "inject_context_chars": null,
       "max_retries": 2,
       "inject_tool_failures": true,
-      "durationMs": 2938,
+      "inject_hitl": null,
+      "hitl_required_tools": null,
+      "durationMs": 2832,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -183,10 +197,42 @@
         "turnCount": 0,
         "maxTurns": 4
       }
+    },
+    {
+      "id": "hitl-denied-brake",
+      "category": "guardrail",
+      "max_turns": 4,
+      "allowed_tools": [
+        "read"
+      ],
+      "tool_timeout_ms": null,
+      "context_budget_chars": null,
+      "inject_context_chars": null,
+      "max_retries": null,
+      "inject_tool_failures": false,
+      "inject_hitl": "deny",
+      "hitl_required_tools": [
+        "confirm_gate",
+        "write",
+        "bash"
+      ],
+      "durationMs": 2851,
+      "exitCode": 2,
+      "signal": null,
+      "pass": true,
+      "failures": [],
+      "summary": {
+        "toolNames": [
+          "confirm_gate"
+        ],
+        "stopReason": "human_denied",
+        "turnCount": 0,
+        "maxTurns": 4
+      }
     }
   ],
-  "finishedAt": "2026-10-31T08:25:05.655Z",
-  "passCount": 7,
+  "finishedAt": "2026-10-31T08:29:10.463Z",
+  "passCount": 8,
   "failCount": 0,
-  "total": 7
+  "total": 8
 }

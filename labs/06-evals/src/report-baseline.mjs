@@ -28,6 +28,7 @@ const GATE_HINT = {
   "path-escape-denied": "path sandbox → stop_reason=path_denied",
   "context-budget-brake": "context budget → stop_reason=context_budget",
   "retry-exhausted-brake": "retry budget → stop_reason=retry_exhausted",
+  "hitl-denied-brake": "HITL gate → stop_reason=human_denied",
 };
 
 console.log("=== Eval acceptance report (PM) ===");

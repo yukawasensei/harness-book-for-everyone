@@ -45,7 +45,7 @@ async function ensureOllama() {
   }
 }
 
-function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPath, contextBudgetChars, injectContextChars, contextBudgetPolicy, maxRetries, retryBackoffMs, onRetryExhausted, injectToolFailures, traceOut }) {
+function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPath, contextBudgetChars, injectContextChars, contextBudgetPolicy, maxRetries, retryBackoffMs, onRetryExhausted, injectToolFailures, hitlRequiredTools, injectHitl, hitlTimeoutMs, traceOut }) {
   return new Promise((resolvePromise) => {
     const started = performance.now();
     const env = {
@@ -62,6 +62,9 @@ function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPat
       RETRY_BACKOFF_MS: retryBackoffMs === undefined || retryBackoffMs === null ? "" : String(retryBackoffMs),
       ON_RETRY_EXHAUSTED: onRetryExhausted ? String(onRetryExhausted) : "",
       EVAL_INJECT_TOOL_FAILURES: injectToolFailures ? "1" : "",
+      HITL_REQUIRED_TOOLS: hitlRequiredTools && hitlRequiredTools.length ? hitlRequiredTools.join(",") : "",
+      EVAL_INJECT_HITL: injectHitl ? String(injectHitl) : "",
+      HITL_TIMEOUT_MS: hitlTimeoutMs === undefined || hitlTimeoutMs === null ? "" : String(hitlTimeoutMs),
       NO_PROXY: "127.0.0.1,localhost",
       no_proxy: "127.0.0.1,localhost",
       // Clear proxy vars that may hijack localhost Ollama
@@ -157,7 +160,7 @@ let failCount = 0;
 
 for (const item of selected) {
   console.error(
-    `\n[eval] case=${item.id} maxTurns=${item.max_turns} tools=${(item.allowed_tools || []).join(",")} toolTimeoutMs=${item.tool_timeout_ms ?? "off"} contextBudget=${item.context_budget_chars ?? "off"} injectCtx=${item.inject_context_chars ?? 0} maxRetries=${item.max_retries ?? "off"}`,
+    `\n[eval] case=${item.id} maxTurns=${item.max_turns} tools=${(item.allowed_tools || []).join(",")} toolTimeoutMs=${item.tool_timeout_ms ?? "off"} contextBudget=${item.context_budget_chars ?? "off"} injectCtx=${item.inject_context_chars ?? 0} maxRetries=${item.max_retries ?? "off"} hitl=${item.inject_hitl ?? "off"}`,
   );
   const traceOut = resolve(tracesDir, `${item.id}.jsonl`);
   const run = await runLab05({
@@ -173,6 +176,9 @@ for (const item of selected) {
     retryBackoffMs: item.retry_backoff_ms,
     onRetryExhausted: item.on_retry_exhausted,
     injectToolFailures: item.inject_tool_failures,
+    hitlRequiredTools: item.hitl_required_tools,
+    injectHitl: item.inject_hitl,
+    hitlTimeoutMs: item.hitl_timeout_ms,
     traceOut,
   });
 
@@ -186,6 +192,8 @@ for (const item of selected) {
     inject_context_chars: item.inject_context_chars ?? null,
     max_retries: item.max_retries ?? null,
     inject_tool_failures: item.inject_tool_failures ?? false,
+    inject_hitl: item.inject_hitl ?? null,
+    hitl_required_tools: item.hitl_required_tools ?? null,
     durationMs: run.durationMs,
     exitCode: run.code,
     signal: run.signal,
