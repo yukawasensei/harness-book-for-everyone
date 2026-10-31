@@ -1,0 +1,48 @@
+{
+  "startedAt": "2026-10-31T05:27:46.815Z",
+  "model": "ollama/qwen3.8:27b",
+  "lab05": "<repo-root>/labs/05-minimal-harness",
+  "timeoutMs": 180000,
+  "results": [
+    {
+      "id": "read-lesson-input",
+      "category": "single_tool",
+      "max_turns": 8,
+      "durationMs": 26276,
+      "exitCode": 0,
+      "signal": null,
+      "pass": true,
+      "failures": [],
+      "summary": {
+        "toolNames": [
+          "read"
+        ],
+        "stopReason": "success",
+        "turnCount": 2,
+        "maxTurns": 8
+      }
+    },
+    {
+      "id": "max-turns-brake",
+      "category": "guardrail",
+      "max_turns": 1,
+      "durationMs": 4695,
+      "exitCode": 2,
+      "signal": null,
+      "pass": true,
+      "failures": [],
+      "summary": {
+        "toolNames": [
+          "read"
+        ],
+        "stopReason": "max_turns",
+        "turnCount": 1,
+        "maxTurns": 1
+      }
+    }
+  ],
+  "finishedAt": "2026-10-31T05:28:17.957Z",
+  "passCount": 2,
+  "failCount": 0,
+  "total": 2
+}

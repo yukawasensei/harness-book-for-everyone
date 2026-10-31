@@ -50,6 +50,11 @@
 
 对：再小的改动也可能牵动整条任务链。验收要可复现——同一 `cases.jsonl` 前后跑，看成功率 / 越权率 / 工具选择是否退化；主观体感不能进发布清单。
 
+## 工程进度（2026-10-31）
+
+- `labs/06-evals`：`npm test` schema；`npm run eval:live` 真跑 lab05 + 本地 Ollama，基线写入 `results/baseline-latest.json`。
+- 产品口径不变：Prompt 不可靠，闸门看 Harness；评测看 `stop_reason` / 工具名，不看「感觉」。
+
 ## 下一步
 
 - 工程：起草 `evals/cases.jsonl`（先 5～10 条再扩到 20）；runner 读 cases、跑 Agent、对照 must_* 写 `results/`。  

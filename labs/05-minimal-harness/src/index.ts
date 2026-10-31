@@ -128,9 +128,10 @@ console.error(`[harness] tools=read session=memory maxTurns=${maxTurns}`);
 console.error(`[harness] trace=${tracePath}`);
 
 try {
-  await session.prompt(
-    "必须调用 read 工具读取 lesson-input.md，然后只根据文件内容，用一句中文说明 Harness 的职责。",
-  );
+  const prompt =
+    process.env.EVAL_PROMPT?.trim()
+    || "必须调用 read 工具读取 lesson-input.md，然后只根据文件内容，用一句中文说明 Harness 的职责。";
+  await session.prompt(prompt);
   process.stdout.write("\n");
 
   if (runState.stopReason !== "max_turns") {
