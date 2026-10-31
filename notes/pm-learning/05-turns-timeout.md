@@ -60,7 +60,17 @@
 - **allowlist**：防「碰不该碰的」——即使轮数很少，也不能 bash/写盘。  
 - 缺一不可：只有 allowlist 仍可能合法工具死循环；只有 maxTurns 仍可能一轮内干坏事。二者是正交护栏。
 
+### 产品硬约束（PM · 2026-10-31）
+
+**提示词有可能不被遵循，从而失效。一定要在 harness 里强制执行。**
+
+maxTurns、工具 allowlist、路径边界——凡是安全/成本红线，都不能只写在 system prompt 里指望模型「听话」。Prompt 是软建议；Harness 代码与钩子才是硬闸门。
+
+### 小哈补充
+
+对：把「请不要超过 N 轮」写进提示词不算护栏——模型随时可忽略。验收口径应是 *代码路径是否拦住*（如 `shouldStopAfterTurn` / allowlist），而不是 *模型有没有看起来听话*。
+
 ## 下一步
 
-- 工程：在课 5 **再加一项**单工具超时（仍一次一个控制点），或进入 `labs/06-evals` 做触顶 case。  
+- 工程：`labs/06-evals` 已有 schema stub；下一步可把 runner 接到 lab05 trace / 本地 Ollama。单工具超时仍延后。  
 - 下一课笔记：[06 · 可观测与 Trace](./06-observability-trace.md) · 上一课：[04 · 权限与路径](./04-permissions-paths.md)

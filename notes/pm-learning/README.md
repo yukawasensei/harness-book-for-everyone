@@ -21,4 +21,4 @@ PM（产品经理）视角的 Harness 学习记录。
 | 09 | [09-collaboration.md](./09-collaboration.md) | 协作（产品 × 工程） | 已完成 |
 | 10 | [10-landing.md](./10-landing.md) | 落地（样本 → 产品） | 已完成 |
 
-对照仓库主线：`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/05`。
+对照仓库主线：`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/06`。
