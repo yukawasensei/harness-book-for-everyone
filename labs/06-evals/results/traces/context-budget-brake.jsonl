@@ -1,0 +1,3 @@
+{"timestamp":"2026-10-31T08:21:33.150Z","eventType":"context_budget_check","estimatedChars":5035,"contextBudgetChars":1000,"injectContextChars":5000,"policy":"stop"}
+{"timestamp":"2026-10-31T08:21:33.150Z","eventType":"harness_stop","stop_reason":"context_budget","estimatedChars":5035,"contextBudgetChars":1000,"injectContextChars":5000,"policy":"stop"}
+{"timestamp":"2026-10-31T08:21:33.150Z","eventType":"harness_end","stop_reason":"context_budget","turnCount":0,"maxTurns":4,"toolTimeoutMs":0,"estimatedChars":5035,"contextBudgetChars":1000,"injectContextChars":5000,"policy":"stop"}

@@ -24,6 +24,7 @@
 | 11 | [11-hard-boundaries.md](./11-hard-boundaries.md) | 硬边界评测（超时 + 权限拒绝） | 已完成 |
 | 12 | [12-path-sandbox.md](./12-path-sandbox.md) | 路径沙箱（Workspace Path Policy） | 已完成 |
 | 13 | [13-trace-acceptance.md](./13-trace-acceptance.md) | Trace 作为验收证据（签字放行） | 已完成 |
+| 14 | [14-context-budget.md](./14-context-budget.md) | 上下文预算（Session / Context Window） | 已完成 |
 
 对照仓库主线：根目录 [`README.md`](../../README.md)、[`OPEN_SOURCE.md`](../../OPEN_SOURCE.md)、`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/06`。
 

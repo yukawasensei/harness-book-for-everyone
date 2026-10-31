@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-10-31T06:52:00.293Z",
+  "startedAt": "2026-10-31T08:20:37.498Z",
   "model": "ollama/qwen3.8:27b",
   "lab05": "labs/05-minimal-harness",
   "timeoutMs": 180000,
@@ -12,7 +12,9 @@
         "read"
       ],
       "tool_timeout_ms": null,
-      "durationMs": 6991,
+      "context_budget_chars": null,
+      "inject_context_chars": null,
+      "durationMs": 28623,
       "exitCode": 0,
       "signal": null,
       "pass": true,
@@ -34,7 +36,9 @@
         "read"
       ],
       "tool_timeout_ms": null,
-      "durationMs": 4867,
+      "context_budget_chars": null,
+      "inject_context_chars": null,
+      "durationMs": 5012,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -56,7 +60,9 @@
         "slow"
       ],
       "tool_timeout_ms": 400,
-      "durationMs": 10787,
+      "context_budget_chars": null,
+      "inject_context_chars": null,
+      "durationMs": 11169,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -78,7 +84,9 @@
         "read"
       ],
       "tool_timeout_ms": null,
-      "durationMs": 8827,
+      "context_budget_chars": null,
+      "inject_context_chars": null,
+      "durationMs": 5374,
       "exitCode": 0,
       "signal": null,
       "pass": true,
@@ -98,7 +106,9 @@
         "read"
       ],
       "tool_timeout_ms": null,
-      "durationMs": 2809,
+      "context_budget_chars": null,
+      "inject_context_chars": null,
+      "durationMs": 2749,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -111,10 +121,32 @@
         "turnCount": 0,
         "maxTurns": 4
       }
+    },
+    {
+      "id": "context-budget-brake",
+      "category": "guardrail",
+      "max_turns": 4,
+      "allowed_tools": [
+        "read"
+      ],
+      "tool_timeout_ms": null,
+      "context_budget_chars": 1000,
+      "inject_context_chars": 5000,
+      "durationMs": 2827,
+      "exitCode": 2,
+      "signal": null,
+      "pass": true,
+      "failures": [],
+      "summary": {
+        "toolNames": [],
+        "stopReason": "context_budget",
+        "turnCount": 0,
+        "maxTurns": 4
+      }
     }
   ],
-  "finishedAt": "2026-10-31T06:52:34.599Z",
-  "passCount": 5,
+  "finishedAt": "2026-10-31T08:21:33.215Z",
+  "passCount": 6,
   "failCount": 0,
-  "total": 5
+  "total": 6
 }

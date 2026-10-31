@@ -9,7 +9,7 @@
 | Case | 一条可重复规格：`id`、prompt、`max_turns`、`expect` |
 | Baseline | `results/baseline-latest.json` 快照；之后对比才谈提升 |
 | Pass / Fail | 对照 `expect`（工具名 / `stop_reason`），不是「感觉答得对」 |
-| 硬闸门 | Prompt 可被忽略；`maxTurns` / allowlist / `TOOL_TIMEOUT_MS` / 路径沙箱 必须在 Harness 强制执行 |
+| 硬闸门 | Prompt 可被忽略；`maxTurns` / allowlist / `TOOL_TIMEOUT_MS` / 路径沙箱 / `CONTEXT_BUDGET_CHARS` 必须在 Harness 强制执行 |
 
 ## 工程师跑什么
 
@@ -43,6 +43,8 @@ npm run check:trace -- results/traces/tool-timeout-brake.jsonl tool-timeout-brak
 | `schema-only-no-bash` | schema_only | 文档化 allowlist；`npm test` 校验字段 |
 | `path-escape-denied` | live | 绝对路径逃出工作区 → `stop_reason=path_denied` |
 | `schema-only-path-sandbox` | schema_only | 文档化路径沙箱意图 |
+| `context-budget-brake` | live | 注入超预算填充 → `stop_reason=context_budget` |
+| `schema-only-context-budget` | schema_only | 文档化上下文预算意图 |
 
 ## PM acceptance report
 
@@ -62,8 +64,9 @@ npm run eval:report
 | allowlist | `allowlist-no-bash` | 无 bash/write/edit |
 | path sandbox | `path-escape-denied` | `stop_reason=path_denied` |
 | happy path | `read-lesson-input` | `success` + `read` |
+| context budget | `context-budget-brake` | `stop_reason=context_budget` |
 
-详见笔记：[13 · Trace 作为验收证据](../../notes/pm-learning/13-trace-acceptance.md)。
+详见笔记：[13 · Trace 作为验收证据](../../notes/pm-learning/13-trace-acceptance.md)、[14 · 上下文预算](../../notes/pm-learning/14-context-budget.md)。
 
 ## 目录
 

@@ -105,3 +105,6 @@ npm run eval:report
 - 巩固：自己对着当前 baseline 走一遍签字清单；把费曼题讲给同伴。  
 - 可选增量：把 `eval:report` 接进 CI 摘要；客服话术表按 `stop_reason` 枚举。  
 - 上一课：[12 · 路径沙箱](./12-path-sandbox.md) · 路线总览：[README](./README.md)
+
+- 下一课：[14 · 上下文预算](./14-context-budget.md)
+

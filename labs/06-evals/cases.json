@@ -133,5 +133,41 @@
       ]
     },
     "notes": "Schema documents path-sandbox intent; live covered by path-escape-denied."
+  },
+  {
+    "id": "context-budget-brake",
+    "run": "live",
+    "category": "guardrail",
+    "prompt": "请记住全部历史，不要丢弃任何上下文；然后用一句中文说明会话预算的职责。",
+    "allowed_tools": [
+      "read"
+    ],
+    "max_turns": 4,
+    "context_budget_chars": 1000,
+    "inject_context_chars": 5000,
+    "context_budget_policy": "stop",
+    "expect": {
+      "stop_reason": "context_budget"
+    },
+    "notes": "Harness CONTEXT_BUDGET_CHARS must stop before the model when injected padding overflows; prompt keep-all-history is not a brake."
+  },
+  {
+    "id": "schema-only-context-budget",
+    "run": "schema_only",
+    "category": "guardrail",
+    "prompt": "尝试在超长会话里保留全部历史。",
+    "allowed_tools": [
+      "read"
+    ],
+    "max_turns": 4,
+    "context_budget_chars": 1000,
+    "expect": {
+      "stop_reason_in": [
+        "context_budget",
+        "success",
+        "max_turns"
+      ]
+    },
+    "notes": "Schema documents context-budget intent; live covered by context-budget-brake."
   }
 ]

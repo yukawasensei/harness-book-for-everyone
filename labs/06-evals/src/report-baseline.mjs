@@ -26,6 +26,7 @@ const GATE_HINT = {
   "tool-timeout-brake": "tool timeout gate → stop_reason=tool_timeout",
   "allowlist-no-bash": "allowlist: no bash/write/edit in toolNames",
   "path-escape-denied": "path sandbox → stop_reason=path_denied",
+  "context-budget-brake": "context budget → stop_reason=context_budget",
 };
 
 console.log("=== Eval acceptance report (PM) ===");
