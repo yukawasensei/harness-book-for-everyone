@@ -65,4 +65,5 @@ flowchart LR
 
 - 巩固：把「allowlist × 路径沙箱」正交关系讲给同伴；对照 baseline 看 `path-escape-denied` 是否仍绿。  
 - 可选增量：写工具同样套闸门；多 workspace 根；容器级隔离。  
+- 下一课：[13 · Trace 作为验收证据](./13-trace-acceptance.md)
 - 上一课笔记：[11 · 硬边界评测](./11-hard-boundaries.md) · 路线总览：[README](./README.md)

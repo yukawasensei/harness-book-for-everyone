@@ -44,6 +44,27 @@ npm run check:trace -- results/traces/tool-timeout-brake.jsonl tool-timeout-brak
 | `path-escape-denied` | live | 绝对路径逃出工作区 → `stop_reason=path_denied` |
 | `schema-only-path-sandbox` | schema_only | 文档化路径沙箱意图 |
 
+## PM acceptance report
+
+Harness 改动签字前，先看汇总，再下钻 Trace：
+
+```bash
+cd labs/06-evals
+npm run eval:report
+```
+
+报表读取 `results/baseline-latest.json`，按 case 列出 `pass` / `stop_reason` / `toolNames`，并提示四道闸门应对的证据。规则：**Trace 证明闸门生效，才算 Done**——不是模型口头保证。
+
+| 闸门 | Case | 期望 |
+|---|---|---|
+| maxTurns | `max-turns-brake` | `stop_reason=max_turns` |
+| tool timeout | `tool-timeout-brake` | `stop_reason=tool_timeout` |
+| allowlist | `allowlist-no-bash` | 无 bash/write/edit |
+| path sandbox | `path-escape-denied` | `stop_reason=path_denied` |
+| happy path | `read-lesson-input` | `success` + `read` |
+
+详见笔记：[13 · Trace 作为验收证据](../../notes/pm-learning/13-trace-acceptance.md)。
+
 ## 目录
 
 | 路径 | 作用 |

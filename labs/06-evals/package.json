@@ -5,6 +5,7 @@
   "scripts": {
     "test": "node src/validate-cases.mjs",
     "check:trace": "node src/check-trace.mjs",
-    "eval:live": "node src/run-live.mjs"
+    "eval:live": "node src/run-live.mjs",
+    "eval:report": "node src/report-baseline.mjs"
   }
 }
