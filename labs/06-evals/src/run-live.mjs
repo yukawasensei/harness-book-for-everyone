@@ -45,7 +45,7 @@ async function ensureOllama() {
   }
 }
 
-function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPath, contextBudgetChars, injectContextChars, contextBudgetPolicy, traceOut }) {
+function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPath, contextBudgetChars, injectContextChars, contextBudgetPolicy, maxRetries, retryBackoffMs, onRetryExhausted, injectToolFailures, traceOut }) {
   return new Promise((resolvePromise) => {
     const started = performance.now();
     const env = {
@@ -58,6 +58,10 @@ function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPat
       CONTEXT_BUDGET_CHARS: contextBudgetChars === undefined || contextBudgetChars === null ? "" : String(contextBudgetChars),
       EVAL_INJECT_CONTEXT_CHARS: injectContextChars === undefined || injectContextChars === null ? "" : String(injectContextChars),
       CONTEXT_BUDGET_POLICY: contextBudgetPolicy ? String(contextBudgetPolicy) : "",
+      MAX_RETRIES: maxRetries === undefined || maxRetries === null ? "" : String(maxRetries),
+      RETRY_BACKOFF_MS: retryBackoffMs === undefined || retryBackoffMs === null ? "" : String(retryBackoffMs),
+      ON_RETRY_EXHAUSTED: onRetryExhausted ? String(onRetryExhausted) : "",
+      EVAL_INJECT_TOOL_FAILURES: injectToolFailures ? "1" : "",
       NO_PROXY: "127.0.0.1,localhost",
       no_proxy: "127.0.0.1,localhost",
       // Clear proxy vars that may hijack localhost Ollama
@@ -153,7 +157,7 @@ let failCount = 0;
 
 for (const item of selected) {
   console.error(
-    `\n[eval] case=${item.id} maxTurns=${item.max_turns} tools=${(item.allowed_tools || []).join(",")} toolTimeoutMs=${item.tool_timeout_ms ?? "off"} contextBudget=${item.context_budget_chars ?? "off"} injectCtx=${item.inject_context_chars ?? 0}`,
+    `\n[eval] case=${item.id} maxTurns=${item.max_turns} tools=${(item.allowed_tools || []).join(",")} toolTimeoutMs=${item.tool_timeout_ms ?? "off"} contextBudget=${item.context_budget_chars ?? "off"} injectCtx=${item.inject_context_chars ?? 0} maxRetries=${item.max_retries ?? "off"}`,
   );
   const traceOut = resolve(tracesDir, `${item.id}.jsonl`);
   const run = await runLab05({
@@ -165,6 +169,10 @@ for (const item of selected) {
     contextBudgetChars: item.context_budget_chars,
     injectContextChars: item.inject_context_chars,
     contextBudgetPolicy: item.context_budget_policy,
+    maxRetries: item.max_retries,
+    retryBackoffMs: item.retry_backoff_ms,
+    onRetryExhausted: item.on_retry_exhausted,
+    injectToolFailures: item.inject_tool_failures,
     traceOut,
   });
 
@@ -176,6 +184,8 @@ for (const item of selected) {
     tool_timeout_ms: item.tool_timeout_ms ?? null,
     context_budget_chars: item.context_budget_chars ?? null,
     inject_context_chars: item.inject_context_chars ?? null,
+    max_retries: item.max_retries ?? null,
+    inject_tool_failures: item.inject_tool_failures ?? false,
     durationMs: run.durationMs,
     exitCode: run.code,
     signal: run.signal,

@@ -27,6 +27,7 @@ const GATE_HINT = {
   "allowlist-no-bash": "allowlist: no bash/write/edit in toolNames",
   "path-escape-denied": "path sandbox → stop_reason=path_denied",
   "context-budget-brake": "context budget → stop_reason=context_budget",
+  "retry-exhausted-brake": "retry budget → stop_reason=retry_exhausted",
 };
 
 console.log("=== Eval acceptance report (PM) ===");

@@ -15,6 +15,7 @@ const STOP_REASONS = new Set([
   "tool_timeout",
   "path_denied",
   "context_budget",
+  "retry_exhausted",
   "tool_error",
   "model_error",
 ]);

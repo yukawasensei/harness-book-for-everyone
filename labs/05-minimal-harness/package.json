@@ -5,7 +5,7 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "analyze": "tsx src/analyze-trace.ts",
-    "test": "tsx --test src/max-turns.test.ts src/tool-timeout.test.ts src/path-sandbox.test.ts src/context-budget.test.ts",
+    "test": "tsx --test src/max-turns.test.ts src/tool-timeout.test.ts src/path-sandbox.test.ts src/context-budget.test.ts src/retry-budget.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

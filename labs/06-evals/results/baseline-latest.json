@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-10-31T08:20:37.498Z",
+  "startedAt": "2026-10-31T08:24:28.434Z",
   "model": "ollama/qwen3.8:27b",
   "lab05": "labs/05-minimal-harness",
   "timeoutMs": 180000,
@@ -14,7 +14,9 @@
       "tool_timeout_ms": null,
       "context_budget_chars": null,
       "inject_context_chars": null,
-      "durationMs": 28623,
+      "max_retries": null,
+      "inject_tool_failures": false,
+      "durationMs": 8546,
       "exitCode": 0,
       "signal": null,
       "pass": true,
@@ -38,7 +40,9 @@
       "tool_timeout_ms": null,
       "context_budget_chars": null,
       "inject_context_chars": null,
-      "durationMs": 5012,
+      "max_retries": null,
+      "inject_tool_failures": false,
+      "durationMs": 5224,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -62,7 +66,9 @@
       "tool_timeout_ms": 400,
       "context_budget_chars": null,
       "inject_context_chars": null,
-      "durationMs": 11169,
+      "max_retries": null,
+      "inject_tool_failures": false,
+      "durationMs": 9815,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -86,7 +92,9 @@
       "tool_timeout_ms": null,
       "context_budget_chars": null,
       "inject_context_chars": null,
-      "durationMs": 5374,
+      "max_retries": null,
+      "inject_tool_failures": false,
+      "durationMs": 5120,
       "exitCode": 0,
       "signal": null,
       "pass": true,
@@ -108,7 +116,9 @@
       "tool_timeout_ms": null,
       "context_budget_chars": null,
       "inject_context_chars": null,
-      "durationMs": 2749,
+      "max_retries": null,
+      "inject_tool_failures": false,
+      "durationMs": 2779,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -132,7 +142,9 @@
       "tool_timeout_ms": null,
       "context_budget_chars": 1000,
       "inject_context_chars": 5000,
-      "durationMs": 2827,
+      "max_retries": null,
+      "inject_tool_failures": false,
+      "durationMs": 2815,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -143,10 +155,38 @@
         "turnCount": 0,
         "maxTurns": 4
       }
+    },
+    {
+      "id": "retry-exhausted-brake",
+      "category": "guardrail",
+      "max_turns": 4,
+      "allowed_tools": [
+        "read"
+      ],
+      "tool_timeout_ms": null,
+      "context_budget_chars": null,
+      "inject_context_chars": null,
+      "max_retries": 2,
+      "inject_tool_failures": true,
+      "durationMs": 2938,
+      "exitCode": 2,
+      "signal": null,
+      "pass": true,
+      "failures": [],
+      "summary": {
+        "toolNames": [
+          "flaky",
+          "flaky",
+          "flaky"
+        ],
+        "stopReason": "retry_exhausted",
+        "turnCount": 0,
+        "maxTurns": 4
+      }
     }
   ],
-  "finishedAt": "2026-10-31T08:21:33.215Z",
-  "passCount": 6,
+  "finishedAt": "2026-10-31T08:25:05.655Z",
+  "passCount": 7,
   "failCount": 0,
-  "total": 6
+  "total": 7
 }

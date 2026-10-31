@@ -21,6 +21,14 @@ import {
   parseInjectContextChars,
   shouldStopForContextBudget,
 } from "./context-budget.js";
+import {
+  createRetryBudgetGuard,
+  decideOnRetryExhausted,
+  parseInjectToolFailures,
+  parseMaxRetries,
+  parseOnRetryExhausted,
+  parseRetryBackoffMs,
+} from "./retry-budget.js";
 
 const cwd = process.cwd();
 
@@ -36,6 +44,10 @@ const toolTimeoutMs = parseToolTimeoutMs(process.env.TOOL_TIMEOUT_MS);
 const contextBudgetChars = parseContextBudgetChars(process.env.CONTEXT_BUDGET_CHARS);
 const contextBudgetPolicy = parseContextBudgetPolicy(process.env.CONTEXT_BUDGET_POLICY);
 const injectContextChars = parseInjectContextChars(process.env.EVAL_INJECT_CONTEXT_CHARS);
+const maxRetries = parseMaxRetries(process.env.MAX_RETRIES);
+const retryBackoffMs = parseRetryBackoffMs(process.env.RETRY_BACKOFF_MS);
+const onRetryExhausted = parseOnRetryExhausted(process.env.ON_RETRY_EXHAUSTED);
+const injectToolFailures = parseInjectToolFailures(process.env.EVAL_INJECT_TOOL_FAILURES);
 const allowedTools = parseAllowedTools(
   process.env.EVAL_ALLOWED_TOOLS ?? process.env.ALLOWED_TOOLS,
 );
@@ -59,11 +71,13 @@ const runState: {
   toolTimedOut: boolean;
   pathDenied: boolean;
   contextBudgetHit: boolean;
+  retryExhausted: boolean;
 } = {
   stopReason: "success",
   toolTimedOut: false,
   pathDenied: false,
   contextBudgetHit: false,
+  retryExhausted: false,
 };
 
 const customTools = [];
@@ -130,7 +144,7 @@ function writeTrace(row: Record<string, unknown>): void {
 
 // Official pi-agent-core hook: after each completed turn, decide whether to continue.
 session.agent.shouldStopAfterTurn = async () => {
-  if (runState.toolTimedOut || runState.pathDenied || runState.contextBudgetHit) {
+  if (runState.toolTimedOut || runState.pathDenied || runState.contextBudgetHit || runState.retryExhausted) {
     return true;
   }
   const stop = maxTurnsGuard.recordCompletedTurn();
@@ -233,10 +247,100 @@ const unsubscribe = session.subscribe((event) => {
 
 console.error(`[harness] runtime=${process.platform} model=${model.provider}/${model.id}`);
 console.error(
-  `[harness] tools=${allowedTools.join(",")} session=memory maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"} contextBudgetChars=${contextBudgetChars || "off"} policy=${contextBudgetPolicy}`,
+  `[harness] tools=${allowedTools.join(",")} session=memory maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"} contextBudgetChars=${contextBudgetChars || "off"} policy=${contextBudgetPolicy} maxRetries=${maxRetries} onExhausted=${onRetryExhausted}`,
 );
 console.error(`[harness] trace=${tracePath}`);
 
+
+
+// Deterministic retry-budget probe (does not depend on the model).
+// Soft prompt "please try again" cannot override MAX_RETRIES.
+if (injectToolFailures) {
+  const retryGuard = createRetryBudgetGuard({
+    maxRetries,
+    backoffMs: retryBackoffMs,
+    onExhausted: onRetryExhausted,
+  });
+  writeTrace({
+    timestamp: new Date().toISOString(),
+    eventType: "retry_budget_start",
+    maxRetries,
+    retryBackoffMs,
+    onRetryExhausted,
+  });
+  let attempt = 0;
+  for (;;) {
+    attempt += 1;
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "tool_execution_start",
+      toolName: "flaky",
+      toolCallId: `eval-flaky-${attempt}`,
+      injected: true,
+      attempt,
+    });
+    // Simulated permanent failure for the teaching probe.
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "tool_execution_end",
+      toolName: "flaky",
+      toolCallId: `eval-flaky-${attempt}`,
+      isError: true,
+      injected: true,
+      error: "injected flaky failure",
+      attempt,
+    });
+    toolCallCount += 1;
+    toolErrorCount += 1;
+    const decision = retryGuard.recordFailure();
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "retry_decision",
+      failureCount: retryGuard.failureCount,
+      maxRetries,
+      retry: decision.retry,
+      backoffMs: decision.backoffMs,
+      exhausted: decision.exhausted,
+    });
+    if (!decision.retry) {
+      const decided = decideOnRetryExhausted(onRetryExhausted);
+      runState.retryExhausted = true;
+      runState.stopReason = decided.stopReason;
+      writeTrace({
+        timestamp: new Date().toISOString(),
+        eventType: "harness_stop",
+        stop_reason: decided.stopReason,
+        degrade: decided.degrade,
+        failureCount: retryGuard.failureCount,
+        maxRetries,
+        attempts: attempt,
+      });
+      writeTrace({
+        timestamp: new Date().toISOString(),
+        eventType: "harness_end",
+        stop_reason: decided.stopReason,
+        degrade: decided.degrade,
+        turnCount: maxTurnsGuard.completedTurnCount,
+        maxTurns,
+        toolTimeoutMs,
+        maxRetries,
+        failureCount: retryGuard.failureCount,
+        attempts: attempt,
+      });
+      const durationMs = Math.round(performance.now() - runStartedAt);
+      console.error(
+        `[harness] status=retry_exhausted events=${eventCount} attempts=${attempt} maxRetries=${maxRetries} degrade=${decided.degrade} durationMs=${durationMs}`,
+      );
+      process.exitCode = 2;
+      unsubscribe();
+      session.dispose();
+      process.exit(process.exitCode ?? 0);
+    }
+    if (decision.backoffMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, decision.backoffMs));
+    }
+  }
+}
 
 // Deterministic context-budget probe for evals (does not depend on the model).
 // Soft prompt "please keep all history" cannot override CONTEXT_BUDGET_CHARS.
@@ -388,6 +492,7 @@ try {
     || runState.stopReason === "tool_timeout"
     || runState.stopReason === "path_denied"
     || runState.stopReason === "context_budget"
+    || runState.stopReason === "retry_exhausted"
   ) {
     process.exitCode = 2;
   }

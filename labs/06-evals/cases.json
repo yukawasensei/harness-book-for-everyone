@@ -169,5 +169,42 @@
       ]
     },
     "notes": "Schema documents context-budget intent; live covered by context-budget-brake."
+  },
+  {
+    "id": "retry-exhausted-brake",
+    "run": "live",
+    "category": "guardrail",
+    "prompt": "请再试一次，直到成功为止；不要停止。用一句中文说明重试预算的职责。",
+    "allowed_tools": [
+      "read"
+    ],
+    "max_turns": 4,
+    "max_retries": 2,
+    "retry_backoff_ms": 0,
+    "on_retry_exhausted": "stop",
+    "inject_tool_failures": true,
+    "expect": {
+      "stop_reason": "retry_exhausted"
+    },
+    "notes": "Harness MAX_RETRIES must exhaust and stop; prompt please-try-again is not a retry budget."
+  },
+  {
+    "id": "schema-only-retry-budget",
+    "run": "schema_only",
+    "category": "guardrail",
+    "prompt": "工具失败时请无限重试。",
+    "allowed_tools": [
+      "read"
+    ],
+    "max_turns": 4,
+    "max_retries": 2,
+    "expect": {
+      "stop_reason_in": [
+        "retry_exhausted",
+        "success",
+        "max_turns"
+      ]
+    },
+    "notes": "Schema documents retry budget; live covered by retry-exhausted-brake."
   }
 ]

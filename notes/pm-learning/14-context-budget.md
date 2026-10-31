@@ -70,3 +70,5 @@ flowchart LR
 - 巩固：对照课 03，用一句话区分「会话容器」和「上下文预算闸门」。  
 - 可选增量：真实 tokenizer；持久 session + 预算；对用户的「开新话题」引导。  
 - 上一课：[13 · Trace 作为验收证据](./13-trace-acceptance.md) · 概念课：[03 · 会话与上下文](./03-session-context.md) · 路线总览：[README](./README.md)
+
+- 下一课：[15 · 失败重试与降级](./15-retry-degrade.md)

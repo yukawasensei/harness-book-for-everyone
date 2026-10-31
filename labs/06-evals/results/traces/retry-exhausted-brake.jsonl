@@ -1,0 +1,12 @@
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"retry_budget_start","maxRetries":2,"retryBackoffMs":0,"onRetryExhausted":"stop"}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"tool_execution_start","toolName":"flaky","toolCallId":"eval-flaky-1","injected":true,"attempt":1}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"tool_execution_end","toolName":"flaky","toolCallId":"eval-flaky-1","isError":true,"injected":true,"error":"injected flaky failure","attempt":1}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"retry_decision","failureCount":1,"maxRetries":2,"retry":true,"backoffMs":0,"exhausted":false}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"tool_execution_start","toolName":"flaky","toolCallId":"eval-flaky-2","injected":true,"attempt":2}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"tool_execution_end","toolName":"flaky","toolCallId":"eval-flaky-2","isError":true,"injected":true,"error":"injected flaky failure","attempt":2}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"retry_decision","failureCount":2,"maxRetries":2,"retry":true,"backoffMs":0,"exhausted":false}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"tool_execution_start","toolName":"flaky","toolCallId":"eval-flaky-3","injected":true,"attempt":3}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"tool_execution_end","toolName":"flaky","toolCallId":"eval-flaky-3","isError":true,"injected":true,"error":"injected flaky failure","attempt":3}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"retry_decision","failureCount":3,"maxRetries":2,"retry":false,"backoffMs":0,"exhausted":true}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"harness_stop","stop_reason":"retry_exhausted","degrade":"stop","failureCount":3,"maxRetries":2,"attempts":3}
+{"timestamp":"2026-10-31T08:25:05.589Z","eventType":"harness_end","stop_reason":"retry_exhausted","degrade":"stop","turnCount":0,"maxTurns":4,"toolTimeoutMs":0,"maxRetries":2,"failureCount":3,"attempts":3}
