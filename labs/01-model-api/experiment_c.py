@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""第一课·实验 C：Qwen3.6 通过 Pi Harness 的 read 工具读取文件。"""
+"""第一课·实验 C：Qwen3.8 通过 Pi Harness 的 read 工具读取文件。"""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ command = [
     "--provider",
     "ollama",
     "--model",
-    "qwen3.6:27b",
+    "qwen3.8:27b",
     "--tools",
     "read",
     "--mode",

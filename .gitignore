@@ -8,7 +8,9 @@ __pycache__/
 training/checkpoints/
 training/cache/
 exports/
-labs/05-minimal-harness/traces/
+# Local harness run dumps (keep teaching latest.jsonl tracked)
+labs/05-minimal-harness/traces/*
+!labs/05-minimal-harness/traces/latest.jsonl
 
 # Local eval snapshots (keep baseline-latest.json tracked)
 labs/06-evals/results/baseline-20*.json

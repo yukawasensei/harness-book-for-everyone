@@ -38,7 +38,7 @@ def run_pi(label: str, tool_args: list[str], output_name: str) -> dict:
         "--provider",
         "ollama",
         "--model",
-        "qwen3.6:27b",
+        "qwen3.8:27b",
         *tool_args,
         "--mode",
         "json",

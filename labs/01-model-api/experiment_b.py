@@ -14,11 +14,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 README = PROJECT_ROOT / "README.md"
 OUTPUT = Path(__file__).with_name("experiment-b-context-injection.json")
 
-# 关键步骤：读取文件的是 Python，不是 Qwen3.6。
+# 关键步骤：读取文件的是 Python，不是 Qwen3.8。
 readme_text = README.read_text(encoding="utf-8")
 
 payload = {
-    "model": "qwen3.6:27b",
+    "model": "qwen3.8:27b",
     "prompt": (
         "下面是一个 README.md 的完整文本。请只根据这段文本，"
         "准确复述其中 Goal 段落的内容。\n\n"
