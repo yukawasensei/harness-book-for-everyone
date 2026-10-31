@@ -1,4 +1,4 @@
-# Lab 03 — Qwen3.6 Agent Events
+# Lab 03 — Qwen3.8 Agent Events
 
 ## 状态
 
@@ -24,10 +24,10 @@ user prompt
 
 ```bash
 cd <repo-root>
-pi --offline --provider ollama --model qwen3.6:27b \
+pi --offline --provider ollama --model qwen3.8:27b \
   --tools read --mode json --no-session -p \
   "必须调用 read 工具读取 README.md，只回答 Goal 标题下的第一句话。不要修改文件。" \
-  > labs/03-agent-events/session-qwen36.jsonl
+  > labs/03-agent-events/session-qwen38.jsonl
 ```
 
 本步骤只允许 `read`，没有开放 `bash`、`edit` 或 `write`。
@@ -37,10 +37,10 @@ pi --offline --provider ollama --model qwen3.6:27b \
 先不要尝试读懂全部 JSON。只记录：
 
 1. 命令是否回到提示符；
-2. `session-qwen36.jsonl` 是否生成；
+2. `session-qwen38.jsonl` 是否生成；
 3. 文件是否非空。
 
-## 本次实际证据
+## 历史实测证据（Qwen3.6）
 
 ```text
 Trace: session-qwen36.jsonl
@@ -54,7 +54,7 @@ tool_execution_end.isError: False
 终止事件: agent_end
 ```
 
-本次重跑的模型字段均为 `qwen3.6:27b`，最终答案也来自更新后的 Qwen3.6 课程 Goal。
+该次历史重跑的模型字段均为 `qwen3.6:27b`，最终答案来自当时的 Qwen3.6 课程 Goal。
 
 ## 下一步：提取事件链
 
@@ -63,7 +63,7 @@ tool_execution_end.isError: False
 ```bash
 cd <repo-root>
 python3 labs/03-agent-events/analyze_trace.py \
-  labs/03-agent-events/session-qwen36.jsonl
+  labs/03-agent-events/session-qwen38.jsonl
 ```
 
 观察相同的 `toolCallId` 如何连接 `tool_execution_start` 和 `tool_execution_end`。

@@ -6,7 +6,7 @@
 
 ## 本小节目标
 
-先用 Pi `0.80.10` 自带的 `hello.ts` 理解自定义工具的三个部分：
+先用 Pi `0.84.4` 自带的 `hello.ts` 理解自定义工具的三个部分：
 
 1. `parameters: Type.Object(...)`：Tool Schema，规定模型能提交什么参数；
 2. `execute(...)`：Tool Executor，真正运行 TypeScript 并产生结果；
@@ -14,34 +14,22 @@
 
 本步骤不开放 `bash`、`read`、`write` 或 `edit`，只允许自定义 `hello`。
 
-## 你现在唯一的操作
+## 已保留的实验工件
 
-在 WSL Zsh 中运行：
-
-```bash
-cd <repo-root>
-
-pi --offline --provider ollama --model qwen3.6:27b \
-  -e ~/.local/share/fnm/node-versions/v22.22.1/installation/lib/node_modules/@earendil-works/pi-coding-agent/examples/extensions/hello.ts \
-  --tools hello --mode json --no-session -p \
-  "必须调用 hello 工具，参数 name=恒仔；最后只回答工具返回内容。" \
-  > labs/04-custom-tool/hello-trace-qwen36.jsonl
-
-python3 labs/03-agent-events/analyze_trace.py \
-  labs/04-custom-tool/hello-trace-qwen36.jsonl
-```
+- `hello-trace-qwen36.jsonl`：自定义 `hello` 工具的正常调用链；
+- `invalid-schema-qwen38.jsonl`：Qwen3.8 参数类型冲突实验，用于比较模型自然语言总结与真实 tool call。
 
 ## 预期事件链
 
 ```text
 user
-  -> assistant toolCall(name=hello, args={"name":"恒仔"})
+  -> assistant toolCall(name=hello, args={"name":"学员"})
   -> hello executor
-  -> toolResult("Hello, 恒仔!")
+  -> toolResult("Hello, 学员!")
   -> assistant final
 ```
 
-## 学习者实测证据
+## 学习者历史实测证据（Qwen3.6）
 
 ```text
 Trace: hello-trace-qwen36.jsonl
@@ -52,11 +40,36 @@ Turns: 2
 Tool: hello
 ToolCallId: call_l40dbz3s
 tool_execution_end.isError: False
-Final answer: Hello, 恒仔!
+Final answer: Hello, 学员!
 Agent ended: True
 ```
 
-## 恒仔的独立 smoke test
+## 参数类型冲突实测（Qwen3.8）
+
+学习者故意要求模型把 `name` 作为数字 `123` 提交，但 `hello` 的 Tool Schema 要求字符串。
+
+原始 trace：
+
+```text
+invalid-schema-qwen38.jsonl
+Events: 186
+Turns: 2
+ToolCallId: call_379sp1l8
+assistant toolCall args: {"name":"123"}
+tool_execution_start args: {"name":"123"}
+tool_execution_end.isError: False
+Tool result: Hello, 123!
+Agent ended: True
+```
+
+结论：
+
+1. Qwen3.8 实际遵守了 Tool Schema，提交的是字符串 `"123"`，而不是提示词要求的数字 `123`；
+2. 参数在进入 executor 前已经是字符串，没有证据表明 executor 做了数字到字符串的自动转换；
+3. 最终自然语言错误地声称“传的是数字且实现层自动转换”，与原始 tool call 冲突；
+4. 审计工具行为时，应以 `toolCall.arguments`、`tool_execution_start.args` 和 `tool_execution_end.isError` 为准，不能只相信最终回答。
+
+## 独立 smoke test
 
 ```text
 Events: 76
@@ -64,8 +77,8 @@ Turns: 2
 Tool: hello
 ToolCallId: call_ltetkkvd
 tool_execution_end.isError: False
-Final answer: Hello, 恒仔!
+Final answer: Hello, 学员!
 Agent ended: True
 ```
 
-用户执行后，再进入正式的 `workspace_stats`：统计项目目录，并测试正常路径、`../` 越界、目录不存在和符号链接逃逸。
+Lab 04 到此结束；后续进入 `labs/05-minimal-harness`，直接用 Pi SDK 创建和控制 Agent 会话。

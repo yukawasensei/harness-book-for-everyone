@@ -7,7 +7,7 @@
   "readme_characters": 630,
   "request": {
     "model": "qwen3.6:27b",
-    "prompt": "下面是一个 README.md 的完整文本。请只根据这段文本，准确复述其中 Goal 段落的内容。\n\n--- README START ---\n# Pi + Qwen Harness 学习项目\n\n## Goal\n\n从零开始，通过真实实验理解本地模型、工具调用、Agent loop、Harness、评测、数据制作和 QLoRA 微调，并最终把微调后的 Qwen3.6 模型重新接入同一套 Harness 做 A/B 对比。\n\n## Architecture\n\n```text\nWSL Pi / Harness / Training\n        |\n        | OpenAI-compatible API\n        v\nhttp://127.0.0.1:11434/v1\n        |\n        v\nWindows Ollama + Qwen3.6:27b + RTX 3090\n```\n\n## Learning order\n\n1. 普通模型 API\n2. Pi 只读工具调用\n3. Agent JSONL 事件与循环\n4. 自定义工具\n5. Pi SDK 最小 Harness\n6. 权限、超时、最大轮数与日志\n7. 自动评测\n8. Qwen3.6-27B QLoRA 可行性烟雾测试\n9. Qwen3.6-27B 正式 QLoRA\n10. Tool/Agent 轨迹和 A/B 测试\n\n## Safety baseline\n\n前两课只允许 `read,grep,find,ls`，禁止 `bash,edit,write`。Pi 不是安全沙箱；所有实验只在本项目目录进行。\n--- README END ---",
+    "prompt": "下面是一个 README.md 的完整文本。请只根据这段文本，准确复述其中 Goal 段落的内容。\n\n--- README START ---\n# Pi + Qwen Harness 学习项目\n\n## Goal\n\n从零开始，通过真实实验理解本地模型、工具调用、Agent loop、Harness、评测、数据制作和 QLoRA 微调，并最终把微调后的 Qwen3.6 模型重新接入同一套 Harness 做 A/B 对比。\n\n## Architecture\n\n```text\nWSL Pi / Harness / Training\n        |\n        | OpenAI-compatible API\n        v\nhttp://127.0.0.1:11434/v1\n        |\n        v\nHost Ollama + local qwen (+ local GPU)\n```\n\n## Learning order\n\n1. 普通模型 API\n2. Pi 只读工具调用\n3. Agent JSONL 事件与循环\n4. 自定义工具\n5. Pi SDK 最小 Harness\n6. 权限、超时、最大轮数与日志\n7. 自动评测\n8. Qwen3.6-27B QLoRA 可行性烟雾测试\n9. Qwen3.6-27B 正式 QLoRA\n10. Tool/Agent 轨迹和 A/B 测试\n\n## Safety baseline\n\n前两课只允许 `read,grep,find,ls`，禁止 `bash,edit,write`。Pi 不是安全沙箱；所有实验只在本项目目录进行。\n--- README END ---",
     "stream": false,
     "think": false,
     "keep_alive": "2m",

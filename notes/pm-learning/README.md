@@ -4,7 +4,7 @@
 
 - 每课：**一张图解** + **要点** + **产品拍板项** + **费曼自测**
 - 工程实验在 `labs/`；这里沉淀「能讲清、能拍板」的认知，不写实现细节堆砌
-- 配图放在 `assets/`，正文用相对路径引用
+- 配图放在 `assets/`，正文用相对路径引用；**图解中英文配套（CN + EN）**
 - 样本栈：本地 **pi + Ollama / qwen**；不依赖付费云 API
 
 ## 课表
@@ -25,4 +25,6 @@
 | 12 | [12-path-sandbox.md](./12-path-sandbox.md) | 路径沙箱（Workspace Path Policy） | 已完成 |
 | 13 | [13-trace-acceptance.md](./13-trace-acceptance.md) | Trace 作为验收证据（签字放行） | 已完成 |
 
-对照仓库主线：`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/06`。
+对照仓库主线：根目录 [`README.md`](../../README.md)、[`OPEN_SOURCE.md`](../../OPEN_SOURCE.md)、`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/06`。
+
+开源入口：先读仓库根 README；本目录是 **PM 图解课表**。

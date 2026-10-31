@@ -1,14 +1,14 @@
 # Pi Agent + Qwen Harness 与微调零基础实操计划
 
-> **For Hermes:** 按本计划逐课实施；每课先讲 10–15 分钟核心概念，再由用户亲手完成实验，恒仔负责环境检查、排错和验收。不要一次性替用户把所有代码写完。
+> **For facilitators:** 按本计划逐课实施；每课先讲 10–15 分钟核心概念，再由用户亲手完成实验，助教负责环境检查、排错和验收。不要一次性替用户把所有代码写完。
 
-**Goal:** 让零基础用户在本机完成“使用 Pi → 看懂 Agent 循环 → 构建自己的最小 Harness → 建立评测 → 制作数据 → 完成 Qwen3.6 QLoRA 微调 → 接回 Harness 对比”的完整闭环。
+**Goal:** 让零基础用户在本机完成“使用 Pi → 看懂 Agent 循环 → 构建自己的最小 Harness → 建立评测 → 制作数据 → 完成 Qwen3.8 QLoRA 微调 → 接回 Harness 对比”的完整闭环。
 
-**Architecture:** Windows 侧只运行 Ollama、Qwen3.6:27b、NVIDIA 驱动和 ComfyUI；WSL2 Ubuntu 侧统一运行 Pi CLI/SDK、Node.js/TypeScript、Harness 源码、评测、Python 与 QLoRA 微调。Pi 通过 mirrored networking 访问 `http://127.0.0.1:11434/v1`，复用 Windows Ollama 和同一份 17GB 模型，不在 WSL 重复安装 Ollama。
+**Architecture:** Windows 侧只运行 Ollama、Qwen3.8:27b、NVIDIA 驱动（及其他本机宿主服务）；WSL2 Ubuntu 侧统一运行 Pi CLI/SDK、Node.js/TypeScript、Harness 源码、评测、Python 与 QLoRA 微调。Pi 通过 mirrored networking 访问 `http://127.0.0.1:11434/v1`，复用 Windows Ollama 和同一份 17GB 模型，不在 WSL 重复安装 Ollama。
 
-**Tech Stack:** Windows 10、RTX 3090 24GB、64GB RAM、WSL2 Ubuntu 24.04、Windows Ollama 0.32.5、Qwen3.6:27b、WSL Node.js 22、Pi 0.80.10、TypeScript、Python 3.12、Transformers、TRL、PEFT、bitsandbytes、pytest。
+**Tech Stack:** Windows/Linux host、example local GPU ≈24GB VRAM、adequate RAM、WSL2 Ubuntu 24.04、Windows Ollama 0.33.2、Qwen3.8:27b、WSL Node.js 22、Pi 0.84.4、TypeScript、Python 3.12、Transformers、TRL、PEFT、bitsandbytes、pytest。
 
-**Workspace:** 活跃项目统一放在 WSL 原生文件系统 `~/ai-learning/`；不要把 `node_modules`、Python venv 或训练缓存放在 `/mnt/c`。需要给 Windows 使用的报告和成品再导出到 `/mnt/c/Users/<user>/Documents/AI-Learning/exports/`。
+**Workspace:** 活跃项目统一放在 WSL 原生文件系统 `~/ai-learning/`；不要把 `node_modules`、Python venv 或训练缓存放在 `/mnt/c`。需要给 Windows 使用的报告和成品再导出到 `<windows-exports>/`。
 
 ---
 
@@ -19,21 +19,21 @@
 - WSL Node.js：`v22.22.1`（NVM 0.40.5）
 - WSL npm：`10.9.4`
 - Git：WSL `/usr/bin/git`
-- Windows Ollama：`0.32.5`，WSL 已能通过 `127.0.0.1:11434` 访问
-- 已安装推理模型：`qwen3.6:27b`，约 17GB
-- GPU：RTX 3090 24GB，当前约 20GB 可用显存
-- WSL：Ubuntu 24.04，用户 `<user>`，HOME `~`
+- Windows Ollama：`0.32.12`，WSL 已能通过 `127.0.0.1:11434` 访问
+- 已安装推理模型：`qwen3.8:27b`，约 17GB
+- GPU：example local GPU ≈24GB VRAM（以本机实测为准）
+- WSL：Ubuntu 24.04，用户 `<you>`，HOME `~`
 - WSL 根盘可用约 949GB
-- WSL 可见 RTX 3090 24GB
+- WSL/宿主机可见本机 GPU
 - WSL Python：3.12.3
-- Pi 官方当前 npm 包：`@earendil-works/pi-coding-agent@0.80.10`
+- 课程当前固定 Pi npm 包：`@earendil-works/pi-coding-agent@0.84.4`
 
 ### 为什么仍然分推理与训练两种工件
 
-1. `qwen3.6:27b`：Ollama 量化推理工件，用于 Pi/Harness、工具调用、候选数据生成和评审。
-2. `Qwen/Qwen3.6-27B`：Hugging Face 训练源模型，用于后续 QLoRA；不能直接拿 Ollama 的 Q4 blob 训练。
-3. 当前官方 Qwen3.6 系列没有 0.8B/4B 同名小模型，因此课程不虚构不存在的模型 ID。
-4. RTX 3090 24GB 对 27B QLoRA 属于边界场景：先做极小序列、极少步数的可行性门，再决定是否进入正式训练；失败时明确停在门口，不偷偷换回其他系列。
+1. `qwen3.8:27b`：Ollama 量化推理工件，用于 Pi/Harness、工具调用、候选数据生成和评审。
+2. `Qwen/Qwen3.8-27B`：Hugging Face 训练源模型，用于后续 QLoRA；不能直接拿 Ollama 的 Q4 blob 训练。
+3. 当前官方 Qwen3.8 系列没有 0.8B/4B 同名小模型，因此课程不虚构不存在的模型 ID。
+4. ≈24GB 消费级 GPU 对 27B QLoRA 属于边界场景：先做极小序列、极少步数的可行性门，再决定是否进入正式训练；失败时明确停在门口，不偷偷换回其他系列。
 
 ### 必须先理解的边界
 
@@ -93,20 +93,20 @@ pi-qwen-harness/
 
 **验收：**
 
-- `ollama list` 能看到 `qwen3.6:27b`。
+- `ollama list` 能看到 `qwen3.8:27b`。
 - API 返回非空文本。
 - 用户能用自己的话解释“调用模型”和“运行 Agent”的差别。
 
 ---
 
-## 课 2：安装 Pi 并连接本地 Qwen3.6
+## 课 2：安装 Pi 并连接本地 Qwen3.8
 
 **Objective:** 让 Pi 使用本机 Ollama，不依赖云端 API key。
 
 **安装命令：**
 
 ```bash
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.80.10
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.84.4
 pi --version
 ```
 
@@ -131,8 +131,8 @@ pi --version
       },
       "models": [
         {
-          "id": "qwen3.6:27b",
-          "name": "Qwen3.6 27B Local",
+          "id": "qwen3.8:27b",
+          "name": "Qwen3.8 27B Local",
           "reasoning": false,
           "input": ["text"],
           "contextWindow": 4096,
@@ -153,7 +153,7 @@ pi --version
 **先用只读工具：**
 
 ```bash
-pi --provider ollama --model qwen3.6:27b \
+pi --provider ollama --model qwen3.8:27b \
   --tools read,grep,find,ls \
   -p "读取 README.md，并列出项目当前有哪些学习目录。不要修改文件。"
 ```
@@ -162,7 +162,7 @@ pi --provider ollama --model qwen3.6:27b \
 
 **验收：**
 
-- `pi --list-models qwen3.6` 能看到本地模型。
+- `pi --list-models qwen3.8` 能看到本地模型。
 - Pi 至少触发一次只读工具调用。
 - 最终回答与真实文件结构一致。
 - 运行后检查项目文件无意外修改。
@@ -182,7 +182,7 @@ pi --provider ollama --model qwen3.6:27b \
 **命令：**
 
 ```bash
-pi --provider ollama --model qwen3.6:27b \
+pi --provider ollama --model qwen3.8:27b \
   --tools read,grep,find,ls \
   --mode json --no-session \
   "查找 README.md 中的 Goal，并解释它。" \
@@ -208,14 +208,14 @@ User prompt
     ↓
 System prompt + messages + tool schemas
     ↓
-Qwen3.6
+Qwen3.8
     ├── final answer → stop
     └── tool call
             ↓
         Harness validates and executes
             ↓
         tool result appended to messages
-            └──────────────→ Qwen3.6 again
+            └──────────────→ Qwen3.8 again
 ```
 
 **验收：** 用户能指出一次完整的“模型 → 工具 → 模型”闭环。
@@ -248,7 +248,7 @@ Qwen3.6
 1. 正常统计 `labs/`。
 2. 请求 `../`，预期被拒绝。
 3. 请求不存在目录，预期结构化错误。
-4. 让 Qwen3.6 决定何时调用该工具。
+4. 让 Qwen3.8 决定何时调用该工具。
 
 **验收：** 工具结果与独立脚本统计一致；越界测试全部失败且没有读取项目外文件。
 
@@ -275,18 +275,15 @@ labs/05-minimal-harness/
 **依赖：**
 
 ```bash
-npm install --save-exact \
-  @earendil-works/pi-coding-agent@0.80.10 \
-  @earendil-works/pi-agent-core@0.80.10 \
-  @earendil-works/pi-ai@0.80.10
-npm install --save-dev --save-exact typescript tsx vitest @types/node
+npm install --save-exact @earendil-works/pi-coding-agent@0.84.4
+npm install --save-dev --save-exact typescript tsx @types/node
 ```
 
 **最小程序必须包含：**
 
 ```ts
 const modelRuntime = await ModelRuntime.create();
-const model = modelRuntime.getModel("ollama", "qwen3.6:27b");
+const model = modelRuntime.getModel("ollama", "qwen3.8:27b");
 
 const { session } = await createAgentSession({
   cwd: process.cwd(),
@@ -301,7 +298,6 @@ session.subscribe((event) => {
 });
 
 await session.prompt("读取 README.md，并总结学习目标。");
-await session.agent.waitForIdle();
 ```
 
 **必须亲手补齐的能力：**
@@ -404,9 +400,9 @@ await session.agent.waitForIdle();
 
 # 第四阶段：微调基础和数据
 
-## 课 8：Qwen3.6-27B QLoRA 可行性烟雾测试
+## 课 8：Qwen3.8-27B QLoRA 可行性烟雾测试
 
-**Objective:** 在 RTX 3090 24GB 上验证 `Qwen/Qwen3.6-27B` 能否完成“4-bit 加载 → 单个训练 step → 保存 adapter → 重新加载”，只判断技术可行性，不追求质量。
+**Objective:** 在 ≈24GB 显存的本机 GPU 上验证 `Qwen/Qwen3.8-27B` 能否完成“4-bit 加载 → 单个训练 step → 保存 adapter → 重新加载”，只判断技术可行性，不追求质量。
 
 **WSL 项目目录：**
 
@@ -417,12 +413,12 @@ await session.agent.waitForIdle();
 **训练源模型：**
 
 ```text
-Qwen/Qwen3.6-27B
+Qwen/Qwen3.8-27B
 ```
 
-**与 Ollama 工件的区别：** `qwen3.6:27b` 用于推理；QLoRA 从 Hugging Face Transformers 兼容权重开始。
+**与 Ollama 工件的区别：** `qwen3.8:27b` 用于推理；QLoRA 从 Hugging Face Transformers 兼容权重开始。
 
-**第一道门：** 先验证当前 Transformers、PEFT、bitsandbytes 与 Qwen3.6 架构兼容，再下载完整权重。
+**第一道门：** 先验证当前 Transformers、PEFT、bitsandbytes 与 Qwen3.8 架构兼容，再下载完整权重。
 
 **保守首跑参数：**
 
@@ -491,14 +487,14 @@ training/data/test.jsonl
 
 ---
 
-## 课 10：Qwen3.6-27B 正式 QLoRA
+## 课 10：Qwen3.8-27B 正式 QLoRA
 
-**Objective:** 只有第 8 课可行性门通过后，才在 RTX 3090 24GB 上训练可复现的 Qwen3.6-27B 行为适配器。
+**Objective:** 只有第 8 课可行性门通过后，才在 ≈24GB 显存的本机 GPU 上训练可复现的 Qwen3.8-27B 行为适配器。
 
 **模型：**
 
 ```text
-Qwen/Qwen3.6-27B
+Qwen/Qwen3.8-27B
 ```
 
 **训练顺序：**
@@ -511,7 +507,7 @@ Qwen/Qwen3.6-27B
 
 **验收：**
 
-- held-out test 优于原始 Qwen3.6-27B 基线；
+- held-out test 优于原始 Qwen3.8-27B 基线；
 - 非目标任务没有明显崩坏；
 - adapter、tokenizer、训练配置和报告完整；
 - 固定 seed 可复现；
@@ -568,9 +564,9 @@ assistant: final answer
 
 **A/B 组：**
 
-- A：`qwen3.6:27b` Ollama，作为强基线/教师
-- B：原始 Qwen3.6-27B
-- C：Qwen3.6-27B + LoRA
+- A：`qwen3.8:27b` Ollama，作为强基线/教师
+- B：原始 Qwen3.8-27B
+- C：Qwen3.8-27B + LoRA
 - D：C + 改进 Harness/Prompt
 
 **最终报告：**
@@ -650,7 +646,7 @@ Prompt 版本
 4. **Pi 无默认权限弹窗：** 第一阶段只启用只读工具，在隔离项目中运行。
 5. **微调不保证 Agent 更好：** 数据、评测和 Harness 往往比第一次 LoRA 更重要。
 6. **版本变化：** Pi、Transformers 和 Qwen 系列支持变化较快；每次安装必须锁版本并记录。
-7. **单一 Ollama 服务：** Windows Ollama 已更新到 0.32.1；不在 WSL 重复安装 Ollama，避免模型重复占盘和 11434 端口冲突。
+7. **单一 Ollama 服务：** Windows Ollama 已更新到 0.32.12；不在 WSL 重复安装 Ollama，避免模型重复占盘和 11434 端口冲突。
 
 ---
 
@@ -660,9 +656,9 @@ Prompt 版本
 
 1. 建立 WSL 原生隔离工作区 `<repo-root>`。
 2. 写入 `README.md`、`AGENTS.md` 和术语笔记模板。
-3. 安装并验证 Pi 0.80.10。
+3. 安装并验证 Pi 0.84.4。
 4. 备份后写入 Pi 的 Ollama provider 配置。
-5. 用 `qwen3.6:27b` 完成一次只读工具调用。
+5. 用 `qwen3.8:27b` 完成一次只读工具调用。
 6. 保存 JSONL trace。
 7. 用户根据真实 trace 画出第一张 Agent loop。
 

@@ -11,6 +11,8 @@
 
 ## 图解
 
+> 配图：**中英文配套**（CN + EN labels）。
+
 ![硬边界三闸门](./assets/harness-hard-boundaries.jpg)
 
 ```mermaid

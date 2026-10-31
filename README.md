@@ -1,35 +1,70 @@
-# Pi + Qwen Harness 学习项目
+# Pi + Qwen Agent Harness — PM Learning Curriculum
 
-## Goal
+开源友好的 **Agent Harness** 实操课：用本地 **pi + Ollama / Qwen** 搞懂工具循环、硬闸门、路径沙箱与评测验收——面向产品经理与协作工程师。
 
-从零开始，通过真实实验理解本地模型、工具调用、Agent loop、Harness、评测、数据制作和 QLoRA 微调，并最终把微调后的 Qwen3.6 模型重新接入同一套 Harness 做 A/B 对比。
+> Open-source-friendly **Agent Harness** labs: learn the tool loop, hard gates, path sandbox, and eval sign-off with local **pi + Ollama / Qwen**. Built for PMs and the engineers who ship with them.
 
-## Architecture
+## 你学完能拍板什么 / What you can decide
+
+| 中文 | English |
+|---|---|
+| Prompt 不是护栏 | Prompt is not a guardrail |
+| 闸门要看 Trace 里的 `stop_reason` / 工具名 | Gates are proven by Trace `stop_reason` / tool names |
+| 白名单 ≠ 路径安全 | Allowlist ≠ path safety |
+| 改 Harness 前先跑 evals | Run evals before calling a harness change “done” |
+
+## 快速入口 / Start here
+
+1. **产品经理课表（图解 + 费曼）** → [`notes/pm-learning/README.md`](./notes/pm-learning/README.md)  
+2. **工程实验** → `labs/01` … `labs/06`（最小 harness + evals）  
+3. **验收报表** → 在 `labs/06-evals` 运行 `npm run eval:report`（读取 `results/baseline-latest.json`）
+
+## 样本架构（可替换） / Sample architecture
 
 ```text
-WSL Pi / Harness / Training
+WSL / Linux  ·  pi harness · Node · evals
         |
-        | OpenAI-compatible API
+        |  OpenAI-compatible API
         v
 http://127.0.0.1:11434/v1
         |
         v
-Windows Ollama + Qwen3.6:27b + RTX 3090
+Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 ```
 
-## Learning order
+- 仓库路径请用你自己的 clone 根目录（下文写作 `<repo-root>` / `workspaceRoot`）。  
+- Use your own clone path (`<repo-root>` / `workspaceRoot`); do not copy another machine’s absolute home path.
+- 默认 **NO_PROXY=127.0.0.1,localhost**，避免代理劫持本机 Ollama。
 
-1. 普通模型 API
-2. Pi 只读工具调用
-3. Agent JSONL 事件与循环
-4. 自定义工具
-5. Pi SDK 最小 Harness
-6. 权限、超时、最大轮数与日志
-7. 自动评测
-8. Qwen3.6-27B QLoRA 可行性烟雾测试
-9. Qwen3.6-27B 正式 QLoRA
-10. Tool/Agent 轨迹和 A/B 测试
+## 课表速览 / Curriculum map
 
-## Safety baseline
+### PM 笔记（推荐主线）
 
-前两课只允许 `read,grep,find,ls`，禁止 `bash,edit,write`。Pi 不是安全沙箱；所有实验只在本项目目录进行。
+见 [`notes/pm-learning/`](./notes/pm-learning/)：能力总览 → 工具循环 → 会话 → 权限/路径 → 轮数超时 → Trace → Evals → 选型/协作/落地 → **硬边界** → **路径沙箱** → **Trace 验收签字**。
+
+### Labs
+
+| Lab | 主题 |
+|---|---|
+| `labs/01-model-api` | 无工具 vs 注入上下文 vs Agent read |
+| `labs/02-pi-cli` | 只读工具 allowlist |
+| `labs/03-agent-events` | JSONL 事件与循环 |
+| `labs/04-custom-tool` | 自定义工具 |
+| `labs/05-minimal-harness` | maxTurns / timeout / allowlist / path sandbox |
+| `labs/06-evals` | cases + live baseline + `eval:report` |
+
+## 安全基线 / Safety baseline
+
+- 早期实验默认只读工具；危险工具必须由 **Harness allowlist** 排除，而不是靠模型“答应不用”。  
+- 文件工具必须落在 **workspaceRoot** 内（路径沙箱）；越界应产生可审计的 `path_denied`。  
+- 验收看 Trace / baseline，不看最终回复是否“听起来乖”。
+
+## 开源说明 / Open source notes
+
+- 课程与图解按 **可公开** 内容维护（无公司品牌、无私人邮箱、无本机绝对家目录）。  
+- 训练 / 本机硬件细节若需保留，请放在未跟踪的私有笔记（见 [`OPEN_SOURCE.md`](./OPEN_SOURCE.md)）。  
+- Diagrams: **中英文配套**（CN + EN labels）。
+
+## License
+
+教学示例；第三方依赖（pi、Ollama、模型权重）遵循各自许可。发布前请自行确认模型与工具的许可证。

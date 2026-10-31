@@ -11,6 +11,8 @@
 
 ## 图解
 
+> 配图：**中英文配套**（CN + EN labels）。
+
 ![路径沙箱闸门](./assets/harness-path-sandbox.jpg)
 
 ```mermaid

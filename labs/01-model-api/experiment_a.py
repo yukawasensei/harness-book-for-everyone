@@ -13,7 +13,7 @@ URL = "http://127.0.0.1:11434/api/generate"
 OUTPUT = Path(__file__).with_name("experiment-a-no-tool.json")
 
 payload = {
-    "model": "qwen3.6:27b",
+    "model": "qwen3.8:27b",
     "prompt": (
         "请读取文件 <repo-root>/README.md，"
         "然后准确告诉我其中 Goal 段落的内容。不要猜测。"

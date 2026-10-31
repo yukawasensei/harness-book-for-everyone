@@ -9,3 +9,8 @@ training/checkpoints/
 training/cache/
 exports/
 labs/05-minimal-harness/traces/
+
+# Local eval snapshots (keep baseline-latest.json tracked)
+labs/06-evals/results/baseline-20*.json
+labs/**/qwen38-cutover-smoke.jsonl
+labs/**/invalid-schema-qwen38.jsonl

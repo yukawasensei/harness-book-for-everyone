@@ -11,6 +11,8 @@
 
 ## 图解
 
+> 配图：**中英文配套**（CN + EN labels）。
+
 ![Trace as Acceptance Evidence](./assets/harness-trace-acceptance.jpg)
 
 ```mermaid

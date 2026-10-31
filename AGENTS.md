@@ -2,19 +2,26 @@
 
 ## Project purpose
 
-这是 Pi Agent + Qwen3.6 Harness 与微调的教学实验项目。
+Teaching lab for **Agent Harness** concepts with local **pi + Ollama / Qwen**: tool loop, hard gates, path sandbox, traces, and evals. Primary audience: PMs learning what to demand from harness engineering, plus engineers implementing those gates.
 
 ## Safety rules
 
-- 默认只读，不修改文件，除非用户明确指定当前实验允许写入。
-- 不访问项目根目录以外的文件。
-- 不读取或展示 API key、token、cookie、SSH key、浏览器配置或凭据。
-- 不执行删除、安装、网络发布、系统配置修改或进程终止命令，除非用户明确确认。
-- 工具调用失败时报告真实错误，不编造结果。
-- 每次只改变一个实验变量，并保留可复现命令和输出。
+- Run harness / Node / npm / tests / trace analysis on Linux or WSL; keep the model server (e.g. Ollama) on the host if that is your sample setup.
+- Default to read-only tools unless the current lab explicitly allows writes.
+- Stay inside the project `workspaceRoot` / `<repo-root>`. Do not read or write outside it.
+- Never read or display API keys, tokens, cookies, SSH keys, browser profiles, or other credentials.
+- Do not delete, install globally, publish, change system config, or kill processes unless the user explicitly confirms.
+- On tool failure, report the real error; never invent results.
+- Change one experimental variable at a time; keep reproducible commands and outputs.
 
 ## Verification
 
-- 结论必须由真实工具输出、测试或 trace 支持。
-- 生成或修改代码后运行最小测试。
-- Agent 实验记录模型、Prompt、工具列表、上下文、耗时、错误和终止原因。
+- Claims need real tool output, tests, or traces.
+- After code changes, run the smallest relevant test (`npm test`, targeted eval).
+- Agent runs should record model, prompt, tool list, context notes, duration, errors, and `stop_reason`.
+
+## Public curriculum
+
+- Prefer content that can be open-sourced: no private product brands, no personal absolute home paths, no private emails.
+- Diagrams: bilingual **CN + EN** labels.
+- See root `README.md` and `OPEN_SOURCE.md`.
