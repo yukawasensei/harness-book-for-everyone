@@ -13,6 +13,7 @@ const STOP_REASONS = new Set([
   "success",
   "max_turns",
   "tool_timeout",
+  "path_denied",
   "tool_error",
   "model_error",
 ]);

@@ -4,6 +4,7 @@ export type StopReason =
   | "success"
   | "max_turns"
   | "tool_timeout"
+  | "path_denied"
   | "tool_error"
   | "model_error";
 

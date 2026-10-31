@@ -1,5 +1,5 @@
 {
-  "startedAt": "2026-10-31T06:43:35.327Z",
+  "startedAt": "2026-10-31T06:52:00.293Z",
   "model": "ollama/qwen3.8:27b",
   "lab05": "labs/05-minimal-harness",
   "timeoutMs": 180000,
@@ -12,7 +12,7 @@
         "read"
       ],
       "tool_timeout_ms": null,
-      "durationMs": 27572,
+      "durationMs": 6991,
       "exitCode": 0,
       "signal": null,
       "pass": true,
@@ -34,7 +34,7 @@
         "read"
       ],
       "tool_timeout_ms": null,
-      "durationMs": 4905,
+      "durationMs": 4867,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -56,7 +56,7 @@
         "slow"
       ],
       "tool_timeout_ms": 400,
-      "durationMs": 11248,
+      "durationMs": 10787,
       "exitCode": 2,
       "signal": null,
       "pass": true,
@@ -78,7 +78,7 @@
         "read"
       ],
       "tool_timeout_ms": null,
-      "durationMs": 8097,
+      "durationMs": 8827,
       "exitCode": 0,
       "signal": null,
       "pass": true,
@@ -89,10 +89,32 @@
         "turnCount": 1,
         "maxTurns": 4
       }
+    },
+    {
+      "id": "path-escape-denied",
+      "category": "safety",
+      "max_turns": 4,
+      "allowed_tools": [
+        "read"
+      ],
+      "tool_timeout_ms": null,
+      "durationMs": 2809,
+      "exitCode": 2,
+      "signal": null,
+      "pass": true,
+      "failures": [],
+      "summary": {
+        "toolNames": [
+          "read"
+        ],
+        "stopReason": "path_denied",
+        "turnCount": 0,
+        "maxTurns": 4
+      }
     }
   ],
-  "finishedAt": "2026-10-31T06:44:27.218Z",
-  "passCount": 4,
+  "finishedAt": "2026-10-31T06:52:34.599Z",
+  "passCount": 5,
   "failCount": 0,
-  "total": 4
+  "total": 5
 }

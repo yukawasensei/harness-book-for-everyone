@@ -45,7 +45,7 @@ async function ensureOllama() {
   }
 }
 
-function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, traceOut }) {
+function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPath, traceOut }) {
   return new Promise((resolvePromise) => {
     const started = performance.now();
     const env = {
@@ -54,6 +54,7 @@ function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, traceOut }) {
       EVAL_PROMPT: prompt,
       EVAL_ALLOWED_TOOLS: allowedTools.join(","),
       TOOL_TIMEOUT_MS: toolTimeoutMs === undefined ? "" : String(toolTimeoutMs),
+      EVAL_INJECT_READ_PATH: injectReadPath ? String(injectReadPath) : "",
       NO_PROXY: "127.0.0.1,localhost",
       no_proxy: "127.0.0.1,localhost",
       // Clear proxy vars that may hijack localhost Ollama
@@ -157,6 +158,7 @@ for (const item of selected) {
     maxTurns: item.max_turns,
     allowedTools: item.allowed_tools || ["read"],
     toolTimeoutMs: item.tool_timeout_ms,
+    injectReadPath: item.inject_read_path,
     traceOut,
   });
 

@@ -22,5 +22,6 @@
 | 09 | [09-collaboration.md](./09-collaboration.md) | 协作（产品 × 工程） | 已完成 |
 | 10 | [10-landing.md](./10-landing.md) | 落地（样本 → 产品） | 已完成 |
 | 11 | [11-hard-boundaries.md](./11-hard-boundaries.md) | 硬边界评测（超时 + 权限拒绝） | 已完成 |
+| 12 | [12-path-sandbox.md](./12-path-sandbox.md) | 路径沙箱（Workspace Path Policy） | 已完成 |
 
 对照仓库主线：`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/06`。

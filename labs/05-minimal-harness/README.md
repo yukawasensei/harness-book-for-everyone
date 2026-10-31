@@ -11,7 +11,7 @@
 5. Harness 用 `try/finally` 保证订阅和会话被释放。
 6. **maxTurns**：通过 `session.agent.shouldStopAfterTurn`（pi-agent-core 官方钩子）在完成 N 轮后刹车；trace 写入 `turn_guard` / `harness_stop`（`stop_reason=max_turns`）与 `harness_end`。
 
-已加入：单工具超时（TOOL_TIMEOUT_MS + demo slow）。仍延后：路径策略深化。
+已加入：单工具超时（TOOL_TIMEOUT_MS + demo slow）；路径沙箱（sandboxed read + assertInsideWorkspace → stop_reason=path_denied）。
 
 数据流：
 
@@ -52,3 +52,13 @@ Env knobs used by evals (public lab API):
 
 Demo tool `slow` sleeps for `delay_ms` and is registered only when allowlisted. It exists so timeout evals are deterministic.
 
+
+## Path sandbox
+
+When `read` is allowlisted, lab05 registers a **sandboxed** `read` that overrides the builtin.
+`assertInsideWorkspace(cwd, path)` rejects `..` climbs, absolute escapes, and symlink escapes.
+Denied calls set `stop_reason=path_denied` in the trace.
+
+Eval bait file (outside workspace): `/tmp/pi-harness-path-escape-bait.txt`
+
+Eval inject (deterministic): set `EVAL_INJECT_READ_PATH` to force one sandboxed `read` before the model loop; used by `path-escape-denied`.

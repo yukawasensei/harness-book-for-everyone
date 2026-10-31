@@ -43,12 +43,34 @@ if (!model) {
   throw new Error("Model ollama/qwen3.8:27b is not configured in ~/.pi/agent/models.json");
 }
 
-const runState: { stopReason: StopReason; toolTimedOut: boolean } = {
+const runState: { stopReason: StopReason; toolTimedOut: boolean; pathDenied: boolean } = {
   stopReason: "success",
   toolTimedOut: false,
+  pathDenied: false,
 };
 
 const customTools = [];
+// Same-name customTools override builtins in pi AgentSession registry.
+if (allowedTools.includes("read")) {
+  const { createSandboxedReadTool } = await import("./sandboxed-read.js");
+  customTools.push(
+    createSandboxedReadTool({
+      workspaceRoot: cwd,
+      onDenied: (info) => {
+        runState.pathDenied = true;
+        runState.stopReason = "path_denied";
+        writeTrace({
+          timestamp: new Date().toISOString(),
+          eventType: "harness_stop",
+          stop_reason: "path_denied",
+          requestedPath: info.requestedPath,
+          resolvedPath: info.resolvedPath,
+          workspaceRoot: info.workspaceRoot,
+        });
+      },
+    }),
+  );
+}
 if (allowedTools.includes("slow")) {
   const { createSlowTool } = await import("./slow-tool.js");
   customTools.push(
@@ -91,7 +113,7 @@ function writeTrace(row: Record<string, unknown>): void {
 
 // Official pi-agent-core hook: after each completed turn, decide whether to continue.
 session.agent.shouldStopAfterTurn = async () => {
-  if (runState.toolTimedOut) {
+  if (runState.toolTimedOut || runState.pathDenied) {
     return true;
   }
   const stop = maxTurnsGuard.recordCompletedTurn();
@@ -116,6 +138,23 @@ session.agent.shouldStopAfterTurn = async () => {
 
 // After a tool times out, mark isError + ask the loop to terminate this batch.
 session.agent.afterToolCall = async (context) => {
+  if (runState.pathDenied) {
+    return {
+      isError: true,
+      content: [
+        {
+          type: "text",
+          text: "Harness path sandbox denied this path. stop_reason=path_denied",
+        },
+      ],
+      details: {
+        ...(context.result.details as object),
+        pathDenied: true,
+        stop_reason: "path_denied",
+      },
+      terminate: true,
+    };
+  }
   if (!runState.toolTimedOut) {
     return undefined;
   }
@@ -181,6 +220,67 @@ console.error(
 );
 console.error(`[harness] trace=${tracePath}`);
 
+// Deterministic path-sandbox probe for evals (does not depend on the model calling read).
+const injectReadPath = process.env.EVAL_INJECT_READ_PATH?.trim();
+if (injectReadPath) {
+  const sandboxed = customTools.find((tool) => tool.name === "read");
+  if (!sandboxed || typeof sandboxed.execute !== "function") {
+    throw new Error("EVAL_INJECT_READ_PATH set but sandboxed read tool is not registered");
+  }
+  const probeId = "eval-inject-read";
+  writeTrace({
+    timestamp: new Date().toISOString(),
+    eventType: "tool_execution_start",
+    toolName: "read",
+    toolCallId: probeId,
+    injected: true,
+    path: injectReadPath,
+  });
+  try {
+    await sandboxed.execute(probeId, { path: injectReadPath }, undefined, undefined, undefined);
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "tool_execution_end",
+      toolName: "read",
+      toolCallId: probeId,
+      isError: false,
+      injected: true,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    writeTrace({
+      timestamp: new Date().toISOString(),
+      eventType: "tool_execution_end",
+      toolName: "read",
+      toolCallId: probeId,
+      isError: true,
+      injected: true,
+      error: message,
+    });
+    toolErrorCount += 1;
+  }
+  toolCallCount += 1;
+  writeTrace({
+    timestamp: new Date().toISOString(),
+    eventType: "harness_end",
+    stop_reason: runState.stopReason,
+    turnCount: maxTurnsGuard.completedTurnCount,
+    maxTurns,
+    toolTimeoutMs,
+    injectedReadPath: injectReadPath,
+  });
+  const durationMs = Math.round(performance.now() - runStartedAt);
+  console.error(
+    `[harness] status=${runState.stopReason} events=${eventCount} toolCalls=${toolCallCount} toolErrors=${toolErrorCount} turns=${maxTurnsGuard.completedTurnCount} maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"} durationMs=${durationMs} inject=${injectReadPath}`,
+  );
+  if (runState.stopReason === "path_denied") {
+    process.exitCode = 2;
+  }
+  unsubscribe();
+  session.dispose();
+  process.exit(process.exitCode ?? 0);
+}
+
 try {
   const prompt =
     process.env.EVAL_PROMPT?.trim()
@@ -205,7 +305,7 @@ try {
   console.error(
     `[harness] status=${runState.stopReason} events=${eventCount} toolCalls=${toolCallCount} toolErrors=${toolErrorCount} turns=${maxTurnsGuard.completedTurnCount} maxTurns=${maxTurns} toolTimeoutMs=${toolTimeoutMs || "off"} durationMs=${durationMs}`,
   );
-  if (runState.stopReason === "max_turns" || runState.stopReason === "tool_timeout") {
+  if (runState.stopReason === "max_turns" || runState.stopReason === "tool_timeout" || runState.stopReason === "path_denied") {
     process.exitCode = 2;
   }
 } catch (error) {
