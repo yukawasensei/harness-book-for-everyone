@@ -19,6 +19,33 @@
 2. **工程实验** → `labs/01` … `labs/06`（最小 harness + evals）  
 3. **验收报表** → 在 `labs/06-evals` 运行 `npm run eval:report`（读取 `results/baseline-latest.json`）
 
+## Quickstart · 克隆到绿基线
+
+给第一次打开仓库的读者。详细图解见 [`notes/pm-learning/18-getting-started.md`](./notes/pm-learning/18-getting-started.md)。
+
+**需要**：Git · Node.js 20+（LTS）· Linux 或 WSL2。**可选**：本机 [Ollama](https://ollama.com) + 课程所用本地模型（仅 `eval:live`）。
+
+```bash
+git clone https://github.com/yukawasensei/harness-book-for-everyone.git
+cd harness-book-for-everyone   # 本地目录名也可仍为历史 pi-qwen-harness
+
+cd labs/05-minimal-harness && npm install && npm test && cd -
+cd labs/06-evals && npm install && npm run eval:schema && cd -
+
+# 有 Ollama 时再跑 live（务必设 NO_PROXY，避免代理劫持 localhost）
+cd labs/06-evals
+NO_PROXY=127.0.0.1,localhost npm run eval:live
+npm run eval:report
+```
+
+| 命令 | 需要 Ollama？ | 证明什么 |
+|---|---|---|
+| `labs/05… npm test` | 否 | 闸门单测绿 |
+| `labs/06… npm run eval:schema` | 否 | 案例规格合法 |
+| `labs/06… npm run eval:live` | **是** | 端到端基线绿 |
+
+**笔记入口**：[`notes/pm-learning/`](./notes/pm-learning/)（图解课表）。**禁止**：付费云模型 / 把密钥写进仓库。
+
 ## 样本架构（可替换） / Sample architecture
 
 ```text
@@ -40,7 +67,7 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 
 ### PM 笔记（推荐主线）
 
-见 [`notes/pm-learning/`](./notes/pm-learning/)：能力总览 → 工具循环 → 会话 → 权限/路径 → 轮数超时 → Trace → Evals → 选型/协作/落地 → **硬边界** → **路径沙箱** → **Trace 验收签字** → **上下文预算** → **重试与降级** → **人机确认（HITL）** → **成本与延迟预算**。
+见 [`notes/pm-learning/`](./notes/pm-learning/)：能力总览 → 工具循环 → 会话 → 权限/路径 → 轮数超时 → Trace → Evals → 选型/协作/落地 → **硬边界** → **路径沙箱** → **Trace 验收签字** → **上下文预算** → **重试与降级** → **人机确认（HITL）** → **成本与延迟预算** → **[开源读者上手](./notes/pm-learning/18-getting-started.md)**（克隆到绿基线）。加深弧课 14–18 **已完成**。
 
 ### Labs
 
@@ -51,7 +78,9 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | `labs/03-agent-events` | JSONL 事件与循环 |
 | `labs/04-custom-tool` | 自定义工具 |
 | `labs/05-minimal-harness` | maxTurns / timeout / allowlist / path sandbox |
-| `labs/06-evals` | cases + live baseline + `eval:report` |
+| `labs/06-evals` | cases + live baseline + `eval:schema` / `eval:live` / `eval:report` |
+
+克隆后怎么证明还在工作？见 [课 18 上手指南](./notes/pm-learning/18-getting-started.md)。
 
 ## 安全基线 / Safety baseline
 

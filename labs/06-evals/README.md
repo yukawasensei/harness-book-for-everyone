@@ -17,7 +17,7 @@
 cd labs/06-evals
 
 # 1) schema-only（无 Ollama）
-npm test
+npm run eval:schema   # 或 npm test
 
 # 2) live：调用 labs/05-minimal-harness + 本地 Ollama qwen3.8:27b
 #    强制 NO_PROXY，避免 http_proxy 劫持 localhost

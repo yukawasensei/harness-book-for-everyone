@@ -70,4 +70,4 @@ flowchart LR
 
 - 巩固：对照 maxTurns（轮数闸）与 tool timeout（单次工具）——本课是「整次运行」的钱与时间。  
 - 可选增量：按模型单价折算真实费用；延迟预算触发后降级到更快模型。  
-- 上一课：[16 · 人机确认闸门](./16-hitl-gate.md) · 路线总览：[README](./README.md)
+- 上一课：[16 · 人机确认闸门](./16-hitl-gate.md) · 下一课：[18 · 开源读者上手](./18-getting-started.md) · 路线总览：[README](./README.md)
