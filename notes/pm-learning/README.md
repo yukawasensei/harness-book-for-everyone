@@ -1,6 +1,6 @@
-# PM Learning Notes
+# 写给大家看的 Harness 书 · PM 课表 / Harness Book for Everyone · PM Notes
 
-产品经理视角的 Agent Harness 学习记录（可开源课程笔记）。
+产品经理视角的 Agent Harness 公开课笔记（**写给大家看的 Harness 书**）。
 
 - 每课：**一张图解** + **要点** + **产品拍板项** + **费曼自测**
 - 工程实验在 `labs/`；这里沉淀「能讲清、能拍板」的认知，不写实现细节堆砌
@@ -27,4 +27,4 @@
 
 对照仓库主线：根目录 [`README.md`](../../README.md)、[`OPEN_SOURCE.md`](../../OPEN_SOURCE.md)、`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/06`。
 
-开源入口：先读仓库根 README；本目录是 **PM 图解课表**。
+开源入口：先读仓库根 README（**写给大家看的 Harness 书**）；本目录是 **PM 图解课表**。

@@ -1,8 +1,8 @@
-# Pi + Qwen Agent Harness — PM Learning Curriculum
+# 写给大家看的 Harness 书 / Harness Book for Everyone
 
-开源友好的 **Agent Harness** 实操课：用本地 **pi + Ollama / Qwen** 搞懂工具循环、硬闸门、路径沙箱与评测验收——面向产品经理与协作工程师。
+**写给大家看的 Harness 书**——面向大众的 Agent Harness 公开课：用本地样本栈（**pi + Ollama / Qwen**）搞懂工具循环、硬闸门、路径沙箱与评测验收。适合产品经理与协作工程师。
 
-> Open-source-friendly **Agent Harness** labs: learn the tool loop, hard gates, path sandbox, and eval sign-off with local **pi + Ollama / Qwen**. Built for PMs and the engineers who ship with them.
+> **Harness Book for Everyone** — a public Agent Harness curriculum: learn the tool loop, hard gates, path sandbox, and eval sign-off with a local sample stack (**pi + Ollama / Qwen**). Built for PMs and the engineers who ship with them.
 
 ## 你学完能拍板什么 / What you can decide
 
@@ -67,5 +67,5 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 
 ## License
 
-MIT — see [`LICENSE`](./LICENSE). Copyright (c) 2026 pi-qwen-harness contributors.
+MIT — see [`LICENSE`](./LICENSE). Copyright (c) 2026 harness-book-for-everyone contributors.
 

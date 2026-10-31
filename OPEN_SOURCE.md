@@ -1,16 +1,16 @@
 # Open source prep checklist
 
-本仓库面向公开分享的 **Agent Harness PM 课程**。发布前请确认：
+本仓库即公开课 **《写给大家看的 Harness 书》 / Harness Book for Everyone**。发布前请确认：
 
 ## 已处理（本轮）
 
 - [x] 根 README 改为公开课入口（中英）
-- [x] 文档中的 `/home/<user>/...`、`C:\\Users\\...` 换成 `<repo-root>` / `~/ai-learning/pi-qwen-harness` / `workspaceRoot`
+- [x] 文档中的 `/home/<user>/...`、`C:\\Users\\...` 换成 `<repo-root>` / `~/ai-learning/harness-book-for-everyone`（本地目录名可仍为历史 `pi-qwen-harness`） / `workspaceRoot`
 - [x] 去掉助教/内部代号口吻中的私有称呼（改为 generic facilitator）
 - [x] 本机 GPU 型号与用户名从公开课表中泛化
 - [x] 课 11–13 图解改为 **中英文配套**
 - [x] 课 01–10 图解回填为 **中英文配套**
-- [x] 根目录 `LICENSE`（MIT，2026，pi-qwen-harness contributors）
+- [x] 根目录 `LICENSE`（MIT，2026，harness-book-for-everyone contributors）
 - [x] committed eval traces 中的绝对 `workspaceRoot` 改为相对/占位
 
 ## 待 PM 拍板
@@ -19,7 +19,7 @@
 2. **历史 JSONL 样本**（`labs/**/*.jsonl`）：内含当时机器的 `cwd` 绝对路径。  
    - 选项 A：批量替换后保留作教学回放；B：移出 git，改用 scrubbed fixture。
 3. **时间戳 baseline 副本**：已 `.gitignore` `baseline-20*.json`，只跟踪 `baseline-latest.json`。
-4. **远程与可见性**：已选 **MIT**（见根目录 `LICENSE`，copyright 2026 pi-qwen-harness contributors）。尚无 `git remote`；公开前再定 GitHub 可见性。
+4. **远程与可见性**：已选 **MIT**（见根目录 `LICENSE`，copyright 2026 harness-book-for-everyone contributors）。远程已指向 `yukawasensei/harness-book-for-everyone`；按需调整 GitHub 可见性。
 
 ## 本地不要提交
 
