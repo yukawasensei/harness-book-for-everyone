@@ -67,4 +67,5 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 
 ## License
 
-教学示例；第三方依赖（pi、Ollama、模型权重）遵循各自许可。发布前请自行确认模型与工具的许可证。
+MIT — see [`LICENSE`](./LICENSE). Copyright (c) 2026 pi-qwen-harness contributors.
+

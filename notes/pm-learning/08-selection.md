@@ -10,7 +10,8 @@
 
 ## 图解
 
-![选型：买 / 自建 / 组合](./assets/harness-selection.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![选型：买 / 自建 / 组合 / Buy · Build · Blend](./assets/harness-selection.jpg)
 
 ## 要点
 

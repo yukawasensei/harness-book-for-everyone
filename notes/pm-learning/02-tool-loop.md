@@ -10,7 +10,8 @@
 
 ## 图解
 
-![工具循环](./assets/harness-tool-loop.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![工具循环 / Tool Loop](./assets/harness-tool-loop.jpg)
 
 典型链（与课 3 / 课 5 trace 一致）：
 

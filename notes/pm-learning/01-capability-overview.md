@@ -10,7 +10,8 @@
 
 ## 图解
 
-![Harness 能力总览](./assets/harness-capability-map.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![Harness 能力总览 / Capability Map](./assets/harness-capability-map.jpg)
 
 ## 六能力：产品拍板 vs 工程师实现
 

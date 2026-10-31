@@ -10,7 +10,8 @@
 
 ## 图解
 
-![会话与上下文](./assets/harness-session-context.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![会话与上下文 / Session & Context](./assets/harness-session-context.jpg)
 
 ## 要点
 

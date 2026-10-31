@@ -10,7 +10,8 @@
 
 ## 图解
 
-![落地：样本 → 产品](./assets/harness-landing.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![落地：样本 → 产品 / Landing Path](./assets/harness-landing.jpg)
 
 ## 要点
 

@@ -10,7 +10,8 @@
 
 ## 图解
 
-![协作：产品 × 工程](./assets/harness-collaboration.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![协作：产品 × 工程 / Collaboration](./assets/harness-collaboration.jpg)
 
 ## 要点
 

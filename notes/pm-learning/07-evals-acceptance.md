@@ -10,7 +10,8 @@
 
 ## 图解
 
-![评测与验收](./assets/harness-evals-acceptance.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![评测与验收 / Evals & Acceptance](./assets/harness-evals-acceptance.jpg)
 
 ## 要点
 

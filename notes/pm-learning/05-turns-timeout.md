@@ -10,9 +10,10 @@
 
 ## 图解
 
-![轮数与超时](./assets/harness-turns-timeout.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![轮数与超时 / Turns & Timeouts](./assets/harness-turns-timeout.jpg)
 
-![maxTurns + 工具 allowlist](./assets/harness-maxturns-allowlist.jpg)
+![maxTurns + 工具白名单 / maxTurns + Tool Allowlist](./assets/harness-maxturns-allowlist.jpg)
 
 ## 要点
 

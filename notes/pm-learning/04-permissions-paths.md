@@ -10,7 +10,8 @@
 
 ## 图解
 
-![权限与路径](./assets/harness-permissions-paths.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![权限与路径 / Permissions & Paths](./assets/harness-permissions-paths.jpg)
 
 ## 要点
 

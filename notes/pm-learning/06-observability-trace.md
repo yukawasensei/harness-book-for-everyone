@@ -10,7 +10,8 @@
 
 ## 图解
 
-![可观测与 Trace](./assets/harness-observability-trace.jpg)
+> 配图：**中英文配套**（CN + EN labels）。
+![可观测与 Trace / Observability & Trace](./assets/harness-observability-trace.jpg)
 
 ## 要点
 
