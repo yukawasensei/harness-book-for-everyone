@@ -15,36 +15,34 @@
 
 ## 快速入口 / Start here
 
-1. **产品经理课表（图解 + 费曼）** → [`notes/pm-learning/README.md`](./notes/pm-learning/README.md)  
-2. **工程实验** → `labs/01` … `labs/07`（最小 harness + evals + 片场场记评测桩）  
-3. **验收报表** → 在 `labs/06-evals` 运行 `npm run eval:report`（读取 `results/baseline-latest.json`）
+**主线：跟着一个 harness 从零长大**（practice-first）。全书只有一个代码库 [`book/harness/`](./book/harness/)，每章打一个 git tag，`git checkout chNN` 就能看到那一章结束时的代码。
+
+1. **跟做主线** → [`book/harness/README.md`](./book/harness/README.md)（每章加了什么、怎么跑）
+2. **课表与设计** → [`notes/_curriculum-redesign-proposal.md`](./notes/_curriculum-redesign-proposal.md)
+3. **旧版资料（参考）** → `notes/pm-learning/`（23 课图解笔记）、`labs/01`–`07`（逐课实验）
 
 ## Quickstart · 克隆到绿基线
 
-给第一次打开仓库的读者。详细图解见 [`notes/pm-learning/18-getting-started.md`](./notes/pm-learning/18-getting-started.md)。
-
-**需要**：Git · Node.js 20+（LTS）· Linux 或 WSL2。**可选**：本机 [Ollama](https://ollama.com) + 课程所用本地模型（仅 `eval:live`）。
+**需要**：Git · Node.js 20+（LTS）· Linux 或 WSL2。**可选**：本机 [Ollama](https://ollama.com) + `qwen3.8:27b`（真跑才需要）。
 
 ```bash
 git clone https://github.com/yukawasensei/harness-book-for-everyone.git
-cd harness-book-for-everyone   # 本地目录名也可仍为历史 pi-qwen-harness
+cd harness-book-for-everyone/book/harness
+npm install
+npm test            # 离线全绿，不需要 Ollama
+npm run typecheck
 
-cd labs/05-minimal-harness && npm install && npm test && cd -
-cd labs/06-evals && npm install && npm run eval:schema && cd -
-
-# 有 Ollama 时再跑 live（务必设 NO_PROXY，避免代理劫持 localhost）
-cd labs/06-evals
-NO_PROXY=127.0.0.1,localhost npm run eval:live
-npm run eval:report
+# 有 Ollama 时：跑全部 case，写基线并签字
+npm run eval
 ```
 
 | 命令 | 需要 Ollama？ | 证明什么 |
 |---|---|---|
-| `labs/05… npm test` | 否 | 闸门单测绿 |
-| `labs/06… npm run eval:schema` | 否 | 案例规格合法 |
-| `labs/06… npm run eval:live` | **是** | 端到端基线绿 |
+| `npm test` | 否 | 闸门、验收器、隔离配置的单测全绿 |
+| `npm run eval` | **是** | 每条 case 端到端 PASS，且相对上一份基线无回归 |
+| `npm run report` | 否 | 读已提交的 `evals/baseline.json` |
 
-**笔记入口**：[`notes/pm-learning/`](./notes/pm-learning/)（图解课表）。**禁止**：付费云模型 / 把密钥写进仓库。
+harness 只读仓库里的 `book/harness/pi-agent/models.json`，**不**加载你本机 `~/.pi` 的扩展、技能或凭据（见 Ch3）。**禁止**：付费云模型 / 把密钥写进仓库。
 
 ## 样本架构（可替换） / Sample architecture
 
@@ -65,23 +63,26 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 
 ## 课表速览 / Curriculum map
 
-### PM 笔记（推荐主线）
+### 主线：book/harness（Ch0–Ch10）
 
-见 [`notes/pm-learning/`](./notes/pm-learning/)：能力总览 → 工具循环 → 会话 → 权限/路径 → 轮数超时 → Trace → Evals → 选型/协作/落地 → **硬边界** → **路径沙箱** → **Trace 验收签字** → **上下文预算** → **重试与降级** → **人机确认（HITL）** → **成本与延迟预算** → **[开源读者上手](./notes/pm-learning/18-getting-started.md)**（克隆到绿基线）。加深弧课 14–18 **已完成**。落地实操弧：[课 19 片场场记](./notes/pm-learning/19-set-clerk-content-production.md) → [课 20 技能评测桩](./notes/pm-learning/20-skill-eval-stubs.md) → [课 21 接模型写稿](./notes/pm-learning/21-model-behind-stubs.md) → [课 22 生产流水线](./notes/pm-learning/22-production-pipeline.md) → [课 23 整链预算](./notes/pm-learning/23-pipeline-budget.md)（`labs/07-set-clerk` · stub/`MODEL=ollama` · `case-pipeline` · `eval:budget`）。
+| 章 | 主题 | 状态 |
+|---:|---|---|
+| 0 | 跑通本地栈（Ollama + pi CLI） | 用 `labs/01`、`labs/02` |
+| 1 | 看见循环（`pi --mode json` 事件链） | 用 `labs/03` |
+| 2 | 从零写最小 harness | tag `ch02` |
+| 3 | 自己造工具 + 隔离 `~/.pi` | tag `ch03` |
+| 4 | 刹车：轮数与超时 | tag `ch04` |
+| 5 | 边界：白名单与路径沙箱 | tag `ch05` |
+| 6 | 评测基线与签字 | tag `ch06` |
+| 7 | 上下文预算与重试降级 | 进行中 |
+| 8 | 人机确认门 + 第一次写入 | 进行中 |
+| 9 | 成本与延迟预算 | 进行中 |
+| 10 | 综合项目：片场场记（精简版） | 进行中 |
 
-### Labs
+### 旧版资料（保留，供参考）
 
-| Lab | 主题 |
-|---|---|
-| `labs/01-model-api` | 无工具 vs 注入上下文 vs Agent read |
-| `labs/02-pi-cli` | 只读工具 allowlist |
-| `labs/03-agent-events` | JSONL 事件与循环 |
-| `labs/04-custom-tool` | 自定义工具 |
-| `labs/05-minimal-harness` | maxTurns / timeout / allowlist / path sandbox |
-| `labs/06-evals` | cases + live baseline + `eval:schema` / `eval:live` / `eval:report` |
-| `labs/07-set-clerk` | 片场场记四技能：评测桩 + 可选 Ollama/qwen + 整链 pipeline case + 整链预算闸门（`eval:budget`） |
-
-克隆后怎么证明还在工作？见 [课 18 上手指南](./notes/pm-learning/18-getting-started.md)。
+- [`notes/pm-learning/`](./notes/pm-learning/)：23 课 PM 图解 + 费曼笔记，已按主题并入上面各章（对照表见[重构提案](./notes/_curriculum-redesign-proposal.md)第 3 节）。
+- `labs/01`–`07`：逐课实验。`labs/05-minimal-harness` 是闸门“成品版”，`labs/06-evals` 是它的评测；`labs/07-set-clerk` 是固定流水线 + 评测桩。
 
 ## 安全基线 / Safety baseline
 
