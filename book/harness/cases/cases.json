@@ -1,0 +1,9 @@
+[
+  {
+    "id": "read-happy",
+    "chapter": "ch02",
+    "prompt": "必须调用 read 工具读取 lesson-input.md，然后只根据文件内容，用一句中文说明 Harness 的职责。",
+    "allowed_tools": ["read"],
+    "expect": { "tool_called": "read", "stop_reason": "success" }
+  }
+]
