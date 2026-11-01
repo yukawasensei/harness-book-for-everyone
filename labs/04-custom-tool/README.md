@@ -65,7 +65,7 @@ Agent ended: True
 结论：
 
 1. Qwen3.8 实际遵守了 Tool Schema，提交的是字符串 `"123"`，而不是提示词要求的数字 `123`；
-2. 参数在进入 executor 前已经是字符串，没有证据表明 executor 做了数字到字符串的自动转换；
+2. pi 会在 executor 之前的校验层按 schema 做类型转换（数字 `123` → 字符串 `"123"`），所以 executor 收到的类型证明不了模型守规矩；要看模型原始参数，看 `tool_execution_start.args`（该事件在校验前发出，不会被改写）。这次 trace 里 args 已是 `"123"`，说明模型自己发的就是字符串。详见 [书稿第 3 章](../../book/harness/chapters/ch03.md)；
 3. 最终自然语言错误地声称“传的是数字且实现层自动转换”，与原始 tool call 冲突；
 4. 审计工具行为时，应以 `toolCall.arguments`、`tool_execution_start.args` 和 `tool_execution_end.isError` 为准，不能只相信最终回答。
 
