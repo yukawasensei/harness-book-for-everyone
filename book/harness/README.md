@@ -51,6 +51,18 @@ Ch4 时 `stop_reason`：`success | max_turns | tool_timeout | model_error`。
 
 `stop_reason`：`success | max_turns | tool_timeout | tool_denied | path_denied | model_error`。
 
+### Ch6 · 评测基线与签字
+
+| 能力 | 文件 |
+|---|---|
+| 一条命令跑全部 case：逐条起 harness → 存 trace → 用 `checkTrace` 判 PASS/FAIL | `src/eval/run-evals.ts` |
+| 基线 `evals/baseline.json` + 每条 case 的 trace `evals/traces/*.jsonl`（存档前抹掉本机路径） | `evals/` |
+| 和上一份基线对比：`regressed`（PASS→FAIL）/ `fixed` / `new` / `removed` | `src/eval/baseline.ts` |
+| 签字规则：**全部 PASS 且无回归**才 `SIGN-OFF: OK`；否则 `BLOCKED`，退出码 1 | `src/eval/baseline.ts` |
+| 只读报表（不跑模型） | `src/eval/report.ts` |
+
+改 prompt、改闸门、换模型之前先有基线；改完再跑一次，看对比。
+
 ## 为什么要隔离 `~/.pi`
 
 pi 默认会读 `~/.pi/agent/` 下的扩展、技能、全局 AGENTS.md、模型清单和凭据。每台机器都不一样：同一份代码，在作者机器上可能多出扩展工具、多一段系统提示，trace 也就对不上。书里的 harness 用 pi SDK 的三处开关把它们关掉：
@@ -81,7 +93,12 @@ npm install
 npm test            # 离线：case 规格、trace 映射、验收器、schema/executor、类型转换、隔离（不需要 Ollama）
 npm run typecheck
 
-# 有本机 Ollama 时（CASE_ID 选 case，默认 read-happy）
+# 有本机 Ollama 时：跑全部 case，写基线并对比上一份（Ch6）
+npm run eval
+npm run report                            # 只读：看 evals/baseline.json
+CASES=read-happy,max-turns-brake npm run eval   # 只跑部分（不覆盖基线）
+
+# 单跑一条（CASE_ID 选 case，默认 read-happy）
 NO_PROXY=127.0.0.1,localhost CASE_ID=custom-tool-call npm start
 npm run check -- traces/latest.jsonl custom-tool-call    # PASS custom-tool-call
 ```

@@ -1,0 +1,84 @@
+{
+  "model": "ollama/qwen3.8:27b",
+  "startedAt": "2026-11-01T15:47:23.505Z",
+  "finishedAt": "2026-11-01T15:48:10.231Z",
+  "passCount": 7,
+  "total": 7,
+  "results": [
+    {
+      "id": "read-happy",
+      "chapter": "ch02",
+      "pass": true,
+      "stop_reason": "success",
+      "tools": [
+        "read"
+      ],
+      "reasons": [],
+      "durationMs": 5071
+    },
+    {
+      "id": "custom-tool-call",
+      "chapter": "ch03",
+      "pass": true,
+      "stop_reason": "success",
+      "tools": [
+        "hello"
+      ],
+      "reasons": [],
+      "durationMs": 4666
+    },
+    {
+      "id": "custom-tool-schema-conflict",
+      "chapter": "ch03",
+      "pass": true,
+      "stop_reason": "success",
+      "tools": [
+        "hello"
+      ],
+      "reasons": [],
+      "durationMs": 15496
+    },
+    {
+      "id": "max-turns-brake",
+      "chapter": "ch04",
+      "pass": true,
+      "stop_reason": "max_turns",
+      "tools": [
+        "read"
+      ],
+      "reasons": [],
+      "durationMs": 4385
+    },
+    {
+      "id": "tool-timeout-brake",
+      "chapter": "ch04",
+      "pass": true,
+      "stop_reason": "tool_timeout",
+      "tools": [
+        "slow"
+      ],
+      "reasons": [],
+      "durationMs": 6511
+    },
+    {
+      "id": "allowlist-no-bash",
+      "chapter": "ch05",
+      "pass": true,
+      "stop_reason": "success",
+      "tools": [],
+      "reasons": [],
+      "durationMs": 6296
+    },
+    {
+      "id": "path-escape-denied",
+      "chapter": "ch05",
+      "pass": true,
+      "stop_reason": "path_denied",
+      "tools": [
+        "read"
+      ],
+      "reasons": [],
+      "durationMs": 4300
+    }
+  ]
+}

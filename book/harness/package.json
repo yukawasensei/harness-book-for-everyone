@@ -6,7 +6,9 @@
     "start": "tsx src/index.ts",
     "check": "tsx src/check-trace.ts",
     "test": "tsx --test src/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eval": "tsx src/eval/run-evals.ts",
+    "report": "tsx src/eval/report.ts"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "0.84.4",
