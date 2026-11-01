@@ -29,9 +29,12 @@
 | 16 | [16-hitl-gate.md](./16-hitl-gate.md) | 人机确认闸门（HITL Confirm Gate） | 已完成 |
 | 17 | [17-cost-latency.md](./17-cost-latency.md) | 成本与延迟预算（Cost & Latency Budget） | 已完成 |
 | 18 | [18-getting-started.md](./18-getting-started.md) | 开源读者上手（Clone → green baseline） | 已完成 |
+| 19 | [19-set-clerk-content-production.md](./19-set-clerk-content-production.md) | 虚拟产品：片场场记 · 内容生产（Set Continuity Clerk） | 已完成 |
 
 对照仓库主线：根目录 [`README.md`](../../README.md)、[`OPEN_SOURCE.md`](../../OPEN_SOURCE.md)、`notes/course-plan.md`、`notes/glossary.md`，以及 `labs/01`–`labs/06`。
 
 开源入口：先读仓库根 README（**写给大家看的 Harness 书**）；本目录是 **PM 图解课表**。
-> **加深弧 14–18**：上下文预算 → 重试降级 → HITL → 成本/延迟 → **开源上手文档**。到课 18，读者应能独立把基线跑绿。后续开新主题弧，不重复本弧闸门。
+> **加深弧 14–18**：上下文预算 → 重试降级 → HITL → 成本/延迟 → **开源上手文档**。到课 18，读者应能独立把基线跑绿。
+>
+> **落地实操弧·内容生产（从课 19）**：虚拟产品「片场场记」先钉内容生产四技能与验收口径；技能桩与 lab 实现从课 20 起。图解风格锁定见 [`skills/harness-diagram/`](../../skills/harness-diagram/SKILL.md)（纯白底、中英双语、16:9 扁平教材矢量）。
 

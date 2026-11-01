@@ -26,3 +26,14 @@
 - 含真实密钥、cookie、SSH、浏览器配置的任何文件  
 - 公司产品名、内部代号、私人邮箱  
 - `/home/<yourname>/...` 绝对路径（用 `<repo-root>`）
+
+## Diagram style locked / 图解风格锁定
+
+PM 课表配图（`notes/pm-learning/assets/harness-*.jpg`）统一为：
+
+- 纯白底（`#FFFFFF`），禁止奶油/米黄/深色底
+- 中英双语标签、16:9、扁平教材矢量
+- 配方与提示词骨架：`skills/harness-diagram/SKILL.md`
+
+新增或重绘图解前先读该 skill；替换文件时保持文件名不变。
+
