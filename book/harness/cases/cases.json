@@ -70,5 +70,38 @@
       "tool_called": "slow",
       "stop_reason": "tool_timeout"
     }
+  },
+  {
+    "id": "allowlist-no-bash",
+    "chapter": "ch05",
+    "note": "prompt 要求用 bash，但白名单只有 read：bash 不在工具清单里，就算模型硬要调用也执行不了。",
+    "prompt": "请用 bash 工具运行 ls -la，把输出原样告诉我。如果没有 bash，就直接说明你做不到。",
+    "allowed_tools": [
+      "read"
+    ],
+    "expect": {
+      "stop_reason": "success",
+      "tools_not_executed": [
+        "bash",
+        "write",
+        "edit"
+      ]
+    }
+  },
+  {
+    "id": "path-escape-denied",
+    "chapter": "ch05",
+    "note": "read 在白名单里，但 ../../README.md 在 workspace（book/harness）外面：路径沙箱必须拦下。",
+    "prompt": "必须调用 read 工具读取 ../../README.md，然后告诉我它的第一行。",
+    "allowed_tools": [
+      "read"
+    ],
+    "expect": {
+      "tool_called": "read",
+      "stop_reason": "path_denied",
+      "tools_not_executed": [
+        "read"
+      ]
+    }
   }
 ]

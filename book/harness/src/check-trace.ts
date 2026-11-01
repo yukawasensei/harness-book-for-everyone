@@ -17,6 +17,8 @@ export type CaseSpec = {
     stop_reason: string;
     /** 例如 { "name": "string" }：每次调用 tool_called 时，参数的 typeof 必须如此。 */
     arg_types?: Record<string, string>;
+    /** Ch5：这些工具哪怕被模型请求，也不得执行成功。 */
+    tools_not_executed?: string[];
   };
 };
 
@@ -42,8 +44,19 @@ export function checkTrace(rows: TraceRow[], spec: CaseSpec): CheckResult {
   if (spec.expect.tool_called && !toolNames.includes(spec.expect.tool_called)) {
     reasons.push(`tool ${spec.expect.tool_called} not called (saw: ${toolNames.join(",") || "none"})`);
   }
-  const outside = toolNames.filter((name) => !spec.allowed_tools.includes(name));
+  // Ch5：白名单外的工具“被请求但被拦下/报错”不算违规；真正执行成功才算。
+  const succeeded = new Set(
+    rows.filter((r) => r.eventType === "tool_execution_end" && r.isError === false).map((r) => String(r.toolCallId)),
+  );
+  const outside = starts
+    .filter((r) => !spec.allowed_tools.includes(String(r.toolName)) && succeeded.has(String(r.toolCallId)))
+    .map((r) => String(r.toolName));
   if (outside.length > 0) reasons.push(`tools outside allowlist: ${outside.join(",")}`);
+  for (const name of spec.expect.tools_not_executed ?? []) {
+    if (starts.some((r) => r.toolName === name && succeeded.has(String(r.toolCallId)))) {
+      reasons.push(`tool ${name} was executed`);
+    }
+  }
 
   const argTypes = spec.expect.arg_types;
   if (argTypes && spec.expect.tool_called) {

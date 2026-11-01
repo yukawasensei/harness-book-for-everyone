@@ -56,6 +56,7 @@ test("checkTrace: tool outside allowlist fails", () => {
   const rows = [
     ...fixture,
     { timestamp: "t", eventType: "tool_execution_start", toolName: "bash", toolCallId: "c2" },
+    { timestamp: "t", eventType: "tool_execution_end", toolName: "bash", toolCallId: "c2", isError: false },
   ];
   assert.match(checkTrace(rows, readHappy).reasons.join(), /outside allowlist: bash/);
 });

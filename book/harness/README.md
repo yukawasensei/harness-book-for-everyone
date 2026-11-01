@@ -37,7 +37,19 @@
 | 闸门参数写在 case 里（`max_turns`、`tool_timeout_ms`），不写在 prompt 里 | `cases/cases.json` |
 | 退出码：`0` success · `2` 闸门刹车 · `1` 模型错误 | `src/index.ts` |
 
-`stop_reason`：`success | max_turns | tool_timeout | model_error`。
+Ch4 时 `stop_reason`：`success | max_turns | tool_timeout | model_error`。
+
+### Ch5 · 边界：白名单与路径沙箱
+
+| 能力 | 文件 |
+|---|---|
+| **白名单 ≠ 路径安全**：`read` 在白名单里，照样能读 `../../` 外面的文件 | — |
+| 路径沙箱：解析成真实路径（含符号链接、尚未存在的叶子）后必须仍在 workspace（`book/harness/`）里 | `src/gates/path-sandbox.ts` |
+| 工具策略：pi 钩子 `session.agent.beforeToolCall` 在**执行前**复核白名单（`tool_denied`）+ 检查路径参数（`path_denied`），不过就 `block` 并停机 | `src/gates/tool-policy.ts` + `src/index.ts` |
+| trace 只记请求的路径和原因，绝不写本机绝对路径 | `src/gates/tool-policy.ts` |
+| 验收：白名单外工具“被请求但被拦”不算违规，**执行成功**才算；`expect.tools_not_executed` | `src/check-trace.ts` |
+
+`stop_reason`：`success | max_turns | tool_timeout | tool_denied | path_denied | model_error`。
 
 ## 为什么要隔离 `~/.pi`
 
@@ -83,5 +95,7 @@ npm run check -- traces/latest.jsonl custom-tool-call    # PASS custom-tool-call
 | `custom-tool-schema-conflict` | ch03（实验） | `hello` | 同上；对照模型口头陈述 |
 | `max-turns-brake` | ch04 | `read`（`max_turns=1`） | `stop_reason=max_turns` |
 | `tool-timeout-brake` | ch04 | `slow`（`tool_timeout_ms=400`） | 调用 `slow`，`stop_reason=tool_timeout` |
+| `allowlist-no-bash` | ch05 | `read` | prompt 要 bash；bash/write/edit 均未执行，`success` |
+| `path-escape-denied` | ch05 | `read` | 请求 `../../README.md`；执行前被拦，`stop_reason=path_denied` |
 
 设计来源：[`notes/_curriculum-redesign-proposal.md`](../../notes/_curriculum-redesign-proposal.md)。

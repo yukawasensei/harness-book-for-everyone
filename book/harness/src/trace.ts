@@ -4,7 +4,7 @@
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
-export type StopReason = "success" | "max_turns" | "tool_timeout" | "model_error";
+export type StopReason = "success" | "max_turns" | "tool_timeout" | "tool_denied" | "path_denied" | "model_error";
 
 export type TraceRow = {
   timestamp: string;
@@ -47,7 +47,7 @@ export function toTraceRow(event: { type: string; [key: string]: unknown }, now 
     row.isError = event.isError;
     // executor 自己报告的 details（例如 receivedType）：校验/类型转换之后，executor 真正拿到了什么。
     const details = (event.result as { details?: unknown } | undefined)?.details;
-    if (details && typeof details === "object") row.details = details;
+    if (details && typeof details === "object" && Object.keys(details).length > 0) row.details = details;
   }
   return row;
 }

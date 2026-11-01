@@ -2,6 +2,7 @@
 // 只做四件事：选模型、限定工具、跑一次会话、把事件和 stop_reason 写进 trace。
 // Ch3 · 增量：注册自定义工具；隔离本机 ~/.pi 全局配置（见 isolated-pi.ts）。
 // Ch4 · 增量：轮数上限 + 工具超时，停机原因统一记在 run-state。
+// Ch5 · 增量：beforeToolCall 里执行白名单复核 + 路径沙箱。
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +14,7 @@ import { CUSTOM_TOOLS } from "./tools/index.js";
 import { createRunState } from "./run-state.js";
 import { createMaxTurnsGuard } from "./gates/max-turns.js";
 import { withToolTimeout } from "./gates/tool-timeout.js";
+import { decideToolCall } from "./gates/tool-policy.js";
 
 if (process.platform !== "linux") throw new Error("Run the harness inside Linux/WSL");
 
@@ -70,7 +72,15 @@ session.agent.shouldStopAfterTurn = () => {
   return stop;
 };
 
-// pi-agent-core 钩子 2：工具执行完后，若某道闸门已咬住，就结束这一批工具调用。
+// pi-agent-core 钩子 2：工具执行前过策略（白名单复核 + 路径沙箱）；不过就拦下并停机。
+session.agent.beforeToolCall = async ({ toolCall, args }) => {
+  const decision = decideToolCall({ toolName: toolCall.name, args }, { allowedTools: spec.allowed_tools, workspaceRoot: cwd });
+  if (decision.allow) return undefined;
+  run.stop(decision.stopReason, decision.details);
+  return { block: true, reason: `Harness policy: ${decision.stopReason}`, terminate: true };
+};
+
+// pi-agent-core 钩子 3：工具执行完后，若某道闸门已咬住，就结束这一批工具调用。
 session.agent.afterToolCall = async () => (run.stopped ? { isError: true, terminate: true } : undefined);
 
 const unsubscribe = session.subscribe((event) => {
