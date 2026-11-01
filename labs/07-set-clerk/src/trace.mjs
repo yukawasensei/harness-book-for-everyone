@@ -23,8 +23,8 @@ export function createTraceSession({ skill, caseId, tracePath }) {
     writeEvent({ path, bytes }) {
       return emit({ eventType: "write", path, bytes });
     },
-    end({ stop_reason = "success", extra = {} } = {}) {
-      return emit({ eventType: "harness_end", stop_reason, ...extra });
+    end({ stop_reason = "success", ...rest } = {}) {
+      return emit({ eventType: "harness_end", stop_reason, ...rest });
     },
     rows,
     tracePath,

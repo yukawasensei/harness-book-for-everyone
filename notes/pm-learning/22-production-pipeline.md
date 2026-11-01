@@ -76,8 +76,8 @@ npm test
 
 ## 下一步
 
-- 可收紧 HITL：覆盖「已有稿再改」的确认闸门。  
-- 整链成本/延迟实测：接模型后用 `PIPELINE_MAX_MS` / Trace `elapsed_ms` 对照课 17。  
+- **下一课（已开）**：[23 · 整链成本与延迟预算](./23-pipeline-budget.md)——`PIPELINE_MAX_MS` / `PIPELINE_COST_UNITS` + `eval:budget`。  
+- 其后可收紧 HITL：覆盖「已有稿再改」的确认闸门。  
 - 预告：项目二（分发文案技能等）**不在本课**；仍不真发平台。  
 - 上一课：[21 · 接模型写稿](./21-model-behind-stubs.md) · 路线总览：[README](./README.md)
 

@@ -5,6 +5,7 @@
   "scripts": {
     "test": "node src/run-pipeline.mjs && node src/validate-schema.mjs",
     "eval:schema": "node src/run-pipeline.mjs && node src/validate-schema.mjs",
+    "eval:budget": "node src/eval-budget.mjs",
     "stubs": "MODEL=stub node src/run-pipeline.mjs",
     "pipeline": "node src/run-pipeline.mjs",
     "eval:live": "node src/eval-live.mjs"

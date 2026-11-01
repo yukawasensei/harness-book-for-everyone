@@ -2,10 +2,15 @@
 /**
  * Whole-chain production pipeline: pick_topic → draft_script → draft_board → shot_prompts.
  * Fail-stop on first non-success; writes traces/case-pipeline.jsonl covering the chain.
- * Per-skill cases still get their own traces from skill runners.
  *
- * Optional: PIPELINE_MAX_MS — soft wall-clock budget for the whole chain
- * (product decision: budget covers the line, not only one skill).
+ * Whole-chain budgets (lesson 23; not the same as lesson-17 single-skill caps):
+ *   PIPELINE_MAX_MS      — wall-clock; stop BEFORE next step when elapsed >= max
+ *                          (maxMs=0 is deterministic: stop before first skill)
+ *                          stop_reason=pipeline_latency_budget
+ *   PIPELINE_COST_UNITS  — teaching proxy: each started skill costs 1 unit;
+ *                          stop BEFORE next step when remaining < 1
+ *                          stop_reason=pipeline_cost_budget
+ * Budget stops are NOT collapsed into generic pipeline_fail.
  */
 import { rmSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -52,11 +57,20 @@ function resetOutArtifacts() {
   }
 }
 
+/** null = unlimited; 0 allowed (deterministic latency brake). */
 function readMaxMs() {
   const raw = process.env.PIPELINE_MAX_MS;
-  if (!raw) return null;
+  if (raw === undefined || raw === "") return null;
   const n = Number(raw);
-  return Number.isFinite(n) && n > 0 ? n : null;
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+/** null = unlimited; each skill costs 1 unit. */
+function readCostUnits() {
+  const raw = process.env.PIPELINE_COST_UNITS;
+  if (raw === undefined || raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : null;
 }
 
 assertEscapeDenied();
@@ -65,7 +79,9 @@ console.log(`backend=${backend}  (MODEL / SET_CLERK_BACKEND; default stub)`);
 console.log("pipeline order: pick_topic → draft_script → draft_board → shot_prompts");
 
 const maxMs = readMaxMs();
-if (maxMs) console.log(`PIPELINE_MAX_MS=${maxMs} (whole-chain soft budget)`);
+const costBudget = readCostUnits();
+if (maxMs !== null) console.log(`PIPELINE_MAX_MS=${maxMs} (whole-chain latency budget)`);
+if (costBudget !== null) console.log(`PIPELINE_COST_UNITS=${costBudget} (whole-chain cost proxy; 1 unit/skill)`);
 
 const startedAt = Date.now();
 const pipelineTracePath = resolve(labRoot, "traces", `${PIPELINE_CASE_ID}.jsonl`);
@@ -78,24 +94,54 @@ pipe.emit({
   eventType: "pipeline_plan",
   order: ORDER.map((s) => s.skill),
   budget_ms: maxMs,
+  budget_cost_units: costBudget,
 });
 
+let stopReason = null; // pipeline_fail | pipeline_latency_budget | pipeline_cost_budget
 let failedSkill = null;
 let failDetail = null;
+let costUsed = 0;
+let completedSteps = 0;
 
 for (const step of ORDER) {
-  if (maxMs && Date.now() - startedAt > maxMs) {
+  const elapsedBefore = Date.now() - startedAt;
+
+  if (maxMs !== null && elapsedBefore >= maxMs) {
+    stopReason = "pipeline_latency_budget";
     failedSkill = step.skill;
-    failDetail = `PIPELINE_MAX_MS exceeded before ${step.skill}`;
+    failDetail = `PIPELINE_MAX_MS=${maxMs} exceeded before ${step.skill}`;
     pipe.emit({
       eventType: "pipeline_budget",
-      stop_reason: "pipeline_budget",
-      skill: step.skill,
-      elapsed_ms: Date.now() - startedAt,
+      stop_reason: "pipeline_latency_budget",
+      budget_type: "latency",
+      skill_would_run: step.skill,
+      elapsed_ms: elapsedBefore,
+      budget_ms: maxMs,
+      cost_units_used: costUsed,
+      budget_cost_units: costBudget,
+    });
+    break;
+  }
+
+  if (costBudget !== null && costBudget - costUsed < 1) {
+    stopReason = "pipeline_cost_budget";
+    failedSkill = step.skill;
+    failDetail = `PIPELINE_COST_UNITS=${costBudget} exhausted before ${step.skill} (used=${costUsed})`;
+    pipe.emit({
+      eventType: "pipeline_budget",
+      stop_reason: "pipeline_cost_budget",
+      budget_type: "cost",
+      skill_would_run: step.skill,
+      elapsed_ms: elapsedBefore,
+      cost_units_used: costUsed,
+      budget_cost_units: costBudget,
       budget_ms: maxMs,
     });
     break;
   }
+
+  // Charge 1 unit when a skill is started (teaching proxy).
+  if (costBudget !== null) costUsed += 1;
 
   pipe.emit({ eventType: "step_start", skill: step.skill, caseId: step.caseId });
   try {
@@ -103,6 +149,7 @@ for (const step of ORDER) {
     const stop = r?.stop_reason ?? "unknown";
     const rel = r?.relativePath;
     if (stop !== "success" || !rel) {
+      stopReason = "pipeline_fail";
       failedSkill = step.skill;
       failDetail = `step returned stop_reason=${stop}`;
       pipe.emit({
@@ -121,8 +168,10 @@ for (const step of ORDER) {
       out_path: rel,
       backend: r?.backend ?? backend,
     });
+    completedSteps += 1;
     console.log(`ok  pipeline step ${step.skill} → ${rel} stop_reason=success`);
   } catch (e) {
+    stopReason = "pipeline_fail";
     failedSkill = step.skill;
     failDetail = e?.message || String(e);
     pipe.emit({
@@ -138,16 +187,24 @@ for (const step of ORDER) {
 
 const elapsed = Date.now() - startedAt;
 
-if (failedSkill) {
+if (stopReason) {
   pipe.end({
-    stop_reason: "pipeline_fail",
+    stop_reason: stopReason,
     failed_skill: failedSkill,
+    skill_would_run: failedSkill,
     detail: failDetail,
     elapsed_ms: elapsed,
-    completed: ORDER.map((s) => s.skill).indexOf(failedSkill),
+    cost_units_used: costUsed,
+    budget_ms: maxMs,
+    budget_cost_units: costBudget,
+    completed: completedSteps,
   });
+  const label =
+    stopReason === "pipeline_fail"
+      ? "pipeline stopped"
+      : "pipeline budget stop";
   console.error(
-    `\nFAIL  pipeline stopped at ${failedSkill}: ${failDetail}  (fail-stop; remaining steps skipped)`,
+    `\nFAIL  ${label} at ${failedSkill}: ${failDetail}  (stop_reason=${stopReason}; remaining steps skipped)`,
   );
   console.error(`trace=${pipelineTracePath}`);
   process.exit(1);
@@ -156,6 +213,7 @@ if (failedSkill) {
 pipe.end({
   stop_reason: "success",
   elapsed_ms: elapsed,
+  cost_units_used: costUsed,
   order: ORDER.map((s) => s.skill),
   out_paths: OUT_FILES.map((n) => `workspace/out/${n}`),
 });
@@ -163,4 +221,4 @@ pipe.end({
 console.log(
   "\nPASS  pipeline wrote workspace/out/{topic.json,script.md,board.json,prompts.json}",
 );
-console.log(`trace=${pipelineTracePath}  elapsed_ms=${elapsed}`);
+console.log(`trace=${pipelineTracePath}  elapsed_ms=${elapsed}  cost_units_used=${costUsed}`);
