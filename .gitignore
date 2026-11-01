@@ -34,3 +34,7 @@ notes/_curriculum-review-*.md
 notes/_plan-*.md
 # Local stderr dumps
 labs/**/*.err
+notes/_ask-*.md
+notes/_ch*-task.md
+# book harness: pi model catalog cache (only models.json is tracked)
+book/harness/pi-agent/models-store.json

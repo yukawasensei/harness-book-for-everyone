@@ -1,4 +1,5 @@
 // Ch2 · 验收：trace 是否满足 case 的 expect（工具名 + stop_reason）。
+// Ch3 · 增量：可断言工具参数的真实类型（arg_types），以 trace 为准，不信最终回答。
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { TraceRow } from "./trace.js";
@@ -7,7 +8,12 @@ export type CaseSpec = {
   id: string;
   prompt: string;
   allowed_tools: string[];
-  expect: { tool_called?: string; stop_reason: string };
+  expect: {
+    tool_called?: string;
+    stop_reason: string;
+    /** 例如 { "name": "string" }：每次调用 tool_called 时，参数的 typeof 必须如此。 */
+    arg_types?: Record<string, string>;
+  };
 };
 
 export type CheckResult = { pass: boolean; reasons: string[] };
@@ -21,9 +27,8 @@ export function parseTrace(text: string): TraceRow[] {
 
 export function checkTrace(rows: TraceRow[], spec: CaseSpec): CheckResult {
   const reasons: string[] = [];
-  const toolNames = rows
-    .filter((r) => r.eventType === "tool_execution_start")
-    .map((r) => String(r.toolName));
+  const starts = rows.filter((r) => r.eventType === "tool_execution_start");
+  const toolNames = starts.map((r) => String(r.toolName));
   const end = rows.filter((r) => r.eventType === "harness_end").at(-1);
 
   if (!end) reasons.push("missing harness_end");
@@ -35,6 +40,18 @@ export function checkTrace(rows: TraceRow[], spec: CaseSpec): CheckResult {
   }
   const outside = toolNames.filter((name) => !spec.allowed_tools.includes(name));
   if (outside.length > 0) reasons.push(`tools outside allowlist: ${outside.join(",")}`);
+
+  const argTypes = spec.expect.arg_types;
+  if (argTypes && spec.expect.tool_called) {
+    for (const start of starts.filter((r) => r.toolName === spec.expect.tool_called)) {
+      const args = (start.args ?? {}) as Record<string, unknown>;
+      for (const [key, type] of Object.entries(argTypes)) {
+        if (typeof args[key] !== type) {
+          reasons.push(`arg ${key} is ${typeof args[key]} (${JSON.stringify(args[key])}), expected ${type}`);
+        }
+      }
+    }
+  }
 
   return { pass: reasons.length === 0, reasons };
 }

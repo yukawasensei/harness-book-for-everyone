@@ -1,0 +1,8 @@
+{"timestamp":"2026-11-01T00:00:00.000Z","eventType":"harness_start","case_id":"custom-tool-call","extensions":0,"activeTools":["hello"]}
+{"timestamp":"2026-11-01T00:00:00.100Z","eventType":"agent_start"}
+{"timestamp":"2026-11-01T00:00:01.000Z","eventType":"message_end","role":"assistant"}
+{"timestamp":"2026-11-01T00:00:01.100Z","eventType":"tool_execution_start","toolName":"hello","toolCallId":"call_fixture","args":{"name":"学员"}}
+{"timestamp":"2026-11-01T00:00:01.200Z","eventType":"tool_execution_end","toolName":"hello","toolCallId":"call_fixture","isError":false}
+{"timestamp":"2026-11-01T00:00:02.000Z","eventType":"message_end","role":"assistant","text":"Hello, 学员!"}
+{"timestamp":"2026-11-01T00:00:02.100Z","eventType":"agent_end"}
+{"timestamp":"2026-11-01T00:00:02.101Z","eventType":"harness_end","stop_reason":"success","case_id":"custom-tool-call"}
