@@ -4,8 +4,8 @@
  * No paid APIs. Forces NO_PROXY so http_proxy cannot hijack localhost.
  */
 import { spawn } from "node:child_process";
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
 import { assertExpect, loadTrace, summarizeTrace } from "./assert-trace.mjs";
@@ -20,6 +20,11 @@ const tracesDir = resolve(resultsDir, "traces");
 
 const CASE_FILTER = process.env.EVAL_CASE_ID; // optional single case
 const PER_CASE_TIMEOUT_MS = Number(process.env.EVAL_TIMEOUT_MS || 180_000);
+
+// Public repo: never persist this machine's absolute repo path in results/traces.
+function scrubRepoRoot(text, root = repoRoot) {
+  return text.split(root).join("<repo-root>");
+}
 
 function failFast(message) {
   console.error(`BLOCKER: ${message}`);
@@ -118,7 +123,9 @@ function runLab05({ prompt, maxTurns, allowedTools, toolTimeoutMs, injectReadPat
       clearTimeout(timer);
       const durationMs = Math.round(performance.now() - started);
       if (existsSync(lab05Trace) && readFileSync(lab05Trace, "utf8").trim().length > 0) {
-        copyFileSync(lab05Trace, traceOut);
+        const scrubbed = scrubRepoRoot(readFileSync(lab05Trace, "utf8"));
+        writeFileSync(lab05Trace, scrubbed, "utf8");
+        writeFileSync(traceOut, scrubbed, "utf8");
       }
       resolvePromise({
         code,
@@ -154,7 +161,7 @@ if (selected.length === 0) {
 const report = {
   startedAt: new Date().toISOString(),
   model: "ollama/qwen3.8:27b",
-  lab05: lab05Root,
+  lab05: relative(repoRoot, lab05Root),
   timeoutMs: PER_CASE_TIMEOUT_MS,
   results: [],
 };
