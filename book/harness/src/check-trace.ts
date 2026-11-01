@@ -22,6 +22,12 @@ export type CaseSpec = {
   retry_backoff_ms?: number;
   /** Ch7：flaky 演示工具前几次必定失败（默认一直失败）。 */
   flaky_fail_times?: number;
+  /** Ch8：写类工具只能写这些目录（相对 book/harness）。 */
+  writable_dirs?: string[];
+  /** Ch8：执行前必须由人确认的工具。 */
+  confirm_tools?: string[];
+  /** Ch8：评测用的“模拟的人”的决定；真跑时用 HITL_MODE=tty 在终端里确认。 */
+  hitl_decision?: "approve" | "deny";
   expect: {
     tool_called?: string;
     stop_reason: string;
@@ -29,6 +35,8 @@ export type CaseSpec = {
     arg_types?: Record<string, string>;
     /** Ch5：这些工具哪怕被模型请求，也不得执行成功。 */
     tools_not_executed?: string[];
+    /** Ch8：这些工具必须至少执行成功一次。 */
+    tools_succeeded?: string[];
     /** Ch7：trace 里必须出现的事件及最少次数，例如 { "tool_retry": 2 }。 */
     events?: Record<string, number>;
   };
@@ -70,6 +78,11 @@ export function checkTrace(rows: TraceRow[], spec: CaseSpec): CheckResult {
     }
   }
 
+  for (const name of spec.expect.tools_succeeded ?? []) {
+    if (!starts.some((r) => r.toolName === name && succeeded.has(String(r.toolCallId)))) {
+      reasons.push(`tool ${name} never succeeded`);
+    }
+  }
   for (const [eventType, min] of Object.entries(spec.expect.events ?? {})) {
     const count = rows.filter((r) => r.eventType === eventType).length;
     if (count < min) reasons.push(`event ${eventType} x${count}, expected >= ${min}`);

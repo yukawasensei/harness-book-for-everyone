@@ -77,6 +77,23 @@ Ch4 时 `stop_reason`：`success | max_turns | tool_timeout | model_error`。
 
 `stop_reason` 新增：`context_budget`、`retry_exhausted`。
 
+### Ch8 · 人机确认门 + 第一次写入
+
+| 能力 | 文件 |
+|---|---|
+| 第一次开放写入（pi 内置 `write` / `edit`），但**只能写 `writable_dirs`**：能读的地方 ≠ 能写的地方 | `src/gates/tool-policy.ts` |
+| 确认门：`confirm_tools` 里的工具执行前必须由人确认；先过策略再问人（越界的不打扰人） | `beforeToolCall` in `src/index.ts` |
+| 确认者可替换：真跑 `HITL_MODE=tty` 在终端按 `y/N`（超时 = 拒绝）；评测用 case 里的 `hitl_decision`（trace 标 `by: simulated`）；什么都没配 = 一律拒绝 | `src/gates/hitl.ts` |
+| trace 留证：`hitl_request` → `hitl_decision`（谁、同不同意、为什么） | `src/index.ts` |
+| 每次运行前清空可写目录，产物只来自本次运行（`workspace/` 不入库） | `src/index.ts` |
+
+`stop_reason` 新增：`human_denied`。
+
+```bash
+# 亲手当一次“人”
+NO_PROXY=127.0.0.1,localhost HITL_MODE=tty CASE_ID=hitl-approve-write npm start
+```
+
 ## 为什么要隔离 `~/.pi`
 
 pi 默认会读 `~/.pi/agent/` 下的扩展、技能、全局 AGENTS.md、模型清单和凭据。每台机器都不一样：同一份代码，在作者机器上可能多出扩展工具、多一段系统提示，trace 也就对不上。书里的 harness 用 pi SDK 的三处开关把它们关掉：
@@ -133,5 +150,8 @@ npm run check -- traces/latest.jsonl custom-tool-call    # PASS custom-tool-call
 | `retry-recovers` | ch07 | `flaky`（前 2 次失败，重试 2） | `tool_retry`×2 + `success` |
 | `retry-exhausted-brake` | ch07 | `flaky`（一直失败，重试 2，stop） | `stop_reason=retry_exhausted` |
 | `retry-degrade` | ch07 | `flaky`（一直失败，重试 1，degrade） | `tool_degraded` + `success` |
+| `hitl-approve-write` | ch08 | `write`（需确认，模拟同意） | 写入 `workspace/out/note.md`，`success` |
+| `hitl-denied-brake` | ch08 | `write`（需确认，模拟拒绝） | 不执行，`stop_reason=human_denied` |
+| `write-outside-writable-denied` | ch08 | `write`（只能写 `workspace/out`） | 写 `src/hacked.ts` 被拦，`path_denied` |
 
 设计来源：[`notes/_curriculum-redesign-proposal.md`](../../notes/_curriculum-redesign-proposal.md)。

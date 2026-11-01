@@ -38,3 +38,6 @@ notes/_ask-*.md
 notes/_ch*-task.md
 # book harness: pi model catalog cache (only models.json is tracked)
 book/harness/pi-agent/models-store.json
+
+# book harness: files written by agent runs (Ch8+)
+book/harness/workspace/

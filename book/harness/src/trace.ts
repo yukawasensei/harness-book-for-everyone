@@ -12,6 +12,7 @@ export type StopReason =
   | "path_denied"
   | "context_budget"
   | "retry_exhausted"
+  | "human_denied"
   | "model_error";
 
 export type TraceRow = {
