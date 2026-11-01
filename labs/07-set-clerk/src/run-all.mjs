@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 /**
- * Run all four skill stubs in pipeline order (fixture → files under workspace/out).
+ * Run all four skills in pipeline order (fixture → files under workspace/out).
+ * Default backend = stub. Set MODEL=ollama to use local qwen via model-adapter.
  */
 import { runPickTopic } from "./skills/pick_topic.mjs";
 import { runDraftScript } from "./skills/draft_script.mjs";
 import { runDraftBoard } from "./skills/draft_board.mjs";
 import { runShotPrompts } from "./skills/shot_prompts.mjs";
 import { assertUnderOutDir } from "./path-sandbox.mjs";
+import { getBackend } from "./model-adapter.mjs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const labRoot = resolve(__dirname, "..");
+const backend = getBackend();
 
 function assertEscapeDenied() {
   let denied = false;
@@ -29,18 +32,21 @@ function assertEscapeDenied() {
   return true;
 }
 
+assertEscapeDenied();
+console.log(`backend=${backend}  (MODEL / SET_CLERK_BACKEND; default stub)`);
+
 const steps = [
-  () => runPickTopic({ caseId: "case-pick_topic" }),
-  () => runDraftScript({ caseId: "case-draft_script" }),
-  () => runDraftBoard({ caseId: "case-draft_board" }),
-  () => runShotPrompts({ caseId: "case-shot_prompts" }),
+  () => runPickTopic({ caseId: "case-pick_topic", backend }),
+  () => runDraftScript({ caseId: "case-draft_script", backend }),
+  () => runDraftBoard({ caseId: "case-draft_board", backend }),
+  () => runShotPrompts({ caseId: "case-shot_prompts", backend }),
 ];
 
-assertEscapeDenied();
-
 for (const step of steps) {
-  const r = step();
-  console.log(`ok  stub ${r.relativePath} stop_reason=${r.stop_reason}`);
+  const r = await step();
+  console.log(`ok  ${r.backend} ${r.relativePath} stop_reason=${r.stop_reason}`);
 }
 
-console.log("\nPASS  stub pipeline wrote workspace/out/{topic.json,script.md,board.json,prompts.json}");
+console.log(
+  "\nPASS  pipeline wrote workspace/out/{topic.json,script.md,board.json,prompts.json}",
+);

@@ -76,7 +76,7 @@ npm test
 
 ## 下一步
 
-- 课 21（预告）：在桩上换血——接本地 qwen / 收紧 HITL 与预算，仍以四 case 全绿为门禁。  
+- 下一课：[21 · 接模型写稿](./21-model-behind-stubs.md)（桩不变，换 Ollama/qwen 适配器；文案好看但 path 错仍算不过）。  
 - 巩固：对照课 13 Trace 签字与课 07 evals——本课把它们收成虚拟产品的技能门禁。  
 - 上一课：[19 · 片场场记 · 内容生产](./19-set-clerk-content-production.md) · 路线总览：[README](./README.md)
 
