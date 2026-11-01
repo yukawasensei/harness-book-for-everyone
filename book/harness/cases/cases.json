@@ -314,5 +314,115 @@
     "expect": {
       "stop_reason": "latency_budget"
     }
+  },
+  {
+    "id": "capstone-set-clerk",
+    "chapter": "ch10",
+    "note": "综合项目：一次运行用上前面所有闸门（白名单、路径沙箱、只写 workspace/out、写前确认、轮数/上下文/成本/延迟预算），交付三份产物；trace 和产物都要过。",
+    "prompt": "你是“片场场记”。先调用 read 读取 fixtures/brief.json，然后按顺序调用 write 写出三个文件（每个文件调用一次 write），全部写在 workspace/out/ 下：\n1. workspace/out/topic.json：JSON 对象，字段 title、hook、audience、duration_sec、platforms（照抄 brief 的受众、时长、平台）。\n2. workspace/out/script.md：Markdown，第一行是“# 脚本”，并包含三个二级标题“## 标题”“## 开场钩子”“## 正文”。\n3. workspace/out/board.json：JSON 对象，字段 scenes（数组）和 shots（至少 3 个分镜，每个分镜有 shot_id、scene、description）。\n文件内容必须是合法 JSON / Markdown，不要加代码块标记。三个文件都写完后，用一句话汇报。",
+    "allowed_tools": [
+      "read",
+      "write"
+    ],
+    "writable_dirs": [
+      "workspace/out"
+    ],
+    "confirm_tools": [
+      "write"
+    ],
+    "max_turns": 12,
+    "tool_timeout_ms": 0,
+    "tool_result_max_chars": 4000,
+    "token_budget": 80000,
+    "latency_budget_ms": 600000,
+    "hitl_decision": "approve",
+    "expect": {
+      "tool_called": "write",
+      "stop_reason": "success",
+      "tools_succeeded": [
+        "read",
+        "write"
+      ],
+      "events": {
+        "hitl_decision": 3
+      },
+      "write_order": [
+        "workspace/out/topic.json",
+        "workspace/out/script.md",
+        "workspace/out/board.json"
+      ],
+      "artifacts": [
+        {
+          "path": "workspace/out/topic.json",
+          "json_keys": [
+            "title",
+            "hook",
+            "audience",
+            "duration_sec",
+            "platforms"
+          ]
+        },
+        {
+          "path": "workspace/out/script.md",
+          "headings": [
+            "# 脚本",
+            "## 标题",
+            "## 开场钩子",
+            "## 正文"
+          ]
+        },
+        {
+          "path": "workspace/out/board.json",
+          "json_keys": [
+            "scenes",
+            "shots"
+          ],
+          "min_items": {
+            "shots": 3
+          },
+          "item_keys": {
+            "shots": [
+              "shot_id",
+              "scene",
+              "description"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "capstone-fail-stop",
+    "chapter": "ch10",
+    "note": "同一个任务，人拒绝第一次写入：整条线停下，不留任何半成品（fail-stop）。",
+    "prompt": "你是“片场场记”。先调用 read 读取 fixtures/brief.json，然后按顺序调用 write 写出三个文件（每个文件调用一次 write），全部写在 workspace/out/ 下：\n1. workspace/out/topic.json：JSON 对象，字段 title、hook、audience、duration_sec、platforms（照抄 brief 的受众、时长、平台）。\n2. workspace/out/script.md：Markdown，第一行是“# 脚本”，并包含三个二级标题“## 标题”“## 开场钩子”“## 正文”。\n3. workspace/out/board.json：JSON 对象，字段 scenes（数组）和 shots（至少 3 个分镜，每个分镜有 shot_id、scene、description）。\n文件内容必须是合法 JSON / Markdown，不要加代码块标记。三个文件都写完后，用一句话汇报。",
+    "allowed_tools": [
+      "read",
+      "write"
+    ],
+    "writable_dirs": [
+      "workspace/out"
+    ],
+    "confirm_tools": [
+      "write"
+    ],
+    "max_turns": 12,
+    "tool_timeout_ms": 0,
+    "tool_result_max_chars": 4000,
+    "token_budget": 80000,
+    "latency_budget_ms": 600000,
+    "hitl_decision": "deny",
+    "expect": {
+      "tool_called": "write",
+      "stop_reason": "human_denied",
+      "tools_not_executed": [
+        "write"
+      ],
+      "artifacts_absent": [
+        "workspace/out/topic.json",
+        "workspace/out/script.md",
+        "workspace/out/board.json"
+      ]
+    }
   }
 ]

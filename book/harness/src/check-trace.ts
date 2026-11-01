@@ -3,6 +3,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { TraceRow } from "./trace.js";
+import { checkArtifact, checkWriteOrder, type ArtifactSpec } from "./check-artifacts.js";
 
 export type CaseSpec = {
   id: string;
@@ -41,6 +42,12 @@ export type CaseSpec = {
     tools_not_executed?: string[];
     /** Ch8：这些工具必须至少执行成功一次。 */
     tools_succeeded?: string[];
+    /** Ch10：交付物检查（在 harness 根目录下读文件）。 */
+    artifacts?: ArtifactSpec[];
+    /** Ch10：这些文件必须不存在（fail-stop：失败时不留半成品）。 */
+    artifacts_absent?: string[];
+    /** Ch10：这些文件第一次写入的先后顺序。 */
+    write_order?: string[];
     /** Ch7：trace 里必须出现的事件及最少次数，例如 { "tool_retry": 2 }。 */
     events?: Record<string, number>;
   };
@@ -104,6 +111,19 @@ export function checkTrace(rows: TraceRow[], spec: CaseSpec): CheckResult {
     }
   }
 
+  if (spec.expect.write_order) reasons.push(...checkWriteOrder(rows, spec.expect.write_order));
+
+  return { pass: reasons.length === 0, reasons };
+}
+
+/** trace + 产物一起验收；root 是 harness 根目录。 */
+export function checkCase(rows: TraceRow[], spec: CaseSpec, root: string): CheckResult {
+  const result = checkTrace(rows, spec);
+  const reasons = [...result.reasons];
+  for (const artifact of spec.expect.artifacts ?? []) reasons.push(...checkArtifact(root, artifact));
+  for (const path of spec.expect.artifacts_absent ?? []) {
+    if (checkArtifact(root, { path }).length === 0) reasons.push(`${path} should not exist`);
+  }
   return { pass: reasons.length === 0, reasons };
 }
 
@@ -113,7 +133,7 @@ if (process.argv[1]?.endsWith("check-trace.ts")) {
   const cases = JSON.parse(readFileSync(resolve("cases/cases.json"), "utf8")) as CaseSpec[];
   const spec = cases.find((c) => c.id === caseId);
   if (!spec) throw new Error(`unknown case ${caseId}`);
-  const result = checkTrace(parseTrace(readFileSync(resolve(tracePath), "utf8")), spec);
+  const result = checkCase(parseTrace(readFileSync(resolve(tracePath), "utf8")), spec, process.cwd());
   console.log(`${result.pass ? "PASS" : "FAIL"} ${caseId}${result.pass ? "" : ` — ${result.reasons.join("; ")}`}`);
   process.exitCode = result.pass ? 0 : 1;
 }

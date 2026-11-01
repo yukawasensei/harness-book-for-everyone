@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkTrace, parseTrace, type CaseSpec } from "../check-trace.js";
+import { checkCase, parseTrace, type CaseSpec } from "../check-trace.js";
 import { compareBaselines, formatReport, summarize, type Baseline, type CaseResult } from "./baseline.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -16,7 +16,8 @@ const selected = only ? cases.filter((c) => only.includes(c.id)) : cases;
 if (selected.length === 0) throw new Error(`no case matches CASES=${process.env.CASES}`);
 
 const baselinePath = resolve(root, "evals/baseline.json");
-const tracesDir = resolve(root, "evals/traces");
+// 全量运行才更新已归档的 trace；只跑部分时写到不入库的 traces/partial/，避免和 baseline 对不上。
+const tracesDir = resolve(root, only ? "traces/partial" : "evals/traces");
 mkdirSync(tracesDir, { recursive: true });
 const previous = existsSync(baselinePath) ? (JSON.parse(readFileSync(baselinePath, "utf8")) as Baseline) : undefined;
 
@@ -38,7 +39,7 @@ for (const spec of selected) {
   const traceText = existsSync(latest) ? scrub(readFileSync(latest, "utf8")) : "";
   writeFileSync(resolve(tracesDir, `${spec.id}.jsonl`), traceText, "utf8");
   const rows = parseTrace(traceText);
-  const verdict = rows.length > 0 ? checkTrace(rows, spec) : { pass: false, reasons: [`no trace (exit=${child.status} ${child.error?.message ?? ""})`] };
+  const verdict = rows.length > 0 ? checkCase(rows, spec, root) : { pass: false, reasons: [`no trace (exit=${child.status} ${child.error?.message ?? ""})`] };
   const end = rows.filter((r) => r.eventType === "harness_end").at(-1);
   const tools = rows.filter((r) => r.eventType === "tool_execution_start").map((r) => String(r.toolName));
   results.push({ id: spec.id, chapter: (spec as { chapter?: string }).chapter, pass: verdict.pass, stop_reason: (end?.stop_reason as string) ?? null, tools, reasons: verdict.reasons, durationMs: Date.now() - t0 });

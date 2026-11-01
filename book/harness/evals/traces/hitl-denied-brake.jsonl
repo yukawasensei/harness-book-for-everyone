@@ -1,35 +1,37 @@
-{"timestamp":"2026-11-01T16:00:22.186Z","eventType":"harness_start","case_id":"hitl-denied-brake","extensions":0,"activeTools":["write"],"maxTurns":8,"toolTimeoutMs":0,"contextBudgetChars":0,"toolResultMaxChars":0,"retry":{"maxRetries":0,"backoffMs":0,"onExhausted":"stop"},"writableDirs":["workspace/out"],"confirmTools":["write"],"tokenBudget":0,"latencyBudgetMs":0}
-{"timestamp":"2026-11-01T16:00:22.188Z","eventType":"agent_start"}
-{"timestamp":"2026-11-01T16:00:22.188Z","eventType":"turn_start"}
-{"timestamp":"2026-11-01T16:00:22.188Z","eventType":"message_start","role":"user"}
-{"timestamp":"2026-11-01T16:00:22.189Z","eventType":"message_end","role":"user"}
-{"timestamp":"2026-11-01T16:00:22.991Z","eventType":"message_start","role":"assistant"}
-{"timestamp":"2026-11-01T16:00:22.991Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:22.991Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.051Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.051Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.115Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.166Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.224Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.277Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.335Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.335Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.335Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.335Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:23.335Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:24.008Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:24.008Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:24.010Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:24.010Z","eventType":"message_update"}
-{"timestamp":"2026-11-01T16:00:24.010Z","eventType":"message_end","role":"assistant"}
-{"timestamp":"2026-11-01T16:00:24.010Z","eventType":"tool_execution_start","toolName":"write","toolCallId":"call_jy249eqa","args":{"path":"workspace/out/note.md","content":"第 12 场：道具清单已与美术组核对完毕。"}}
-{"timestamp":"2026-11-01T16:00:24.012Z","eventType":"hitl_request","toolName":"write","toolCallId":"call_jy249eqa"}
-{"timestamp":"2026-11-01T16:00:24.012Z","eventType":"hitl_decision","toolName":"write","toolCallId":"call_jy249eqa","approved":false,"by":"simulated","reason":"case hitl_decision=deny"}
-{"timestamp":"2026-11-01T16:00:24.012Z","eventType":"harness_stop","stop_reason":"human_denied","toolName":"write","by":"simulated","reason":"case hitl_decision=deny"}
-{"timestamp":"2026-11-01T16:00:24.012Z","eventType":"tool_execution_end","toolName":"write","toolCallId":"call_jy249eqa","isError":true}
-{"timestamp":"2026-11-01T16:00:24.012Z","eventType":"message_start","role":"toolResult"}
-{"timestamp":"2026-11-01T16:00:24.012Z","eventType":"message_end","role":"toolResult"}
-{"timestamp":"2026-11-01T16:00:24.012Z","eventType":"turn_end"}
-{"timestamp":"2026-11-01T16:00:24.013Z","eventType":"agent_end"}
-{"timestamp":"2026-11-01T16:00:24.013Z","eventType":"agent_settled"}
-{"timestamp":"2026-11-01T16:00:24.013Z","eventType":"harness_end","stop_reason":"human_denied","turns":0,"tokens":863,"case_id":"hitl-denied-brake","model":"ollama/qwen3.8:27b","tools":["write"],"durationMs":1826}
+{"timestamp":"2026-11-01T16:08:08.049Z","eventType":"harness_start","case_id":"hitl-denied-brake","extensions":0,"activeTools":["write"],"maxTurns":8,"toolTimeoutMs":0,"contextBudgetChars":0,"toolResultMaxChars":0,"retry":{"maxRetries":0,"backoffMs":0,"onExhausted":"stop"},"writableDirs":["workspace/out"],"confirmTools":["write"],"tokenBudget":0,"latencyBudgetMs":0}
+{"timestamp":"2026-11-01T16:08:08.051Z","eventType":"agent_start"}
+{"timestamp":"2026-11-01T16:08:08.051Z","eventType":"turn_start"}
+{"timestamp":"2026-11-01T16:08:08.051Z","eventType":"message_start","role":"user"}
+{"timestamp":"2026-11-01T16:08:08.051Z","eventType":"message_end","role":"user"}
+{"timestamp":"2026-11-01T16:08:08.940Z","eventType":"message_start","role":"assistant"}
+{"timestamp":"2026-11-01T16:08:08.941Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:08.941Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:08.999Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.000Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.000Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.001Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.001Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.061Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.061Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.061Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.061Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.061Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.114Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.114Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.114Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.733Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.733Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.791Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.791Z","eventType":"message_update"}
+{"timestamp":"2026-11-01T16:08:09.791Z","eventType":"message_end","role":"assistant"}
+{"timestamp":"2026-11-01T16:08:09.791Z","eventType":"tool_execution_start","toolName":"write","toolCallId":"call_oiiph71m","args":{"path":"workspace/out/note.md","content":"第 12 场：道具清单已与美术组核对完毕。\n"}}
+{"timestamp":"2026-11-01T16:08:09.793Z","eventType":"hitl_request","toolName":"write","toolCallId":"call_oiiph71m"}
+{"timestamp":"2026-11-01T16:08:09.793Z","eventType":"hitl_decision","toolName":"write","toolCallId":"call_oiiph71m","approved":false,"by":"simulated","reason":"case hitl_decision=deny"}
+{"timestamp":"2026-11-01T16:08:09.793Z","eventType":"harness_stop","stop_reason":"human_denied","toolName":"write","by":"simulated","reason":"case hitl_decision=deny"}
+{"timestamp":"2026-11-01T16:08:09.793Z","eventType":"tool_execution_end","toolName":"write","toolCallId":"call_oiiph71m","isError":true}
+{"timestamp":"2026-11-01T16:08:09.793Z","eventType":"message_start","role":"toolResult"}
+{"timestamp":"2026-11-01T16:08:09.793Z","eventType":"message_end","role":"toolResult"}
+{"timestamp":"2026-11-01T16:08:09.793Z","eventType":"turn_end"}
+{"timestamp":"2026-11-01T16:08:09.794Z","eventType":"agent_end"}
+{"timestamp":"2026-11-01T16:08:09.794Z","eventType":"agent_settled"}
+{"timestamp":"2026-11-01T16:08:09.794Z","eventType":"harness_end","stop_reason":"human_denied","turns":0,"tokens":865,"case_id":"hitl-denied-brake","model":"ollama/qwen3.8:27b","tools":["write"],"durationMs":1745}

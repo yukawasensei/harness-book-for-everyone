@@ -1,9 +1,9 @@
 {
   "model": "ollama/qwen3.8:27b",
-  "startedAt": "2026-11-01T15:59:05.065Z",
-  "finishedAt": "2026-11-01T16:00:41.968Z",
-  "passCount": 18,
-  "total": 18,
+  "startedAt": "2026-11-01T16:06:55.776Z",
+  "finishedAt": "2026-11-01T16:08:58.634Z",
+  "passCount": 20,
+  "total": 20,
   "results": [
     {
       "id": "read-happy",
@@ -14,7 +14,7 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 4957
+      "durationMs": 5021
     },
     {
       "id": "custom-tool-call",
@@ -25,7 +25,7 @@
         "hello"
       ],
       "reasons": [],
-      "durationMs": 4436
+      "durationMs": 4775
     },
     {
       "id": "custom-tool-schema-conflict",
@@ -36,7 +36,7 @@
         "hello"
       ],
       "reasons": [],
-      "durationMs": 12256
+      "durationMs": 8705
     },
     {
       "id": "max-turns-brake",
@@ -47,7 +47,7 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 4003
+      "durationMs": 4149
     },
     {
       "id": "tool-timeout-brake",
@@ -58,7 +58,7 @@
         "slow"
       ],
       "reasons": [],
-      "durationMs": 7021
+      "durationMs": 7253
     },
     {
       "id": "allowlist-no-bash",
@@ -67,7 +67,7 @@
       "stop_reason": "success",
       "tools": [],
       "reasons": [],
-      "durationMs": 6595
+      "durationMs": 6068
     },
     {
       "id": "path-escape-denied",
@@ -78,7 +78,7 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 5177
+      "durationMs": 3688
     },
     {
       "id": "context-budget-brake",
@@ -89,7 +89,7 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 3682
+      "durationMs": 4088
     },
     {
       "id": "tool-result-truncate",
@@ -100,7 +100,7 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 6592
+      "durationMs": 6381
     },
     {
       "id": "retry-recovers",
@@ -111,7 +111,7 @@
         "flaky"
       ],
       "reasons": [],
-      "durationMs": 5435
+      "durationMs": 5258
     },
     {
       "id": "retry-exhausted-brake",
@@ -122,7 +122,7 @@
         "flaky"
       ],
       "reasons": [],
-      "durationMs": 4505
+      "durationMs": 4589
     },
     {
       "id": "retry-degrade",
@@ -133,7 +133,7 @@
         "flaky"
       ],
       "reasons": [],
-      "durationMs": 5635
+      "durationMs": 4903
     },
     {
       "id": "hitl-approve-write",
@@ -144,7 +144,7 @@
         "write"
       ],
       "reasons": [],
-      "durationMs": 4704
+      "durationMs": 5333
     },
     {
       "id": "hitl-denied-brake",
@@ -155,7 +155,7 @@
         "write"
       ],
       "reasons": [],
-      "durationMs": 3998
+      "durationMs": 3860
     },
     {
       "id": "write-outside-writable-denied",
@@ -166,7 +166,7 @@
         "write"
       ],
       "reasons": [],
-      "durationMs": 4538
+      "durationMs": 7465
     },
     {
       "id": "budget-within-limits",
@@ -177,7 +177,7 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 5448
+      "durationMs": 5019
     },
     {
       "id": "cost-budget-brake",
@@ -188,7 +188,7 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 3911
+      "durationMs": 3588
     },
     {
       "id": "latency-budget-brake",
@@ -199,7 +199,34 @@
         "slow"
       ],
       "reasons": [],
-      "durationMs": 4007
+      "durationMs": 3870
+    },
+    {
+      "id": "capstone-set-clerk",
+      "chapter": "ch10",
+      "pass": true,
+      "stop_reason": "success",
+      "tools": [
+        "read",
+        "write",
+        "write",
+        "read",
+        "write"
+      ],
+      "reasons": [],
+      "durationMs": 22372
+    },
+    {
+      "id": "capstone-fail-stop",
+      "chapter": "ch10",
+      "pass": true,
+      "stop_reason": "human_denied",
+      "tools": [
+        "read",
+        "write"
+      ],
+      "reasons": [],
+      "durationMs": 6471
     }
   ]
 }

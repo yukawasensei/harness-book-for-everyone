@@ -106,6 +106,26 @@ NO_PROXY=127.0.0.1,localhost HITL_MODE=tty CASE_ID=hitl-approve-write npm start
 
 `stop_reason` 新增：`cost_budget`、`latency_budget`。
 
+### Ch10 · 综合项目：片场场记（精简版）
+
+一次运行用上前面所有能力，交付一个小产品的三份产物：读 `fixtures/brief.json` → 依次写 `workspace/out/topic.json`（选题）、`script.md`（脚本）、`board.json`（分镜）。
+
+| 用上的闸门 | 在 case 里怎么设 |
+|---|---|
+| 工具白名单 + 路径沙箱 | `allowed_tools: ["read", "write"]` |
+| 只能写一个目录 | `writable_dirs: ["workspace/out"]` |
+| 每次写入前人确认 | `confirm_tools: ["write"]` |
+| 轮数 / 上下文 / 成本 / 延迟预算 | `max_turns`、`tool_result_max_chars`、`token_budget`、`latency_budget_ms` |
+
+| 新能力 | 文件 |
+|---|---|
+| **产物验收**：trace 证明过程守规矩，产物检查证明交付物对；两者都绿才算过（JSON 字段、数组条数、每项字段、Markdown 标题行） | `src/check-artifacts.ts` |
+| 写入顺序：`expect.write_order`（按每个文件第一次成功写入的先后） | `src/check-artifacts.ts` |
+| fail-stop：任何一步被拦或被拒，整条线停下，不留半成品（`expect.artifacts_absent`） | `src/check-trace.ts` |
+| `npm run check` 与 `npm run eval` 都同时检查 trace 和产物 | `src/check-trace.ts`、`src/eval/run-evals.ts` |
+
+和旧版 `labs/07-set-clerk` 的区别：那里是**写死顺序的流水线**调用模型；这里是**同一个 pi agent** 自己决定怎么调用工具，harness 只负责守住边界和验收。
+
 ## 为什么要隔离 `~/.pi`
 
 pi 默认会读 `~/.pi/agent/` 下的扩展、技能、全局 AGENTS.md、模型清单和凭据。每台机器都不一样：同一份代码，在作者机器上可能多出扩展工具、多一段系统提示，trace 也就对不上。书里的 harness 用 pi SDK 的三处开关把它们关掉：
@@ -139,7 +159,7 @@ npm run typecheck
 # 有本机 Ollama 时：跑全部 case，写基线并对比上一份（Ch6）
 npm run eval
 npm run report                            # 只读：看 evals/baseline.json
-CASES=read-happy,max-turns-brake npm run eval   # 只跑部分（不覆盖基线）
+CASES=read-happy,max-turns-brake npm run eval   # 只跑部分（不覆盖基线和已归档的 trace）
 
 # 单跑一条（CASE_ID 选 case，默认 read-happy）
 NO_PROXY=127.0.0.1,localhost CASE_ID=custom-tool-call npm start
@@ -168,5 +188,7 @@ npm run check -- traces/latest.jsonl custom-tool-call    # PASS custom-tool-call
 | `budget-within-limits` | ch09 | `read`（宽松预算） | `success`，`turn_guard` 记累计 token 与耗时 |
 | `cost-budget-brake` | ch09 | `read`（`token_budget=300`） | 第 2 次模型调用前停，`cost_budget` |
 | `latency-budget-brake` | ch09 | `slow`（`latency_budget_ms=1500`，无单步超时） | `stop_reason=latency_budget` |
+| `capstone-set-clerk` | ch10 | `read`、`write`（全部闸门） | 三份产物齐全且合规、写入顺序对、3 次确认、`success` |
+| `capstone-fail-stop` | ch10 | 同上，第一次写入被拒 | `human_denied`，`workspace/out` 里什么都没有 |
 
 设计来源：[`notes/_curriculum-redesign-proposal.md`](../../notes/_curriculum-redesign-proposal.md)。
