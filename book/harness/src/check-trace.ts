@@ -12,6 +12,16 @@ export type CaseSpec = {
   max_turns?: number;
   /** Ch4：自定义工具超时毫秒（默认 0 = 不设）。 */
   tool_timeout_ms?: number;
+  /** Ch7：上下文预算（字符，0 = 不设），超了就停。 */
+  context_budget_chars?: number;
+  /** Ch7：单次工具结果上限（字符，0 = 不截），超了就截断后继续。 */
+  tool_result_max_chars?: number;
+  /** Ch7：工具失败后由 harness 重试几次，用完怎么办，退避基数。 */
+  max_retries?: number;
+  on_exhausted?: "stop" | "degrade";
+  retry_backoff_ms?: number;
+  /** Ch7：flaky 演示工具前几次必定失败（默认一直失败）。 */
+  flaky_fail_times?: number;
   expect: {
     tool_called?: string;
     stop_reason: string;
@@ -19,6 +29,8 @@ export type CaseSpec = {
     arg_types?: Record<string, string>;
     /** Ch5：这些工具哪怕被模型请求，也不得执行成功。 */
     tools_not_executed?: string[];
+    /** Ch7：trace 里必须出现的事件及最少次数，例如 { "tool_retry": 2 }。 */
+    events?: Record<string, number>;
   };
 };
 
@@ -56,6 +68,11 @@ export function checkTrace(rows: TraceRow[], spec: CaseSpec): CheckResult {
     if (starts.some((r) => r.toolName === name && succeeded.has(String(r.toolCallId)))) {
       reasons.push(`tool ${name} was executed`);
     }
+  }
+
+  for (const [eventType, min] of Object.entries(spec.expect.events ?? {})) {
+    const count = rows.filter((r) => r.eventType === eventType).length;
+    if (count < min) reasons.push(`event ${eventType} x${count}, expected >= ${min}`);
   }
 
   const argTypes = spec.expect.arg_types;

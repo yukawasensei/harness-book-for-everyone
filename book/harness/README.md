@@ -63,6 +63,20 @@ Ch4 时 `stop_reason`：`success | max_turns | tool_timeout | model_error`。
 
 改 prompt、改闸门、换模型之前先有基线；改完再跑一次，看对比。
 
+### Ch7 · 上下文预算与重试降级
+
+| 能力 | 文件 |
+|---|---|
+| 上下文预算：每轮结束估算上下文字符数（写进 `turn_guard.contextChars`），超 `context_budget_chars` 就在下一次模型调用**之前**停（`context_budget`） | `src/gates/context-budget.ts` + `src/index.ts` |
+| 工具结果截断：超 `tool_result_max_chars` 就截断、打标记、记 `tool_result_truncated`，然后继续（降级而不是停机）；对 pi 内置 `read` 同样生效 | `afterToolCall` in `src/index.ts` |
+| 重试：harness 在 executor 外面重试 `max_retries` 次，指数退避，每次记 `tool_retry` | `src/gates/retry.ts` |
+| 用完之后由产品决定：`on_exhausted=stop` → `retry_exhausted`；`degrade` → 返回标注 `[degraded]` 的兜底结果，记 `tool_degraded` | `src/gates/retry.ts` |
+| 包装顺序：重试在内层（每次尝试）、超时在外层（罩住全部尝试） | `src/index.ts` |
+| 演示：长文档 `fixtures/big-notes.md`；不稳定的天气工具 `flaky`（前 `flaky_fail_times` 次必失败） | `fixtures/`、`src/tools/flaky.ts` |
+| 验收可要求事件证据：`expect.events`，如 `{ "tool_retry": 2 }` | `src/check-trace.ts` |
+
+`stop_reason` 新增：`context_budget`、`retry_exhausted`。
+
 ## 为什么要隔离 `~/.pi`
 
 pi 默认会读 `~/.pi/agent/` 下的扩展、技能、全局 AGENTS.md、模型清单和凭据。每台机器都不一样：同一份代码，在作者机器上可能多出扩展工具、多一段系统提示，trace 也就对不上。书里的 harness 用 pi SDK 的三处开关把它们关掉：
@@ -114,5 +128,10 @@ npm run check -- traces/latest.jsonl custom-tool-call    # PASS custom-tool-call
 | `tool-timeout-brake` | ch04 | `slow`（`tool_timeout_ms=400`） | 调用 `slow`，`stop_reason=tool_timeout` |
 | `allowlist-no-bash` | ch05 | `read` | prompt 要 bash；bash/write/edit 均未执行，`success` |
 | `path-escape-denied` | ch05 | `read` | 请求 `../../README.md`；执行前被拦，`stop_reason=path_denied` |
+| `context-budget-brake` | ch07 | `read`（预算 6000 字符） | 读长文档后 `stop_reason=context_budget` |
+| `tool-result-truncate` | ch07 | `read`（结果上限 1500） | `tool_result_truncated` + `success` |
+| `retry-recovers` | ch07 | `flaky`（前 2 次失败，重试 2） | `tool_retry`×2 + `success` |
+| `retry-exhausted-brake` | ch07 | `flaky`（一直失败，重试 2，stop） | `stop_reason=retry_exhausted` |
+| `retry-degrade` | ch07 | `flaky`（一直失败，重试 1，degrade） | `tool_degraded` + `success` |
 
 设计来源：[`notes/_curriculum-redesign-proposal.md`](../../notes/_curriculum-redesign-proposal.md)。

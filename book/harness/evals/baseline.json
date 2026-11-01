@@ -1,9 +1,9 @@
 {
   "model": "ollama/qwen3.8:27b",
-  "startedAt": "2026-11-01T15:47:23.505Z",
-  "finishedAt": "2026-11-01T15:48:10.231Z",
-  "passCount": 7,
-  "total": 7,
+  "startedAt": "2026-11-01T15:51:42.175Z",
+  "finishedAt": "2026-11-01T15:52:46.596Z",
+  "passCount": 12,
+  "total": 12,
   "results": [
     {
       "id": "read-happy",
@@ -14,7 +14,7 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 5071
+      "durationMs": 5109
     },
     {
       "id": "custom-tool-call",
@@ -25,7 +25,7 @@
         "hello"
       ],
       "reasons": [],
-      "durationMs": 4666
+      "durationMs": 4379
     },
     {
       "id": "custom-tool-schema-conflict",
@@ -36,7 +36,7 @@
         "hello"
       ],
       "reasons": [],
-      "durationMs": 15496
+      "durationMs": 9139
     },
     {
       "id": "max-turns-brake",
@@ -47,7 +47,7 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 4385
+      "durationMs": 4155
     },
     {
       "id": "tool-timeout-brake",
@@ -58,7 +58,7 @@
         "slow"
       ],
       "reasons": [],
-      "durationMs": 6511
+      "durationMs": 6497
     },
     {
       "id": "allowlist-no-bash",
@@ -67,7 +67,7 @@
       "stop_reason": "success",
       "tools": [],
       "reasons": [],
-      "durationMs": 6296
+      "durationMs": 5576
     },
     {
       "id": "path-escape-denied",
@@ -78,7 +78,62 @@
         "read"
       ],
       "reasons": [],
-      "durationMs": 4300
+      "durationMs": 3747
+    },
+    {
+      "id": "context-budget-brake",
+      "chapter": "ch07",
+      "pass": true,
+      "stop_reason": "context_budget",
+      "tools": [
+        "read"
+      ],
+      "reasons": [],
+      "durationMs": 3575
+    },
+    {
+      "id": "tool-result-truncate",
+      "chapter": "ch07",
+      "pass": true,
+      "stop_reason": "success",
+      "tools": [
+        "read"
+      ],
+      "reasons": [],
+      "durationMs": 6710
+    },
+    {
+      "id": "retry-recovers",
+      "chapter": "ch07",
+      "pass": true,
+      "stop_reason": "success",
+      "tools": [
+        "flaky"
+      ],
+      "reasons": [],
+      "durationMs": 4996
+    },
+    {
+      "id": "retry-exhausted-brake",
+      "chapter": "ch07",
+      "pass": true,
+      "stop_reason": "retry_exhausted",
+      "tools": [
+        "flaky"
+      ],
+      "reasons": [],
+      "durationMs": 4008
+    },
+    {
+      "id": "retry-degrade",
+      "chapter": "ch07",
+      "pass": true,
+      "stop_reason": "success",
+      "tools": [
+        "flaky"
+      ],
+      "reasons": [],
+      "durationMs": 6529
     }
   ]
 }

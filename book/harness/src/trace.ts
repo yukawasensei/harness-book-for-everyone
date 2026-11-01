@@ -4,7 +4,15 @@
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
-export type StopReason = "success" | "max_turns" | "tool_timeout" | "tool_denied" | "path_denied" | "model_error";
+export type StopReason =
+  | "success"
+  | "max_turns"
+  | "tool_timeout"
+  | "tool_denied"
+  | "path_denied"
+  | "context_budget"
+  | "retry_exhausted"
+  | "model_error";
 
 export type TraceRow = {
   timestamp: string;

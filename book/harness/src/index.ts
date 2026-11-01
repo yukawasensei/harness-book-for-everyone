@@ -3,6 +3,7 @@
 // Ch3 · 增量：注册自定义工具；隔离本机 ~/.pi 全局配置（见 isolated-pi.ts）。
 // Ch4 · 增量：轮数上限 + 工具超时，停机原因统一记在 run-state。
 // Ch5 · 增量：beforeToolCall 里执行白名单复核 + 路径沙箱。
+// Ch7 · 增量：上下文预算（超了停 / 工具结果截断）+ 工具重试与降级。
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,9 @@ import { createRunState } from "./run-state.js";
 import { createMaxTurnsGuard } from "./gates/max-turns.js";
 import { withToolTimeout } from "./gates/tool-timeout.js";
 import { decideToolCall } from "./gates/tool-policy.js";
+import { estimateContextChars, truncateToolContent } from "./gates/context-budget.js";
+import { withRetry } from "./gates/retry.js";
+import { createFlakyTool } from "./tools/flaky.js";
 
 if (process.platform !== "linux") throw new Error("Run the harness inside Linux/WSL");
 
@@ -34,11 +38,26 @@ const run = createRunState(writeTrace);
 const maxTurns = spec.max_turns ?? 8;
 const toolTimeoutMs = spec.tool_timeout_ms ?? 0;
 const turns = createMaxTurnsGuard(maxTurns);
+const contextBudgetChars = spec.context_budget_chars ?? 0;
+const toolResultMaxChars = spec.tool_result_max_chars ?? 0;
+const retry = { maxRetries: spec.max_retries ?? 0, backoffMs: spec.retry_backoff_ms ?? 0, onExhausted: spec.on_exhausted ?? "stop" } as const;
+const now = () => new Date().toISOString();
 
-// 工具白名单写在 harness 里，不靠 prompt；自定义工具也只在白名单里才注册，并统一套上超时。
-const customTools = CUSTOM_TOOLS.filter((tool) => spec.allowed_tools.includes(tool.name)).map((tool) =>
-  withToolTimeout(tool, toolTimeoutMs, (info) => run.stop("tool_timeout", info)),
-);
+// 工具白名单写在 harness 里，不靠 prompt；自定义工具也只在白名单里才注册，
+// 并统一套上：重试（内层，每次尝试）→ 超时（外层，罩住全部尝试）。
+const registry = [...CUSTOM_TOOLS, createFlakyTool(spec.flaky_fail_times ?? Number.POSITIVE_INFINITY)];
+const customTools = registry
+  .filter((tool) => spec.allowed_tools.includes(tool.name))
+  .map((tool) =>
+    withRetry(tool, retry, {
+      onRetry: (info) => writeTrace({ timestamp: now(), eventType: "tool_retry", ...info }),
+      onExhausted: (info) => {
+        writeTrace({ timestamp: now(), eventType: info.action === "degrade" ? "tool_degraded" : "retry_exhausted", ...info });
+        if (info.action === "stop") run.stop("retry_exhausted", info);
+      },
+    }),
+  )
+  .map((tool) => withToolTimeout(tool, toolTimeoutMs, (info) => run.stop("tool_timeout", info)));
 const { session, extensionsResult } = await createAgentSession({
   cwd,
   agentDir,
@@ -61,15 +80,23 @@ writeTrace({
   activeTools: session.getActiveToolNames(),
   maxTurns,
   toolTimeoutMs,
+  contextBudgetChars,
+  toolResultMaxChars,
+  retry,
 });
 
 // pi-agent-core 钩子 1：每轮结束后由 harness 决定要不要继续。
-session.agent.shouldStopAfterTurn = () => {
+session.agent.shouldStopAfterTurn = ({ context }) => {
   if (run.stopped) return true;
   const stop = turns.recordTurn();
-  writeTrace({ timestamp: new Date().toISOString(), eventType: "turn_guard", turn: turns.completed, maxTurns });
+  const contextChars = estimateContextChars(context.messages);
+  writeTrace({ timestamp: now(), eventType: "turn_guard", turn: turns.completed, maxTurns, contextChars });
   if (stop) run.stop("max_turns", { turn: turns.completed, maxTurns });
-  return stop;
+  // 上下文超预算：在把它喂给下一轮模型之前停下。
+  else if (contextBudgetChars > 0 && contextChars > contextBudgetChars) {
+    run.stop("context_budget", { contextChars, contextBudgetChars });
+  }
+  return run.stopped;
 };
 
 // pi-agent-core 钩子 2：工具执行前过策略（白名单复核 + 路径沙箱）；不过就拦下并停机。
@@ -81,7 +108,14 @@ session.agent.beforeToolCall = async ({ toolCall, args }) => {
 };
 
 // pi-agent-core 钩子 3：工具执行完后，若某道闸门已咬住，就结束这一批工具调用。
-session.agent.afterToolCall = async () => (run.stopped ? { isError: true, terminate: true } : undefined);
+// 同时负责截断超长的工具结果（包括 pi 内置的 read）。
+session.agent.afterToolCall = async ({ toolCall, result }) => {
+  if (run.stopped) return { isError: true, terminate: true };
+  const cut = truncateToolContent(result.content, toolResultMaxChars);
+  if (!cut.truncated) return undefined;
+  writeTrace({ timestamp: now(), eventType: "tool_result_truncated", toolName: toolCall.name, originalChars: cut.originalChars, maxChars: toolResultMaxChars });
+  return { content: cut.content };
+};
 
 const unsubscribe = session.subscribe((event) => {
   writeTrace(toTraceRow(event as unknown as { type: string }));
