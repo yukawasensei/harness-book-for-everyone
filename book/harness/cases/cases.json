@@ -269,5 +269,50 @@
         "write"
       ]
     }
+  },
+  {
+    "id": "budget-within-limits",
+    "chapter": "ch09",
+    "note": "预算宽松：两轮下来 token 和耗时都在预算内，闸门不干扰正常任务；turn_guard 里能看到累计用量。",
+    "prompt": "必须调用 read 工具读取 lesson-input.md，然后只根据文件内容，用一句中文说明 Harness 的职责。",
+    "allowed_tools": [
+      "read"
+    ],
+    "token_budget": 50000,
+    "latency_budget_ms": 120000,
+    "expect": {
+      "tool_called": "read",
+      "stop_reason": "success",
+      "events": {
+        "turn_guard": 2
+      }
+    }
+  },
+  {
+    "id": "cost-budget-brake",
+    "chapter": "ch09",
+    "note": "系统提示 + 工具清单本身就上千 token；预算 300：第 1 轮结束、第 2 次模型调用之前停下。",
+    "prompt": "必须调用 read 工具读取 lesson-input.md，然后只根据文件内容，用一句中文说明 Harness 的职责。",
+    "allowed_tools": [
+      "read"
+    ],
+    "token_budget": 300,
+    "expect": {
+      "tool_called": "read",
+      "stop_reason": "cost_budget"
+    }
+  },
+  {
+    "id": "latency-budget-brake",
+    "chapter": "ch09",
+    "note": "整次运行只给 1500ms，没有任何单步超时。两处检查：工具开始前（模型调用已经用掉 1.5s 就不再开工具），或每轮结束后（slow 睡完 2.5s 后不再调用模型）。哪一处先咬住都记 latency_budget。",
+    "prompt": "必须调用 slow 工具，delay_ms 填 2500，然后告诉我它返回了什么。",
+    "allowed_tools": [
+      "slow"
+    ],
+    "latency_budget_ms": 1500,
+    "expect": {
+      "stop_reason": "latency_budget"
+    }
   }
 ]

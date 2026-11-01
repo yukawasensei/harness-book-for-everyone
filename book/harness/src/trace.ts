@@ -13,6 +13,8 @@ export type StopReason =
   | "context_budget"
   | "retry_exhausted"
   | "human_denied"
+  | "cost_budget"
+  | "latency_budget"
   | "model_error";
 
 export type TraceRow = {

@@ -5,6 +5,7 @@
 // Ch5 · 增量：beforeToolCall 里执行白名单复核 + 路径沙箱。
 // Ch7 · 增量：上下文预算（超了停 / 工具结果截断）+ 工具重试与降级。
 // Ch8 · 增量：第一次开放写入（只能写 writable_dirs）+ 人机确认门。
+// Ch9 · 增量：整次运行的成本（token）与延迟预算。
 import { mkdirSync, readFileSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,6 +22,7 @@ import { estimateContextChars, truncateToolContent } from "./gates/context-budge
 import { withRetry } from "./gates/retry.js";
 import { createFlakyTool } from "./tools/flaky.js";
 import { denyAllApprover, simulatedApprover, ttyApprover } from "./gates/hitl.js";
+import { createBudgetGuard } from "./gates/budget.js";
 
 if (process.platform !== "linux") throw new Error("Run the harness inside Linux/WSL");
 
@@ -44,6 +46,7 @@ const contextBudgetChars = spec.context_budget_chars ?? 0;
 const toolResultMaxChars = spec.tool_result_max_chars ?? 0;
 const retry = { maxRetries: spec.max_retries ?? 0, backoffMs: spec.retry_backoff_ms ?? 0, onExhausted: spec.on_exhausted ?? "stop" } as const;
 const now = () => new Date().toISOString();
+const budget = createBudgetGuard({ tokenBudget: spec.token_budget ?? 0, latencyBudgetMs: spec.latency_budget_ms ?? 0 });
 const writableDirs = spec.writable_dirs ?? [];
 const confirmTools = spec.confirm_tools ?? [];
 const approver =
@@ -101,25 +104,36 @@ writeTrace({
   retry,
   writableDirs,
   confirmTools,
+  tokenBudget: spec.token_budget ?? 0,
+  latencyBudgetMs: spec.latency_budget_ms ?? 0,
 });
 
 // pi-agent-core 钩子 1：每轮结束后由 harness 决定要不要继续。
-session.agent.shouldStopAfterTurn = ({ context }) => {
+session.agent.shouldStopAfterTurn = ({ context, message }) => {
+  budget.recordUsage(message.usage);
   if (run.stopped) return true;
   const stop = turns.recordTurn();
   const contextChars = estimateContextChars(context.messages);
-  writeTrace({ timestamp: now(), eventType: "turn_guard", turn: turns.completed, maxTurns, contextChars });
+  writeTrace({ timestamp: now(), eventType: "turn_guard", turn: turns.completed, maxTurns, contextChars, tokens: budget.tokens, elapsedMs: budget.elapsedMs() });
   if (stop) run.stop("max_turns", { turn: turns.completed, maxTurns });
   // 上下文超预算：在把它喂给下一轮模型之前停下。
   else if (contextBudgetChars > 0 && contextChars > contextBudgetChars) {
     run.stop("context_budget", { contextChars, contextBudgetChars });
   }
+  // 整次运行的成本 / 延迟预算：同样在下一次模型调用之前检查。
+  const over = budget.check();
+  if (over) run.stop(over.stopReason, over.details);
   return run.stopped;
 };
 
 // pi-agent-core 钩子 2：工具执行前过策略（白名单复核 + 路径沙箱）；不过就拦下并停机。
 // 策略过了，再看要不要人确认（先挡掉越界的，再去打扰人）。
 session.agent.beforeToolCall = async ({ toolCall, args }) => {
+  const over = budget.check(); // 已经超时/超支，就别再开始新的工具
+  if (over) {
+    run.stop(over.stopReason, over.details);
+    return { block: true, reason: `Harness: ${over.stopReason}`, terminate: true };
+  }
   const decision = decideToolCall({ toolName: toolCall.name, args }, { allowedTools: spec.allowed_tools, workspaceRoot: cwd, writableDirs });
   if (!decision.allow) {
     run.stop(decision.stopReason, decision.details);
@@ -168,6 +182,7 @@ try {
     eventType: "harness_end",
     stop_reason: stopReason,
     turns: turns.completed,
+    tokens: budget.tokens,
     case_id: spec.id,
     model: `ollama/${modelId}`,
     tools: spec.allowed_tools,

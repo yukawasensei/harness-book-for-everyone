@@ -94,6 +94,18 @@ Ch4 时 `stop_reason`：`success | max_turns | tool_timeout | model_error`。
 NO_PROXY=127.0.0.1,localhost HITL_MODE=tty CASE_ID=hitl-approve-write npm start
 ```
 
+### Ch9 · 成本与延迟预算
+
+| 能力 | 文件 |
+|---|---|
+| 预算罩住**整次运行**（所有轮、所有工具）：每一步都不贵，加起来也可能超 | `src/gates/budget.ts` |
+| 成本：累计 pi 报告的真实 token 用量（`message.usage`）；本地模型不花钱，用 token 当成本代理，接云模型时换成金额 | `src/gates/budget.ts` |
+| 延迟：从运行开始算的墙钟时间；和 Ch4 的“单个工具超时”是两回事 | `src/gates/budget.ts` |
+| 两处检查：每轮结束后（下一次模型调用之前）、每个工具开始之前 | `shouldStopAfterTurn` / `beforeToolCall` in `src/index.ts` |
+| trace 留证：`turn_guard.tokens` / `turn_guard.elapsedMs`；`harness_end.tokens` | `src/index.ts` |
+
+`stop_reason` 新增：`cost_budget`、`latency_budget`。
+
 ## 为什么要隔离 `~/.pi`
 
 pi 默认会读 `~/.pi/agent/` 下的扩展、技能、全局 AGENTS.md、模型清单和凭据。每台机器都不一样：同一份代码，在作者机器上可能多出扩展工具、多一段系统提示，trace 也就对不上。书里的 harness 用 pi SDK 的三处开关把它们关掉：
@@ -153,5 +165,8 @@ npm run check -- traces/latest.jsonl custom-tool-call    # PASS custom-tool-call
 | `hitl-approve-write` | ch08 | `write`（需确认，模拟同意） | 写入 `workspace/out/note.md`，`success` |
 | `hitl-denied-brake` | ch08 | `write`（需确认，模拟拒绝） | 不执行，`stop_reason=human_denied` |
 | `write-outside-writable-denied` | ch08 | `write`（只能写 `workspace/out`） | 写 `src/hacked.ts` 被拦，`path_denied` |
+| `budget-within-limits` | ch09 | `read`（宽松预算） | `success`，`turn_guard` 记累计 token 与耗时 |
+| `cost-budget-brake` | ch09 | `read`（`token_budget=300`） | 第 2 次模型调用前停，`cost_budget` |
+| `latency-budget-brake` | ch09 | `slow`（`latency_budget_ms=1500`，无单步超时） | `stop_reason=latency_budget` |
 
 设计来源：[`notes/_curriculum-redesign-proposal.md`](../../notes/_curriculum-redesign-proposal.md)。

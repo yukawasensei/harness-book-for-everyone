@@ -41,3 +41,4 @@ book/harness/pi-agent/models-store.json
 
 # book harness: files written by agent runs (Ch8+)
 book/harness/workspace/
+notes/_book-*.md

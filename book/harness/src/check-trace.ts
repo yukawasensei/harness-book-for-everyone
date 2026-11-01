@@ -28,6 +28,10 @@ export type CaseSpec = {
   confirm_tools?: string[];
   /** Ch8：评测用的“模拟的人”的决定；真跑时用 HITL_MODE=tty 在终端里确认。 */
   hitl_decision?: "approve" | "deny";
+  /** Ch9：整次运行的 token 预算（成本代理，0 = 不设）。 */
+  token_budget?: number;
+  /** Ch9：整次运行的墙钟预算（毫秒，0 = 不设）。 */
+  latency_budget_ms?: number;
   expect: {
     tool_called?: string;
     stop_reason: string;
