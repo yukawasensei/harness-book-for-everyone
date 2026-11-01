@@ -1,0 +1,11 @@
+{
+  "name": "07-set-clerk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node src/run-all.mjs && node src/validate-schema.mjs",
+    "eval:schema": "node src/run-all.mjs && node src/validate-schema.mjs",
+    "stubs": "node src/run-all.mjs",
+    "eval:live": "node src/eval-live-stub.mjs"
+  }
+}

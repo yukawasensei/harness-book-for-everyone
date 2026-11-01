@@ -40,7 +40,7 @@ flowchart LR
 | 成功标准 = 绿跑 + 路径 + Trace | **做** | 主观「好看」无法当门禁（费曼已过） |
 | 样本栈 pi + 本地 qwen | **做** | 与课 01–18 / lab05–06 连续 |
 | 真上传 / 云计费 / 真实品牌 / 真账号 | **不做** | 公开安全；Out of scope |
-| lab 技能桩实现 | **下一课** | 本课只钉产品与验收；`labs/07`（或等价）留给课 20 |
+| lab 技能桩实现 | **课 20 已落** | 见 [`labs/07-set-clerk`](../../labs/07-set-clerk/) 与 [课 20](./20-skill-eval-stubs.md) |
 | dsh Web Agent + 服务器沙箱 | **占坑** | 项目二形态课，不当本弧依赖 |
 
 ## 要点
@@ -64,7 +64,7 @@ flowchart LR
 ## 对照工程
 
 - **本课**：产品定义与验收口径（本文 + 图解）；**不新增** lab 技能实现。  
-- **下一课（课 20）**：在 `labs/07-set-clerk`（名称可微调）落下四个 skill 桩、sandbox 输出路径与 schema/live case 骨架。  
+- **下一课（课 20）**：已落 [`labs/07-set-clerk`](../../labs/07-set-clerk/)——四个 skill 桩、sandbox 输出路径与 schema/path/Trace case。  
 - **已有底座**：`labs/05-minimal-harness` 闸门 · `labs/06-evals` 评测形状可复用。  
 - **项目二（未来）**：dsh Web Agent + 服务器沙箱——学成熟壳与远端执行边界，另开课。
 
@@ -78,7 +78,7 @@ flowchart LR
 
 ## 下一步
 
-- 课 20：为四技能落 lab 桩 + schema/live 门禁骨架。  
+- 下一课：[20 · 技能评测桩](./20-skill-eval-stubs.md)（`labs/07-set-clerk` 四技能桩 + schema/path/Trace）。  
 - 巩固：对照课 10「落地」与课 13「Trace 签字」——本课把它们收成虚拟产品 backlog。  
 - 上一课：[18 · 开源读者上手](./18-getting-started.md) · 路线总览：[README](./README.md)
 
