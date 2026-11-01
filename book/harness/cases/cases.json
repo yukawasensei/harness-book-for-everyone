@@ -42,5 +42,33 @@
         "name": "string"
       }
     }
+  },
+  {
+    "id": "max-turns-brake",
+    "chapter": "ch04",
+    "note": "读文件再回答至少要 2 轮；max_turns=1 时第 1 轮结束就必须停。",
+    "prompt": "必须调用 read 工具读取 lesson-input.md，然后用一句中文说明 Harness 的职责。",
+    "allowed_tools": [
+      "read"
+    ],
+    "max_turns": 1,
+    "expect": {
+      "tool_called": "read",
+      "stop_reason": "max_turns"
+    }
+  },
+  {
+    "id": "tool-timeout-brake",
+    "chapter": "ch04",
+    "note": "slow 要睡 3000ms，harness 只给 400ms；prompt 再怎么说“请耐心等”也没用。",
+    "prompt": "必须调用 slow 工具，delay_ms 填 3000。请耐心等它完成，不要放弃。",
+    "allowed_tools": [
+      "slow"
+    ],
+    "tool_timeout_ms": 400,
+    "expect": {
+      "tool_called": "slow",
+      "stop_reason": "tool_timeout"
+    }
   }
 ]

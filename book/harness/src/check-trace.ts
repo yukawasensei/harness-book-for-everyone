@@ -8,6 +8,10 @@ export type CaseSpec = {
   id: string;
   prompt: string;
   allowed_tools: string[];
+  /** Ch4：最多几轮（默认 8）。 */
+  max_turns?: number;
+  /** Ch4：自定义工具超时毫秒（默认 0 = 不设）。 */
+  tool_timeout_ms?: number;
   expect: {
     tool_called?: string;
     stop_reason: string;

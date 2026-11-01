@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { checkTrace, parseTrace, type CaseSpec } from "./check-trace.js";
 import { toTraceRow } from "./trace.js";
-import { helloTool, CUSTOM_TOOLS } from "./tools/hello.js";
+import { helloTool } from "./tools/hello.js";
+import { CUSTOM_TOOLS } from "./tools/index.js";
 import { createIsolatedPi, ISOLATION_FLAGS } from "./isolated-pi.js";
 
 const cases = JSON.parse(readFileSync("cases/cases.json", "utf8")) as CaseSpec[];
@@ -26,8 +27,8 @@ test("hello executor: greets and reports the type it actually received", async (
   assert.equal((result.details as { receivedType: string }).receivedType, "string");
 });
 
-test("CUSTOM_TOOLS registry only contains hello in ch03", () => {
-  assert.deepEqual(CUSTOM_TOOLS.map((t) => t.name), ["hello"]);
+test("CUSTOM_TOOLS registry contains hello", () => {
+  assert.ok(CUSTOM_TOOLS.some((t) => t.name === "hello"));
 });
 
 // --- cases ---

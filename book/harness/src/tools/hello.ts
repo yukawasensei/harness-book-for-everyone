@@ -19,6 +19,3 @@ export const helloTool = defineTool({
     };
   },
 });
-
-/** 本章 harness 可注册的自定义工具；是否真的开放，由 case 的 allowed_tools 决定。 */
-export const CUSTOM_TOOLS = [helloTool];

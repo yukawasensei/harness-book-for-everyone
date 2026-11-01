@@ -1,4 +1,4 @@
-# 书中的 Harness · Ch3 / Book Harness · Ch3
+# 书中的 Harness / Book Harness
 
 《写给大家看的 Harness 书》全书只维护这一个 harness，逐章增长；每章结束打 git tag（`ch02`、`ch03`…），用 `git checkout chNN` 对照。
 
@@ -25,7 +25,19 @@
 | **隔离 `~/.pi`**：只用仓库里的 `pi-agent/models.json`；不加载全局扩展、技能、提示模板、主题、AGENTS.md；凭据只在内存 | `src/isolated-pi.ts` |
 | 开跑前留证：`harness_start.extensions`（应为 0）与 `activeTools` | `src/index.ts` |
 
-`stop_reason` 目前只有 `success | model_error`；后续章节逐个加入 `max_turns`、`tool_timeout`、`path_denied`……
+### Ch4 · 刹车：轮数与超时
+
+| 能力 | 文件 |
+|---|---|
+| 停机原因只记一处：`run.stop(reason)`，第一次生效，写 `harness_stop` | `src/run-state.ts` |
+| 轮数上限：pi 钩子 `session.agent.shouldStopAfterTurn`，每轮写 `turn_guard`，到 `max_turns` 停 | `src/gates/max-turns.ts` |
+| 工具超时：harness 给**所有**自定义工具统一套计时器，不靠工具自己守时 | `src/gates/tool-timeout.ts` |
+| 闸门咬住后用 pi 钩子 `afterToolCall` 返回 `terminate: true`，结束本批工具 | `src/index.ts` |
+| 演示工具 `slow`（自己没有任何超时逻辑） | `src/tools/slow.ts` |
+| 闸门参数写在 case 里（`max_turns`、`tool_timeout_ms`），不写在 prompt 里 | `cases/cases.json` |
+| 退出码：`0` success · `2` 闸门刹车 · `1` 模型错误 | `src/index.ts` |
+
+`stop_reason`：`success | max_turns | tool_timeout | model_error`。
 
 ## 为什么要隔离 `~/.pi`
 
@@ -69,5 +81,7 @@ npm run check -- traces/latest.jsonl custom-tool-call    # PASS custom-tool-call
 | `read-happy` | ch02 | `read` | 调用 `read`，`stop_reason=success` |
 | `custom-tool-call` | ch03 | `hello` | 调用 `hello`，`name` 为字符串，`success` |
 | `custom-tool-schema-conflict` | ch03（实验） | `hello` | 同上；对照模型口头陈述 |
+| `max-turns-brake` | ch04 | `read`（`max_turns=1`） | `stop_reason=max_turns` |
+| `tool-timeout-brake` | ch04 | `slow`（`tool_timeout_ms=400`） | 调用 `slow`，`stop_reason=tool_timeout` |
 
 设计来源：[`notes/_curriculum-redesign-proposal.md`](../../notes/_curriculum-redesign-proposal.md)。
