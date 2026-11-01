@@ -1,25 +1,18 @@
 # 书稿配图缺口清单 / Diagram gaps (book/harness/chapters)
 
-> 风格锁定见 [`skills/harness-diagram/SKILL.md`](../skills/harness-diagram/SKILL.md)：纯白底 `#FFFFFF`、16:9（1280×720）、扁平教材矢量、每个框都要中英双语；蓝 = 工具/输入，紫 = 闸门/控制，绿 = 评测/成功。
-> 画好后放到 `book/harness/assets/`，按下面的文件名保存，再把对应章节的图片链接换掉（或去掉临时说明）。
+> 2026-11-02：五张缺口图已由小哈补画并挂上书稿（`harness-minimal-skeleton` / `schema-executor` / `brakes` / `eval-baseline` / `capstone`）。下文保留文案规格备查。
 
-## 现状
+## 已关闭
 
-| 章 | 当前用图 | 状态 |
-|---:|---|---|
-| 0 | `harness-getting-started.jpg` | 可用 |
-| 1 | `harness-tool-loop.jpg` | 可用 |
-| 2 | `harness-capability-map.jpg` | 可用（通用总览图；有专属图更好，见缺口 1） |
-| 3 | 书稿里的文字示意图 | **缺**（缺口 2） |
-| 4 | `harness-hard-boundaries.jpg` | 能用但有错：`max_tums` 笔误；用的是 lab05 的变量名 `TOOL_TIMEOUT_MS`；部分标签只有英文（缺口 3） |
-| 5 | `harness-path-sandbox.jpg` | 可用 |
-| 6 | `harness-trace-acceptance.jpg` | 可用（有专属图更好，见缺口 4） |
-| 7 | `harness-context-budget.jpg` + `harness-retry-degrade.jpg` | 可用 |
-| 8 | `harness-hitl-gate.jpg` | 可用 |
-| 9 | `harness-cost-latency.jpg` + `harness-pipeline-budget.jpg` | 可用（图 2 画的是旧流水线，书稿里已注明） |
-| 10 | `harness-set-clerk.jpg` | 能用但不准：画的是 4 个技能和旧流水线（缺口 5） |
+| 文件 | 章 |
+|---|---|
+| `harness-minimal-skeleton.jpg` | Ch2 |
+| `harness-schema-executor.jpg` | Ch3 |
+| `harness-brakes.jpg` | Ch4 |
+| `harness-eval-baseline.jpg` | Ch6 |
+| `harness-capstone.jpg` | Ch10 |
 
-未采用的暖黄/米色旧图（不符合纯白风格）：`harness-turns-timeout.jpg`、`harness-evals-acceptance.jpg`、`harness-maxturns-allowlist.jpg`、`harness-permissions-paths.jpg`、`harness-observability-trace.jpg`、`harness-session-context.jpg`、`harness-selection.jpg`、`harness-collaboration.jpg`。
+## 原规格（备查）
 
 ## 缺口 1 · Ch2 最小 harness 骨架 → `harness-minimal-skeleton.jpg`
 
