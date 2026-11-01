@@ -1,5 +1,7 @@
 # 书中的 Harness / Book Harness
 
+[![book-harness CI](https://github.com/yukawasensei/harness-book-for-everyone/actions/workflows/book-harness.yml/badge.svg)](https://github.com/yukawasensei/harness-book-for-everyone/actions/workflows/book-harness.yml)
+
 《写给大家看的 Harness 书》全书只维护这一个 harness，逐章增长；每章结束打 git tag（`ch02`、`ch03`…），用 `git checkout chNN` 对照。
 
 ## 章节目录 / Chapters
