@@ -2,6 +2,24 @@
 
 《写给大家看的 Harness 书》全书只维护这一个 harness，逐章增长；每章结束打 git tag（`ch02`、`ch03`…），用 `git checkout chNN` 对照。
 
+## 章节目录 / Chapters
+
+| 章 | 书稿 | 代码 |
+|---:|---|---|
+| 0 | [跑通本地栈 / Run the Local Stack](./chapters/ch00.md) | `labs/01`、`labs/02` |
+| 1 | [看见循环 / See the Loop](./chapters/ch01.md) | `labs/03` |
+| 2 | [从零写最小 harness / A Minimal Harness](./chapters/ch02.md) | tag `ch02` |
+| 3 | [自己造工具 + 隔离本机配置 / Your Own Tool, Isolated](./chapters/ch03.md) | tag `ch03` |
+| 4 | [刹车：轮数与超时 / Brakes](./chapters/ch04.md) | tag `ch04` |
+| 5 | [边界：白名单与路径沙箱 / Boundaries](./chapters/ch05.md) | tag `ch05` |
+| 6 | [评测基线与签字 / Eval Baseline & Sign-off](./chapters/ch06.md) | tag `ch06` |
+| 7 | [上下文预算与重试降级 / Context, Retry, Degrade](./chapters/ch07.md) | tag `ch07` |
+| 8 | [人机确认门 + 第一次写入 / HITL & First Write](./chapters/ch08.md) | tag `ch08` |
+| 9 | [成本与延迟预算 / Cost & Latency](./chapters/ch09.md) | tag `ch09` |
+| 10 | [综合项目：片场场记 / Capstone](./chapters/ch10.md) | tag `ch10` |
+
+每章都有：要解决的问题、代码在哪、可复制的命令、看什么验收、作者本机真跑记录、产品拍板、费曼标准答。下面是各章能力和 case 的速查表。
+
 ## 各章增量 / What each chapter adds
 
 ### Ch2 · 从零写最小 harness

@@ -67,17 +67,17 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 
 | 章 | 主题 | 状态 |
 |---:|---|---|
-| 0 | 跑通本地栈（Ollama + pi CLI） | 用 `labs/01`、`labs/02` |
-| 1 | 看见循环（`pi --mode json` 事件链） | 用 `labs/03` |
-| 2 | 从零写最小 harness | tag `ch02` |
-| 3 | 自己造工具 + 隔离 `~/.pi` | tag `ch03` |
-| 4 | 刹车：轮数与超时 | tag `ch04` |
-| 5 | 边界：白名单与路径沙箱 | tag `ch05` |
-| 6 | 评测基线与签字 | tag `ch06` |
-| 7 | 上下文预算与重试降级 | tag `ch07` |
-| 8 | 人机确认门 + 第一次写入 | tag `ch08` |
-| 9 | 成本与延迟预算 | tag `ch09` |
-| 10 | 综合项目：片场场记（精简版） | tag `ch10` |
+| 0 | [跑通本地栈（Ollama + pi CLI）](./book/harness/chapters/ch00.md) | 用 `labs/01`、`labs/02` |
+| 1 | [看见循环（`pi --mode json` 事件链）](./book/harness/chapters/ch01.md) | 用 `labs/03` |
+| 2 | [从零写最小 harness](./book/harness/chapters/ch02.md) | tag `ch02` |
+| 3 | [自己造工具 + 隔离 `~/.pi`](./book/harness/chapters/ch03.md) | tag `ch03` |
+| 4 | [刹车：轮数与超时](./book/harness/chapters/ch04.md) | tag `ch04` |
+| 5 | [边界：白名单与路径沙箱](./book/harness/chapters/ch05.md) | tag `ch05` |
+| 6 | [评测基线与签字](./book/harness/chapters/ch06.md) | tag `ch06` |
+| 7 | [上下文预算与重试降级](./book/harness/chapters/ch07.md) | tag `ch07` |
+| 8 | [人机确认门 + 第一次写入](./book/harness/chapters/ch08.md) | tag `ch08` |
+| 9 | [成本与延迟预算](./book/harness/chapters/ch09.md) | tag `ch09` |
+| 10 | [综合项目：片场场记（精简版）](./book/harness/chapters/ch10.md) | tag `ch10` |
 
 ### 旧版资料（保留，供参考）
 
