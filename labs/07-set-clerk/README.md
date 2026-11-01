@@ -1,6 +1,6 @@
-# 第 7 课实验：片场场记 · 评测桩 + 模型适配器 / Lab 07 Set Continuity Clerk
+# 第 7 课实验：片场场记 · 评测桩 + 模型适配器 + 流水线 / Lab 07 Set Continuity Clerk
 
-**桩是合同，模型是供应商。** 四个内容生产技能默认用确定性假实现；设 `MODEL=ollama` 时走本地 qwen，但 **schema / path / Trace 评测桩不变**——文案再好看，桩红也不过。
+**桩是合同，模型是供应商；单技能绿 ≠ 流水线绿。** 四个内容生产技能默认用确定性假实现；设 `MODEL=ollama` 时走本地 qwen，但 **schema / path / Trace 评测桩不变**。课 22 增加整链 `case-pipeline`：四份文件齐全 + 流水线 Trace 完整才算绿。
 
 公开课虚拟产品；**无真实公司品牌、无账号、无公网发布**。
 
@@ -10,31 +10,39 @@
 |---|---|
 | 评测桩 | 验收标准：fixture → `workspace/out/` → schema/path/Trace |
 | 模型适配器 | 可替换后端（默认 Ollama/qwen）；换模型不改 case |
+| 生产流水线 | 顺序锁死；中段失败 **fail-stop**；整链预算罩整条线 |
+| pipeline case | 证明四份产出 + `traces/case-pipeline.jsonl` 完整（不只单技能） |
 | 降级回桩 | 解析失败记 Trace，可回 stub，仍须写对路径 |
-| FAIL 条件 | schema / path / Trace 任一破坏 → 不过（即使散文好看） |
+| FAIL 条件 | schema / path / Trace / 流水线任一破坏 → 不过 |
 
-## 四个技能
+## 四个技能（有序管线）
 
-| 技能 | 产出 | 断言 |
-|---|---|---|
-| `pick_topic` | `workspace/out/topic.json` | 必有字段 + 路径 + Trace |
-| `draft_script` | `workspace/out/script.md` | 结构标题 + 路径 + Trace |
-| `draft_board` | `workspace/out/board.json` | cast/props/scenes/shots + 路径 + Trace |
-| `shot_prompts` | `workspace/out/prompts.json` | 每镜一条 prompt + 路径 + Trace |
+| 顺序 | 技能 | 产出 | 断言 |
+|---:|---|---|---|
+| 1 | `pick_topic` | `workspace/out/topic.json` | 必有字段 + 路径 + Trace |
+| 2 | `draft_script` | `workspace/out/script.md` | 结构标题 + 路径 + Trace |
+| 3 | `draft_board` | `workspace/out/board.json` | cast/props/scenes/shots + 路径 + Trace |
+| 4 | `shot_prompts` | `workspace/out/prompts.json` | 每镜一条 prompt + 路径 + Trace |
+
+另有 **`case-pipeline`**：`format: pipeline`，断言上述四路径齐全、`traces/case-pipeline.jsonl` 含四次 write、`stop_reason=success`、步骤顺序正确。
 
 ## 工程师跑什么
 
 ```bash
 cd labs/07-set-clerk
 
-# CI / 无模型（必须全绿）
-npm test          # = eval:schema：stub 管道 + schema/path/Trace
-npm run stubs     # 强制 stub 写入
+# CI / 无模型（必须全绿：4 单技能 + 1 流水线 = 5/5）
+npm test          # = eval:schema：run-pipeline + schema/path/Trace
+npm run stubs     # 强制 stub 写入整链
+npm run pipeline  # 只跑编排（fail-stop + pipeline Trace）
 
-# 可选 live（本机 Ollama）
+# 可选 live（本机 Ollama；不挡 CI）
 NO_PROXY=127.0.0.1,localhost MODEL=ollama npm run eval:live
-# 若 Ollama 未起或模型未拉：SKIP（exit 0），不挡 CI
 ```
+
+**失败策略（产品默认）**：中段抛错或非 `success` → 停链，Trace `harness_end.stop_reason=pipeline_fail`，进程非 0；不做「半成品降级交卷」。
+
+**整链预算（产品决策）**：成本/延迟按整次流水线计。可选环境变量 `PIPELINE_MAX_MS`：超时则 fail-stop（`pipeline_budget` 事件 + 最终 `pipeline_fail`）。默认不设，避免拖慢 stub CI。
 
 **环境变量**
 
@@ -44,6 +52,7 @@ NO_PROXY=127.0.0.1,localhost MODEL=ollama npm run eval:live
 | `OLLAMA_HOST` | Ollama 地址 | `http://127.0.0.1:11434` |
 | `OLLAMA_MODEL` | 本地模型 tag | `qwen3.8:27b` |
 | `NO_PROXY` | 避免代理劫持 localhost | live 脚本会强制写入 |
+| `PIPELINE_MAX_MS` | 整链软超时（毫秒） | 未设置 = 不限制 |
 
 ## 目录
 
@@ -53,10 +62,11 @@ src/skills/*.mjs        # 四技能（stub + 可选模型）
 src/model-adapter.mjs   # Ollama 适配器 / JSON 解析 / 降级
 src/path-sandbox.mjs    # 只允许 workspace/out
 src/trace.mjs           # 最小 JSONL Trace
-src/run-all.mjs         # 管道
-src/validate-schema.mjs # cases 断言（与后端无关）
+src/run-all.mjs         # 旧管道（仍可手动跑）
+src/run-pipeline.mjs    # 整链编排：fail-stop + case-pipeline Trace
+src/validate-schema.mjs # cases 断言（含 format=pipeline）
 src/eval-live.mjs       # 可选 live
-cases.json
+cases.json              # 4 单技能 + 1 pipeline
 workspace/out/
 traces/
 ```
@@ -66,3 +76,4 @@ traces/
 - 课 19 产品：[notes/pm-learning/19-set-clerk-content-production.md](../../notes/pm-learning/19-set-clerk-content-production.md)
 - 课 20 评测桩：[notes/pm-learning/20-skill-eval-stubs.md](../../notes/pm-learning/20-skill-eval-stubs.md)
 - 课 21 接模型：[notes/pm-learning/21-model-behind-stubs.md](../../notes/pm-learning/21-model-behind-stubs.md)
+- 课 22 流水线：[notes/pm-learning/22-production-pipeline.md](../../notes/pm-learning/22-production-pipeline.md)

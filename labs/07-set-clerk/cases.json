@@ -7,7 +7,15 @@
     "expect": {
       "out_path": "workspace/out/topic.json",
       "format": "json",
-      "required_fields": ["skill", "title", "hook", "audience", "duration_sec", "platforms", "schema_version"],
+      "required_fields": [
+        "skill",
+        "title",
+        "hook",
+        "audience",
+        "duration_sec",
+        "platforms",
+        "schema_version"
+      ],
       "trace_path": "traces/case-pick_topic.jsonl",
       "trace_write_path": "workspace/out/topic.json",
       "stop_reason": "success"
@@ -22,7 +30,13 @@
     "expect": {
       "out_path": "workspace/out/script.md",
       "format": "markdown",
-      "required_headings": ["# 脚本", "## 标题", "## 开场钩子", "## 正文结构", "skill: draft_script"],
+      "required_headings": [
+        "# 脚本",
+        "## 标题",
+        "## 开场钩子",
+        "## 正文结构",
+        "skill: draft_script"
+      ],
       "trace_path": "traces/case-draft_script.jsonl",
       "trace_write_path": "workspace/out/script.md",
       "stop_reason": "success"
@@ -37,7 +51,14 @@
     "expect": {
       "out_path": "workspace/out/board.json",
       "format": "json",
-      "required_fields": ["skill", "schema_version", "cast", "props", "scenes", "shots"],
+      "required_fields": [
+        "skill",
+        "schema_version",
+        "cast",
+        "props",
+        "scenes",
+        "shots"
+      ],
       "min_shots": 3,
       "trace_path": "traces/case-draft_board.jsonl",
       "trace_write_path": "workspace/out/board.json",
@@ -53,13 +74,51 @@
     "expect": {
       "out_path": "workspace/out/prompts.json",
       "format": "json",
-      "required_fields": ["skill", "schema_version", "items"],
+      "required_fields": [
+        "skill",
+        "schema_version",
+        "items"
+      ],
       "min_prompt_items": 2,
-      "required_item_fields": ["shot_id", "prompt", "duration_sec"],
+      "required_item_fields": [
+        "shot_id",
+        "prompt",
+        "duration_sec"
+      ],
       "trace_path": "traces/case-shot_prompts.jsonl",
       "trace_write_path": "workspace/out/prompts.json",
       "stop_reason": "success"
     },
     "notes": "One prompt per shot; Trace proves write path."
+  },
+  {
+    "id": "case-pipeline",
+    "skill": "pipeline",
+    "run": "stub",
+    "category": "content_production",
+    "expect": {
+      "format": "pipeline",
+      "required_out_paths": [
+        "workspace/out/topic.json",
+        "workspace/out/script.md",
+        "workspace/out/board.json",
+        "workspace/out/prompts.json"
+      ],
+      "trace_path": "traces/case-pipeline.jsonl",
+      "trace_write_paths": [
+        "workspace/out/topic.json",
+        "workspace/out/script.md",
+        "workspace/out/board.json",
+        "workspace/out/prompts.json"
+      ],
+      "stop_reason": "success",
+      "order": [
+        "pick_topic",
+        "draft_script",
+        "draft_board",
+        "shot_prompts"
+      ]
+    },
+    "notes": "Whole-chain case: four files present + Trace complete; single-skill green ≠ pipeline green."
   }
 ]

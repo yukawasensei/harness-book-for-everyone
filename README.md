@@ -67,7 +67,7 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 
 ### PM 笔记（推荐主线）
 
-见 [`notes/pm-learning/`](./notes/pm-learning/)：能力总览 → 工具循环 → 会话 → 权限/路径 → 轮数超时 → Trace → Evals → 选型/协作/落地 → **硬边界** → **路径沙箱** → **Trace 验收签字** → **上下文预算** → **重试与降级** → **人机确认（HITL）** → **成本与延迟预算** → **[开源读者上手](./notes/pm-learning/18-getting-started.md)**（克隆到绿基线）。加深弧课 14–18 **已完成**。落地实操弧：[课 19 片场场记](./notes/pm-learning/19-set-clerk-content-production.md) → [课 20 技能评测桩](./notes/pm-learning/20-skill-eval-stubs.md) → [课 21 接模型写稿](./notes/pm-learning/21-model-behind-stubs.md)（`labs/07-set-clerk` · stub/`MODEL=ollama`）。
+见 [`notes/pm-learning/`](./notes/pm-learning/)：能力总览 → 工具循环 → 会话 → 权限/路径 → 轮数超时 → Trace → Evals → 选型/协作/落地 → **硬边界** → **路径沙箱** → **Trace 验收签字** → **上下文预算** → **重试与降级** → **人机确认（HITL）** → **成本与延迟预算** → **[开源读者上手](./notes/pm-learning/18-getting-started.md)**（克隆到绿基线）。加深弧课 14–18 **已完成**。落地实操弧：[课 19 片场场记](./notes/pm-learning/19-set-clerk-content-production.md) → [课 20 技能评测桩](./notes/pm-learning/20-skill-eval-stubs.md) → [课 21 接模型写稿](./notes/pm-learning/21-model-behind-stubs.md) → [课 22 生产流水线](./notes/pm-learning/22-production-pipeline.md)（`labs/07-set-clerk` · stub/`MODEL=ollama` · `case-pipeline`）。
 
 ### Labs
 
@@ -79,7 +79,7 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | `labs/04-custom-tool` | 自定义工具 |
 | `labs/05-minimal-harness` | maxTurns / timeout / allowlist / path sandbox |
 | `labs/06-evals` | cases + live baseline + `eval:schema` / `eval:live` / `eval:report` |
-| `labs/07-set-clerk` | 片场场记四技能：评测桩 + 可选 Ollama/qwen 适配器（schema/path/Trace 不变） |
+| `labs/07-set-clerk` | 片场场记四技能：评测桩 + 可选 Ollama/qwen + 整链 pipeline case（schema/path/Trace 不变） |
 
 克隆后怎么证明还在工作？见 [课 18 上手指南](./notes/pm-learning/18-getting-started.md)。
 

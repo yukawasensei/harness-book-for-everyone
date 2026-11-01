@@ -80,8 +80,8 @@ NO_PROXY=127.0.0.1,localhost MODEL=ollama npm run eval:live
 
 ## 下一步
 
+- 下一课：[22 · 生产流水线串联](./22-production-pipeline.md)——四技能有序管线 + `case-pipeline`（单技能绿 ≠ 流水线绿）。  
 - 巩固：对照课 15 降级与课 17 预算——接模型后把「贵/慢」重新量一次。  
-- 预告：可继续收紧 HITL（覆盖已有稿）或接分发文案技能（仍不真发平台）。  
 - 上一课：[20 · 技能评测桩](./20-skill-eval-stubs.md) · 路线总览：[README](./README.md)
 
 ---
