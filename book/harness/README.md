@@ -19,6 +19,7 @@
 | 8 | [人机确认门 + 第一次写入 / HITL & First Write](./chapters/ch08.md) | tag `ch08` |
 | 9 | [成本与延迟预算 / Cost & Latency](./chapters/ch09.md) | tag `ch09` |
 | 10 | [综合项目：片场场记 / Capstone](./chapters/ch10.md) | tag `ch10` |
+| 附录 | [PM 验收清单 / PM Sign-off Checklist](./chapters/appendix-pm-checklist.md) | 全书验收证据清单 |
 
 每章都有：要解决的问题、代码在哪、可复制的命令、看什么验收、作者本机真跑记录、产品拍板、费曼标准答。下面是各章能力和 case 的速查表。
 
