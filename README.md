@@ -23,7 +23,7 @@
 
 ## Quickstart · 克隆到绿基线
 
-**需要**：Git · Node.js 20+（LTS）· Linux 或 WSL2。**可选**：本机 [Ollama](https://ollama.com) + `qwen3.8:27b`（真跑才需要）。
+**需要**：Git · Node.js 22.19+ · Linux 或 WSL2。**可选**：本机 [Ollama](https://ollama.com) + `qwen3.8:27b`（真跑才需要）。
 
 ```bash
 git clone https://github.com/yukawasensei/harness-book-for-everyone.git

@@ -2,6 +2,9 @@
   "name": "harness-book-harness",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "scripts": {
     "start": "tsx src/index.ts",
     "check": "tsx src/check-trace.ts",
