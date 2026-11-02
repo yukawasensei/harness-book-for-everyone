@@ -187,6 +187,25 @@ NO_PROXY=127.0.0.1,localhost CASE_ID=custom-tool-call npm start
 npm run check -- traces/latest.jsonl custom-tool-call    # PASS custom-tool-call
 ```
 
+## 两种跑法 / Two ways to run
+
+同一套 case、prompt 与闸门，可用两种模型后端（`MODEL_ID=<provider>/<model>`）：
+
+| 跑法 | `MODEL_ID` | 条件 | 费用 |
+|---|---|---|---|
+| 本地 Ollama / Qwen | `ollama/qwen3.8:27b`（默认；旧写法 `qwen3.8:27b` 仍视为 Ollama） | 本机已起 Ollama 并准备好模型；免费、可离线 | $0（配置口径，不含硬件与电力） |
+| DeepSeek API | `deepseek/deepseek-flash` | 复制 `.env.example` 为 `.env`，填入 `DEEPSEEK_API_KEY`；**不要提交 `.env`**（已在 `.gitignore`） | 按 token 计费；无需本机 GPU |
+
+```bash
+# 本地（免费、离线）
+MODEL_ID=ollama/qwen3.8:27b NO_PROXY=127.0.0.1,localhost npm run eval -- --repeat 5
+
+# DeepSeek API（会产生费用；harness 启动时读 .env，已有环境变量优先）
+MODEL_ID=deepseek/deepseek-flash npm run eval -- --repeat 5
+```
+
+实测：20 条 case × repeat 5，DeepSeek Flash 估算约 **$0.026**（见 `evals/runs/compare-qwen3.8-27b-vs-deepseek-flash.md`；按配置价格 × 返回 token，非账单核对）。细节与 thinking 关闭约定见 `src/eval/usage.md`。
+
 ## Case
 
 | id | 章 | 允许工具 | 期望 |

@@ -22,7 +22,7 @@
 
 ## Quickstart · 克隆到绿基线
 
-**需要**：Git · Node.js 22.19+ · Linux 或 WSL2。**可选**：本机 [Ollama](https://ollama.com) + `qwen3.8:27b`（真跑才需要）。
+**需要**：Git · Node.js 22.19+ · Linux 或 WSL2。**可选**：本机 [Ollama](https://ollama.com) + `qwen3.8:27b`（真跑才需要）；也可以用 DeepSeek API 代替本地 GPU（`MODEL_ID=deepseek/deepseek-flash`，key 放 `book/harness/.env`，勿提交）。
 
 ```bash
 git clone https://github.com/yukawasensei/harness-book-for-everyone.git
@@ -38,10 +38,10 @@ npm run eval
 | 命令 | 需要 Ollama？ | 证明什么 |
 |---|---|---|
 | `npm test` | 否 | 闸门、验收器、隔离配置的单测全绿 |
-| `npm run eval` | **是** | 每条 case 端到端 PASS，且相对上一份基线无回归 |
+| `npm run eval` | **是**（或改用 DeepSeek API） | 每条 case 端到端 PASS，且相对上一份基线无回归 |
 | `npm run report` | 否 | 读已提交的 `evals/baseline.json` |
 
-harness 只读仓库里的 `book/harness/pi-agent/models.json`，**不**加载你本机 `~/.pi` 的扩展、技能或凭据（见 Ch3）。**禁止**：付费云模型 / 把密钥写进仓库。
+harness 只读仓库里的 `book/harness/pi-agent/models.json`，**不**加载你本机 `~/.pi` 的扩展、技能或凭据（见 Ch3）。**禁止**：把密钥写进仓库（`.env` 勿提交）。两种跑法见 [`book/harness/README.md`](./book/harness/README.md#两种跑法--two-ways-to-run)。
 
 ## 样本架构（可替换） / Sample architecture
 
