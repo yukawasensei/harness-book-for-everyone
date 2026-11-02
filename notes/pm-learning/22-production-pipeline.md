@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 10 章（[ch10](../../book/harness/chapters/ch10.md)）。
+
 # 22 · 生产流水线串联（Production Pipeline）
 
 > 视角：产品经理 · 图解 + 费曼  

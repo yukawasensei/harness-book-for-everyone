@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 5 章（[ch05](../../book/harness/chapters/ch05.md)）。
+
 # 12 · 路径沙箱（Workspace Path Policy）
 
 > 视角：产品经理 · 图解 + 费曼  

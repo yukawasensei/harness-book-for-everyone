@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 1 章（[ch01](../../book/harness/chapters/ch01.md)）。
+
 # Lab 03 — Qwen3.8 Agent Events
 
 ## 状态

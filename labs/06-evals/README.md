@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 6 章（[ch06](../../book/harness/chapters/ch06.md)）。
+
 # 第 6 课：最小 Evals
 
 用**固定案例**回答：Harness / Prompt 改动后，是变好还是退化？

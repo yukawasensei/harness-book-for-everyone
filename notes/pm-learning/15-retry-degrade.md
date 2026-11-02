@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 7 章（[ch07](../../book/harness/chapters/ch07.md)）。
+
 # 15 · 失败重试与降级（Retry & Degrade）
 
 > 视角：产品经理 · 图解 + 费曼  

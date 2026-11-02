@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入附录（[PM 验收清单](../../book/harness/chapters/appendix-pm-checklist.md)）。
+
 # 08 · 选型（买 / 自建 / 组合）
 
 > 视角：产品经理（PM）· 图解 + 费曼  

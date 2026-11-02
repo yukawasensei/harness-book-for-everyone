@@ -18,8 +18,7 @@
 **主线：跟着一个 harness 从零长大**（practice-first）。全书只有一个代码库 [`book/harness/`](./book/harness/)，每章打一个 git tag，`git checkout chNN` 就能看到那一章结束时的代码。
 
 1. **跟做主线** → [`book/harness/README.md`](./book/harness/README.md)（每章加了什么、怎么跑）
-2. **课表与设计** → [`notes/_curriculum-redesign-proposal.md`](./notes/_curriculum-redesign-proposal.md)
-3. **旧版资料（参考）** → `notes/pm-learning/`（23 课图解笔记）、`labs/01`–`07`（逐课实验）
+2. **PM 验收清单** → [`book/harness/chapters/appendix-pm-checklist.md`](./book/harness/chapters/appendix-pm-checklist.md)
 
 ## Quickstart · 克隆到绿基线
 
@@ -79,10 +78,13 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | 9 | [成本与延迟预算](./book/harness/chapters/ch09.md) | tag `ch09` |
 | 10 | [综合项目：片场场记（精简版）](./book/harness/chapters/ch10.md) | tag `ch10` |
 
-### 旧版资料（保留，供参考）
+### 旧版资料（仅作参考，已并入各章）
 
-- [`notes/pm-learning/`](./notes/pm-learning/)：23 课 PM 图解 + 费曼笔记，已按主题并入上面各章（对照表见[重构提案](./notes/_curriculum-redesign-proposal.md)第 3 节）。
-- `labs/01`–`07`：逐课实验。`labs/05-minimal-harness` 是闸门“成品版”，`labs/06-evals` 是它的评测；`labs/07-set-clerk` 是固定流水线 + 评测桩。
+旧笔记与 lab **不移动、不删除**，文件首行已标注对应新章。对照表见[重构提案](./notes/_curriculum-redesign-proposal.md)第 3 节。
+
+- [`notes/pm-learning/`](./notes/pm-learning/)：23 课 PM 图解 + 费曼笔记（仅作参考，已并入各章）
+- `labs/01`–`07`：逐课实验（仅作参考，已并入各章）。`labs/05-minimal-harness` 是闸门“成品版”，`labs/06-evals` 是它的评测；`labs/07-set-clerk` 是固定流水线 + 评测桩。
+- [`notes/course-plan.md`](./notes/course-plan.md)：旧 12 课计划（未纳入主线，仅作参考）
 
 ## 安全基线 / Safety baseline
 

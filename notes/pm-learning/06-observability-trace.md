@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 1 章（[ch01](../../book/harness/chapters/ch01.md)）、第 2 章（[ch02](../../book/harness/chapters/ch02.md)）、第 6 章（[ch06](../../book/harness/chapters/ch06.md)）。
+
 # 06 · 可观测与 Trace
 
 > 视角：产品经理（PM）· 图解 + 费曼  

@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 10 章（[ch10](../../book/harness/chapters/ch10.md)）。
+
 # 19 · 虚拟产品：片场场记 · 内容生产（Set Continuity Clerk）
 
 > 视角：产品经理 · 图解 + 费曼  

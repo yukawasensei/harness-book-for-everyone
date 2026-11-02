@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 主线书稿 / Main curriculum
+    url: "https://github.com/yukawasensei/harness-book-for-everyone/tree/main/book/harness"
+    about: 跟做 book/harness（Ch0–Ch10）/ Follow the book/harness chapters

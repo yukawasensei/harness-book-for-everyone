@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 0 章（[ch00](../../book/harness/chapters/ch00.md)）。
+
 # Lab 01 — Model API
 
 目标：比较普通模型 API 与 Agent 请求。

@@ -1,3 +1,5 @@
+> **旧版参考资料**：已拆分并入第 2–9 章（[ch02](../../book/harness/chapters/ch02.md) … [ch09](../../book/harness/chapters/ch09.md)）。
+
 # 第 5 课：最小 Harness
 
 这一课不再通过 `pi` CLI 启动 Agent，而是直接使用 Pi SDK 创建和控制会话。

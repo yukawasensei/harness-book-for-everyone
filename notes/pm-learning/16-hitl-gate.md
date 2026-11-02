@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 8 章（[ch08](../../book/harness/chapters/ch08.md)）。
+
 # 16 · 人机确认闸门（HITL Confirm Gate）
 
 > 视角：产品经理 · 图解 + 费曼  

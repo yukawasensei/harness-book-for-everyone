@@ -1,0 +1,72 @@
+name: 复现失败 / Repro failure
+description: 报告按书稿无法复现的问题 / Report a failure reproducing a chapter or lab
+title: "[复现 / Repro] "
+labels: ["repro"]
+body:
+  - type: input
+    id: chapter
+    attributes:
+      label: 章节 / tag · Chapter / tag
+      description: "例如 ch04、book-v1.1.1，或 labs/05 · e.g. ch04, book-v1.1.1, or labs/05"
+      placeholder: "ch06 / book-v1.1.1"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: 操作系统与 WSL · OS and WSL
+      description: "例如 Ubuntu 24.04 on WSL2 · e.g. Ubuntu 24.04 on WSL2"
+      placeholder: "Ubuntu 24.04 · WSL2"
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node 版本 · Node version
+      placeholder: "v22.19.0"
+    validations:
+      required: true
+  - type: input
+    id: pi
+    attributes:
+      label: pi 版本 · pi version
+      description: "`pi --version` 或 package 中的版本 · output of `pi --version` or package version"
+      placeholder: "1.4.0"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Ollama 模型 · Ollama model
+      description: "例如 qwen3.8:27b；离线复现可填 n/a · e.g. qwen3.8:27b; use n/a if offline-only"
+      placeholder: "qwen3.8:27b"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: 执行的命令 · Commands run
+      description: 从 clone 后开始的完整命令 · full commands from after clone
+      placeholder: |
+        cd book/harness
+        npm install
+        npm test
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: 实际输出或 trace 片段 · Actual output or trace snippet
+      description: 粘贴终端输出或相关 JSONL / Trace · paste terminal output or relevant JSONL / Trace
+    validations:
+      required: true
+  - type: dropdown
+    id: no_proxy
+    attributes:
+      label: "是否设了 NO_PROXY=127.0.0.1,localhost · Set NO_PROXY=127.0.0.1,localhost?"
+      options:
+        - "是 / Yes"
+        - "否 / No"
+        - "不确定 / Unsure"
+    validations:
+      required: true

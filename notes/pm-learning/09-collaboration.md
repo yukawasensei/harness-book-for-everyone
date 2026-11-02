@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入附录（[PM 验收清单](../../book/harness/chapters/appendix-pm-checklist.md)）。
+
 # 09 · 协作（产品 × 工程）
 
 > 视角：产品经理（PM）· 图解 + 费曼  

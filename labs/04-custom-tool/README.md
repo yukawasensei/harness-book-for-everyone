@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 3 章（[ch03](../../book/harness/chapters/ch03.md)）。
+
 # Lab 04 — 第一个 Pi Extension 工具
 
 ## 状态

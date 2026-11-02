@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 2 章（[ch02](../../book/harness/chapters/ch02.md)）、第 7 章（[ch07](../../book/harness/chapters/ch07.md)）。
+
 # 03 · 会话与上下文
 
 > 视角：产品经理（PM）· 图解 + 费曼  

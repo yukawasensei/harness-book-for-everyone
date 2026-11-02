@@ -1,3 +1,5 @@
+> **旧版参考资料**：本目录为旧版 PM 课表，各课标注见文件首行；新主线见 [`book/harness`](../../book/harness/README.md)。
+
 # 写给大家看的 Harness 书 · PM 课表 / Harness Book for Everyone · PM Notes
 
 > **新主线已上线**：本书改为 practice-first，跟着一个 harness 从零长大，见 [`book/harness/`](../../book/harness/README.md)（每章一个 git tag）。本目录 23 课笔记保留作参考，各课已并入新主线的对应章节，对照表见[重构提案](../_curriculum-redesign-proposal.md)第 3 节。

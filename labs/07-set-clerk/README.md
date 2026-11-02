@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 10 章（[ch10](../../book/harness/chapters/ch10.md)）。
+
 # 第 7 课实验：片场场记 · 评测桩 + 模型适配器 + 流水线 / Lab 07 Set Continuity Clerk
 
 **桩是合同，模型是供应商；单技能绿 ≠ 流水线绿；整链预算 ≠ 单技能上限。** 四个内容生产技能默认用确定性假实现；设 `MODEL=ollama` 时走本地 qwen，但 **schema / path / Trace 评测桩不变**。课 22 增加整链 `case-pipeline`；课 23 增加整链成本/延迟闸门（`eval:budget`）。

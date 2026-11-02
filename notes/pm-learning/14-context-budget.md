@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 7 章（[ch07](../../book/harness/chapters/ch07.md)）。
+
 # 14 · 上下文预算（Session / Context Window 产品约束）
 
 > 视角：产品经理 · 图解 + 费曼  

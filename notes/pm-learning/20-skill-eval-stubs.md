@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 10 章（[ch10](../../book/harness/chapters/ch10.md)）。
+
 # 20 · 技能评测桩（Skill Eval Stubs）
 
 > 视角：产品经理 · 图解 + 费曼  

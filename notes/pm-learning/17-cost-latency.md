@@ -1,3 +1,5 @@
+> **旧版参考资料**：已并入第 9 章（[ch09](../../book/harness/chapters/ch09.md)）。
+
 # 17 · 成本与延迟预算（Cost & Latency Budget）
 
 > 视角：产品经理 · 图解 + 费曼  
