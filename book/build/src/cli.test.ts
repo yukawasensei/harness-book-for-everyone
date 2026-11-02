@@ -16,6 +16,10 @@ test("CLI 离线 new/status/adopt，可选较早版本", async () => {
     assert.match(lines.join("\n"), /synopsis: locked/);
     f.store.writeDraft(id, "topic", sample("topic"));
     await main(["adopt", id, "topic", "1"], f.dir);
+    f.store.writeDraft(id, "topic", sample("topic"));
+    await assert.rejects(() => main(["adopt", id, "topic", "2"], f.dir), /二次确认/);
+    await main(["adopt", id, "topic", "2", "--confirm"], f.dir);
+    assert.equal(f.store.load(id).stages.topic.adopted_version, 2);
     lines.length = 0;
     await main(["status", id], f.dir);
     assert.match(lines.join("\n"), /topic: adopted/);
@@ -33,5 +37,7 @@ test("CLI 错误参数不被静默忽略，版本参数必须完整合法", asyn
     }
     await assert.rejects(() => main(["run", f.project.id, "unexpected"], f.dir), /未知阶段/);
     await assert.rejects(() => main(["run", f.project.id, "synopsis"], f.dir), /topic 尚未采用/);
+    await assert.rejects(() => main(["run", f.project.id, "topic", "--resume", "--restart"], f.dir), /其中一种/);
+    await assert.rejects(() => main(["adopt", f.project.id, "topic", "1", "--resume"], f.dir), /用法/);
   } finally { f.cleanup(); }
 });

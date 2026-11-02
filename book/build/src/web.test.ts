@@ -181,7 +181,7 @@ test("刷新或服务重启后的已有运行给缺失事件说明；新项目�
   assert.ok(missingEventsNotice(project, []));
 });
 
-test("禁用原因由服务端真实状态机和模板检查给出：依赖未采用、已采用、模板未实现", async () => {
+test("禁用原因来自真实依赖状态；已采用阶段可进入返工", async () => {
   const f = fixture();
   const app = createLocalServer({ root: packageRoot, store: f.store });
   try {
@@ -196,9 +196,8 @@ test("禁用原因由服务端真实状态机和模板检查给出：依赖未�
     assert.equal((await read()).run_blocked_reasons.topic, null);
     f.store.adopt(f.project.id, "topic", 1);
     project = await read();
-    assert.throws(() => assertRunnable(project.stages, "topic"), error => {
-      assert.equal(project.run_blocked_reasons.topic, (error as Error).message); return true;
-    });
+    assert.doesNotThrow(() => assertRunnable(project.stages, "topic"));
+    assert.equal(project.run_blocked_reasons.topic, null);
     assert.equal(project.run_blocked_reasons.synopsis, null);
     f.store.writeDraft(f.project.id, "synopsis", sample("synopsis"));
     f.store.adopt(f.project.id, "synopsis", 1);
@@ -228,15 +227,15 @@ test("阶段与版本统一待审阅，运行徽标跟随实际运行阶段", ()
   assert.equal(stageBadge("locked", "synopsis", { ...completed(), stage: "topic" }).text, "锁定");
 });
 
-test("读者看到采用限制的原因，不暴露章节排期；修改消息逐字显示已保存意见", () => {
+test("采用阶段可返工，待更新徽标中文显示；修改消息逐字显示意见", () => {
   const states = initialWorkflow();
   states.topic.status = "adopted";
   let reason = "";
   try { assertRunnable(states, "topic"); } catch (error) { reason = (error as Error).message; }
   const visible = readerMessage(reason);
   assert.ok(!/P[0-9]|留到/.test(visible));
-  assert.match(visible, /暂不支持.*运行/);
-  assert.equal(visible, "选题已采用，暂不支持再次运行。");
+  assert.equal(visible, "");
+  assert.equal(stageBadge("stale", "storyboard", null).text, "待更新");
   assert.ok(!readerMessage("已采用版本不可丢弃或要求修改；返工留到 P8").includes("P8"));
   const note = "  把孩子换成一位老站长。\n保留空白格。  ";
   const message = runRequestText("topic", "额外要求", { version: 1, note });

@@ -73,7 +73,21 @@ export function createLocalServer(options: ServerOptions) {
           if (reviseFrom !== undefined && (typeof reviseFrom !== "number" || !Number.isSafeInteger(reviseFrom) || reviseFrom < 1)) {
             throw new HttpError(400, "revise_from 必须为正整数版本号");
           }
-          return json(response, 202, await runs.start(id, stage, instructions, reviseFrom as number | undefined));
+          if (input.staging !== undefined && input.staging !== "resume" && input.staging !== "restart") throw new HttpError(400, "暂存选择必须是 resume 或 restart");
+          return json(response, 202, await runs.start(id, stage, instructions, reviseFrom as number | undefined, { confirmed: input.confirmed === true, staging: input.staging as "resume" | "restart" | undefined }));
+        }
+        if (parts.length === 6 && ["confirm-valid", "reassemble"].includes(parts[5]) && method === "POST") {
+          const input = await body(request); runs.assertIdle(id);
+          validation(() => {
+            if (parts[5] === "reassemble") {
+              if (stage !== "prompts") throw new Error("只有提示词阶段可重新拼装");
+              store.reassemblePrompts(id, input.confirmed === true);
+            } else {
+              if (typeof input.reason !== "string" || input.reason.length > 8000) throw new Error("请填写最多 8000 字的理由");
+              store.confirmValid(id, stage, input.reason, input.confirmed === true);
+            }
+          });
+          runs.notify(id); return json(response, 200, runs.detail(id));
         }
         if (parts.length === 6 && ["adopt", "discard", "request-changes"].includes(parts[5]) && method === "POST") {
           const input = await body(request);
@@ -86,7 +100,7 @@ export function createLocalServer(options: ServerOptions) {
           if (parts[5] === "request-changes" && (typeof note !== "string" || !note.trim())) throw new HttpError(400, "修改意见不能为空");
           validation(() => {
             const version = input.version as number;
-            if (parts[5] === "adopt") store.adopt(id, stage, version);
+            if (parts[5] === "adopt") store.adopt(id, stage, version, input.confirmed === true);
             else if (parts[5] === "discard") store.discard(id, stage, version, note as string | undefined);
             else store.requestChanges(id, stage, version, note as string);
           });

@@ -89,7 +89,7 @@ test("缺 S01、编号间断、空 finalize 被拒；补齐后才能形成版本
   } finally { f.cleanup(); }
 });
 
-test("未 finalize 只记会话不出版本；新会话不继承旧草稿且禁用 write_draft", async () => {
+test("未 finalize 暂存落盘不出版本；显式重新开始不继承，禁用 write_draft", async () => {
   const f = await setup([{ call: "write_scene", args: { scene: scene() } }, { text: "先停下" }]);
   try {
     assert.equal((await runStage(f.session, f.store, f.project.id, "script")).stop_reason, "no_draft");
@@ -101,7 +101,8 @@ test("未 finalize 只记会话不出版本；新会话不继承旧草稿且禁�
         { call: "finalize_draft", args: {} },
         { call: "write_draft", args: { artifact: sample("script") } }, { text: "停止" },
       ]).fn;
-      const result = await runStage(second, f.store, f.project.id, "script");
+      await assert.rejects(() => runStage(second, f.store, f.project.id, "script"), /选择从暂存继续或重新开始/);
+      const result = await runStage(second, f.store, f.project.id, "script", "", undefined, undefined, { staging: "restart" });
       assert.equal(result.errors.length, 2);
       assert.equal(result.stop_reason, "no_draft");
     } finally { second.dispose(); }

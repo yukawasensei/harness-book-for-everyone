@@ -187,3 +187,12 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
   .prompt-card section { padding: 10px; }
   .prompt-card section p { line-height: 1.55; }
 }
+ .badge.stale { background: #fff1c7; color: #7c4800; }
+ .provenance-panel, .rework-actions { padding: 10px 14px; border-top: 1px solid #d8ddd9; }
+ .basis { font-weight: 600; }
+ .impact p, .impact li { overflow-wrap: anywhere; line-height: 1.6; }
+ .rework-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; position: sticky; top: 0; z-index: 2; background: #f5f6f4; border-bottom: 1px solid #d8ddd9; }
+ .rework-choice { display: grid; align-content: start; gap: 4px; min-width: 0; }
+ .rework-choice button { font-size: 12px; padding: 7px 4px; }
+ .rework-choice p { font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+ .validity-confirmation { padding-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }

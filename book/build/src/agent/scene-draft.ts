@@ -1,8 +1,11 @@
 import type { ProjectStore } from "../project/store.js";
 import { assertRunnable } from "../workflow/index.js";
+import { currentBasis, sameBasis, type Basis } from "../project/provenance.js";
+import type { ResumeChoice } from "../project/checkpoints.js";
+import type { Scene, SceneShots } from "../contracts/index.js";
 
 /** 每次运行独立的暂存区；会话事件及结束快照负责审计，不是可采用版本。 */
-export class SceneDraft<T extends { scene_id: string }> {
+export class SceneDraft<T extends Scene | SceneShots> {
   private scenes = new Map<string, T>();
   private version: number | null = null;
   private warnings: string[] = [];
@@ -10,6 +13,7 @@ export class SceneDraft<T extends { scene_id: string }> {
   private sourceIds = new Set<string>();
   private submitted = new Set<string>();
   private removed = new Set<string>();
+  private basis: Basis = {};
 
   constructor(private store: ProjectStore, private projectId: string, private stage: "script" | "storyboard", private config: {
     validate: (value: unknown) => void;
@@ -18,14 +22,24 @@ export class SceneDraft<T extends { scene_id: string }> {
     warnings: (scenes: T[]) => string[];
   }) {}
 
-  reset(seedVersion?: number) {
+  reset(seedVersion?: number, choice: ResumeChoice = "restart") {
+    const saved = choice === "resume" ? this.store.assertStagingCurrent(this.projectId, this.stage, seedVersion) : null;
     const seed = seedVersion === undefined ? [] : this.config.seed(seedVersion);
-    this.scenes = new Map(seed.map(scene => [scene.scene_id, structuredClone(scene)]));
+    this.scenes = new Map(((saved?.snapshot.scenes as T[] | undefined) ?? seed).map(scene => [scene.scene_id, structuredClone(scene)]));
     this.sourceVersion = seedVersion ?? null;
     this.sourceIds = new Set(this.scenes.keys());
     this.submitted.clear(); this.removed.clear();
     this.version = null; this.warnings = [];
+    if (saved?.snapshot.scene_changes) {
+      const changes = saved.snapshot.scene_changes;
+      this.sourceIds = new Set([...changes.reused, ...changes.resubmitted]);
+      this.submitted = new Set(changes.resubmitted); this.removed = new Set(changes.removed);
+    }
+    this.basis = currentBasis(this.store.load(this.projectId).stages, this.stage);
+    this.persist();
   }
+
+  private persist() { this.store.saveStaging(this.projectId, this.stage, this.snapshot(), this.basis); }
 
   changes() {
     return {
@@ -38,6 +52,7 @@ export class SceneDraft<T extends { scene_id: string }> {
 
   private assertOpen() {
     assertRunnable(this.store.load(this.projectId).stages, this.stage);
+    if (Object.keys(this.basis).length && !sameBasis(this.basis, currentBasis(this.store.load(this.projectId).stages, this.stage))) throw new Error("暂存来源已变化，请重新开始");
     if (this.version !== null) throw new Error(`本次${this.stage === "script" ? "剧本" : "分镜"}已生成 v${this.version}，不能重复 finalize 或继续写场`);
   }
 
@@ -48,6 +63,8 @@ export class SceneDraft<T extends { scene_id: string }> {
     this.scenes.set(scene.scene_id, structuredClone(scene));
     this.submitted.add(scene.scene_id);
     this.removed.delete(scene.scene_id);
+    if (!Object.keys(this.basis).length) this.basis = currentBasis(this.store.load(this.projectId).stages, this.stage);
+    this.persist();
     return { scene_id: scene.scene_id, scene_count: this.scenes.size, status: "in_progress" };
   }
 
@@ -56,6 +73,7 @@ export class SceneDraft<T extends { scene_id: string }> {
     if (typeof sceneId !== "string" || !/^S[0-9]{2}$/.test(sceneId)) throw new Error("scene_id 不合规：必须为 S 加两位数字");
     if (!this.scenes.delete(sceneId)) throw new Error(`进行中草稿不存在 ${sceneId}，不能删除`);
     this.removed.add(sceneId);
+    this.persist();
     return { scene_id: sceneId, scene_count: this.scenes.size, status: "in_progress" };
   }
 
@@ -67,6 +85,7 @@ export class SceneDraft<T extends { scene_id: string }> {
     const version = this.store.writeDraft(this.projectId, this.stage, this.config.artifact(scenes));
     this.version = version;
     this.warnings = warnings;
+    this.persist();
     return { stage: this.stage, version, status: "pending_review", warnings: this.warnings, scene_changes: this.changes() };
   }
 

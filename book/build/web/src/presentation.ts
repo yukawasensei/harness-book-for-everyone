@@ -7,11 +7,17 @@ import { translateValidationError, type ValidationContext } from "./validation-e
 export const stageNames: Record<Stage, string> = {
   topic: "选题", synopsis: "梗概", script: "剧本", bible: "设定集", storyboard: "分镜脚本", prompts: "分镜提示词",
 };
+export function composerGuidance(project: Pick<ProjectDetail, "stages">, stage: Stage) {
+  if (Object.values(project.stages).every(state => state.status === "adopted")) return "全流程已完成 · 可查看产物或确认返工";
+  if (project.stages[stage].status === "stale") return "本阶段待更新，请选择上方处理方式";
+  if (project.stages[stage].adopted_version !== null) return "本阶段已采用 · 可查看产物或确认返工";
+  return stage === "prompts" ? "审阅并采用后完成六阶段" : "采用后才能继续下一步";
+}
 export const reviewLabels: Record<ReviewStatus, string> = {
   pending: "待审阅", adopted: "已采用", discarded: "已丢弃", changes_requested: "要求修改",
 };
 const stageLabels: Record<StageStatus, string> = {
-  locked: "锁定", ready: "可运行", pending_review: reviewLabels.pending, adopted: reviewLabels.adopted,
+  locked: "锁定", ready: "可运行", pending_review: reviewLabels.pending, adopted: reviewLabels.adopted, stale: "待更新",
 };
 export function stageBadge(status: StageStatus | undefined, stage: Stage, running: Pick<RunInfo, "stage"> | null, implemented = true) {
   if (!implemented) return { text: "暂未开放", className: "unavailable" };
@@ -27,7 +33,7 @@ export function artifactGuidance(stage: Stage, implemented: boolean, adoptedVers
   };
   if (adoptedVersion !== null) return {
     empty: `本阶段已采用 v${adoptedVersion}，请选择版本查看内容。`,
-    footer: stage === "prompts" ? `本阶段已采用 v${adoptedVersion}；六阶段文本产物已完成审阅。` : `本阶段已采用 v${adoptedVersion}；下游以此版本为准，暂不支持更换采用版本。`,
+    footer: `本阶段已采用 v${adoptedVersion}；可返工生成新版本或切换采用版本，下游将检查来源。`,
   };
   return { empty: "运行后可在这里查看和审阅草稿。", footer: "先查看草稿，再决定采用、丢弃或要求修改。" };
 }
@@ -94,7 +100,7 @@ export function runSummary(run: RunResult): { text: string; failed: boolean } {
   }
   const labels: Record<string, string> = {
     no_draft: "未生成草稿", aborted: "运行已中断", max_turns: "达到运行轮数上限",
-    model_error: "模型请求失败", runtime_error: "运行异常",
+    model_error: "模型请求失败", runtime_error: "运行异常", interrupted: "服务重启，运行已中断",
   };
   return { text: labels[run.stop_reason] ?? `运行结束：${run.stop_reason}`, failed: run.stop_reason !== "aborted" };
 }

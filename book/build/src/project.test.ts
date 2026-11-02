@@ -79,14 +79,16 @@ test("不存在的版本不能采用，状态保持 pending_review", () => {
   } finally { f.cleanup(); }
 });
 
-test("采用同版本幂等；采用后换版本或写新草稿明确拒绝", () => {
+test("采用同版本幂等；换版需确认，返工草稿保留当前采用关系", () => {
   const f = fixture(); try {
     f.store.writeDraft(f.project.id, "topic", sample("topic"));
     f.store.writeDraft(f.project.id, "topic", sample("topic"));
     f.store.adopt(f.project.id, "topic", 1);
     f.store.adopt(f.project.id, "topic", 1);
-    assert.throws(() => f.store.adopt(f.project.id, "topic", 2), /返工留到 P8/);
-    assert.throws(() => f.store.writeDraft(f.project.id, "topic", sample("topic")), /返工留到 P8/);
+    assert.throws(() => f.store.adopt(f.project.id, "topic", 2), /二次确认/);
+    assert.equal(f.store.writeDraft(f.project.id, "topic", sample("topic")), 3);
+    assert.equal(f.store.load(f.project.id).stages.topic.adopted_version, 1);
+    assert.equal(f.store.adopt(f.project.id, "topic", 2, true).stages.topic.adopted_version, 2);
   } finally { f.cleanup(); }
 });
 
@@ -186,8 +188,9 @@ test("旧 project.json 缺少审阅字段仍可读取、审阅；旧采用关系
     writeFileSync(file, JSON.stringify(adopted));
     assert.deepEqual(f.store.readAdopted(f.project.id, "topic"), sample("topic"));
     assert.equal(f.store.load(f.project.id).stages.topic.reviews?.[1].status, "adopted");
-    assert.throws(() => f.store.requestChanges(f.project.id, "topic", 1, "改"), /已采用/);
     assert.throws(() => f.store.discard(f.project.id, "topic", 1), /已采用/);
+    f.store.requestChanges(f.project.id, "topic", 1, "改");
+    assert.equal(f.store.revisionContext(f.project.id, "topic", 1).note, "改");
   } finally { f.cleanup(); }
 });
 
@@ -208,6 +211,6 @@ test("要求修改必须有意见；只允许待审版本决定；无效决定�
     f.store.adopt(f.project.id, "topic", 3);
     f.store.adopt(f.project.id, "topic", 3);
     assert.equal(readFileSync(file, "utf8").trim().split("\n").length, 3, "重复采用保持幂等，不重复审计");
-    assert.throws(() => f.store.revisionContext(f.project.id, "topic", 1), /返工留到 P8/);
+    assert.equal(f.store.revisionContext(f.project.id, "topic", 1).note, "保留核心，改变结尾");
   } finally { f.cleanup(); }
 });

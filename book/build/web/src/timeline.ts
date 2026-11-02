@@ -10,6 +10,7 @@ export function appendEvent(rows: TimelineRow[], event: ProjectEvent): TimelineR
   rows = rows.slice(-299);
   switch (event.type) {
     case "run_started": return [...rows, { kind: "note", id: event.run.id, text: `开始${stageNames[event.run.stage]}`, at: event.run.started_at }];
+    case "staging_restored": return [...rows, { kind: "note", id: `${event.run_id}:restored`, text: `已从暂存恢复 ${event.ids.length} ${event.unit}：${event.ids.join("、") || "无"}` }];
     case "project_state": return event.project.running ? rows : settleTools(rows);
     case "run_ended": return [...settleTools(rows), {
       kind: "note", id: `${event.run.id}:end`,

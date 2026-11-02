@@ -130,7 +130,7 @@ export async function createDemoSession(options: StageSessionOptions) {
         personality: "沉稳、耐心，愿意替还没开口的人留位置。",
       });
     }
-    if (options.reviseFrom !== undefined) {
+    if (options.reviseFrom !== undefined || versions.length) {
       artifact.characters[0].appearance = artifact.characters[0].appearance.replace("浅灰", "深灰");
     }
     const missing = structuredClone(artifact);
@@ -147,6 +147,18 @@ export async function createDemoSession(options: StageSessionOptions) {
     { call: "write_draft", args: { artifact } },
     { text: "已修正字段并保存草稿，请在右侧预览后采用。" },
   ];
+  if (options.staging === "resume") {
+    const saved = options.store.assertStagingCurrent(options.projectId, options.stage, options.reviseFrom);
+    const changes = saved.snapshot.scene_changes ?? saved.snapshot.shot_changes;
+    // 修改暂存包含预装原稿，只跳过已重交部分；普通续跑跳过全部已暂存内容。
+    const completed = new Set(options.reviseFrom !== undefined ? changes?.resubmitted ?? []
+      : saved.snapshot.items?.map(item => item.shot_id) ?? saved.snapshot.scenes?.map(scene => scene.scene_id) ?? []);
+    turns = turns.filter(turn => {
+      const args = ("args" in turn ? turn.args : undefined) as { scene?: { scene_id: string }; shot_id?: string } | undefined;
+      const id = args?.scene?.scene_id ?? args?.shot_id;
+      return id === undefined || !completed.has(id);
+    });
+  }
   const session = await createStageSession({ ...options, model: { provider: "ollama", id: "qwen3.8:27b" } });
   session.agent.streamFunction = fakeStream(session.model!, turns, { delayMs: 700 }).fn;
   return session;

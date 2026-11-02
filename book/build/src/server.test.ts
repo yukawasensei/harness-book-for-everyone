@@ -251,7 +251,7 @@ test("离线演示使用真实业务工具：错误卡片、修正草稿、完�
   } finally { await sse.close(); await f.cleanup(); }
 });
 
-test("HTTP 审阅与修改运行：非法来源 4xx，SSE 带审阅状态，采用后禁止返工", async () => {
+test("HTTP 审阅与修改运行：非法来源 4xx，SSE 带审阅状态，采用后返工需确认", async () => {
   const f = await setup();
   const sse = await subscribe(f.base, f.path);
   try {
@@ -280,14 +280,16 @@ test("HTTP 审阅与修改运行：非法来源 4xx，SSE 带审阅状态，采�
     assert.equal((await f.get(`${route}/versions/2`)).status, 200);
     f.store.writeDraft(f.project.id, "topic", sample("topic"));
     assert.equal((await f.post(`${route}/adopt`, { version: 3 })).status, 200);
-    for (const operation of ["discard", "request-changes"]) {
-      assert.equal((await f.post(`${route}/${operation}`, { version: 3, note: "改" })).status, 422);
-    }
+    assert.equal((await f.post(`${route}/discard`, { version: 3 })).status, 422);
     assert.equal((await f.post(`${route}/run`, { revise_from: 1 })).status, 422);
     assert.equal((await f.detail()).stages.synopsis.status, "ready");
     const rows = readFileSync(join(f.store.projectDir(f.project.id), "audit.jsonl"), "utf8").trim().split("\n").map(row => JSON.parse(row));
     assert.deepEqual(rows.map(row => row.action), ["changes_requested", "discarded", "adopted"]);
     assert.ok(rows.every(row => row.actor === "local"));
+    assert.equal((await f.post(`${route}/request-changes`, { version: 3, note: "改" })).status, 200);
+    assert.equal((await f.post(`${route}/run`, { revise_from: 3, confirmed: true })).status, 202);
+    await eventually(f.detail, p => !p.running && p.stages.topic.versions.length === 4);
+    assert.equal((await f.detail()).stages.topic.adopted_version, 3);
   } finally { await sse.close(); await f.cleanup(); }
 });
 

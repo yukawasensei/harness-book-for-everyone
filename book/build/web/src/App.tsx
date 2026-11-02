@@ -11,6 +11,8 @@ import { ArtifactPreview } from "./ArtifactPreview";
 import { ErrorDetails } from "./ErrorDetails";
 import { TechnicalDetails } from "./TechnicalDetails";
 import { formatLocalDateTime } from "./date-time";
+import { ProvenancePanel, ReworkActions, ReworkDialog, InterruptedRunNotice, type ReworkOperation } from "./ReworkPanel";
+import { composerGuidance } from "./presentation";
 
 const stages: [Stage, string][] = [
   ["topic", "选题"], ["synopsis", "梗概"], ["script", "剧本"],
@@ -87,6 +89,8 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
   const [error, setError] = useState("");
   const [instructions, setInstructions] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [confirm, setConfirm] = useState<{ operation: ReworkOperation; reviseFrom?: number } | null>(null);
+  useEffect(() => { setConfirm(null); }, [stage]);
   const feed = useRef<ReturnType<typeof connectProject> | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
   const path = `/api/projects/${encodeURIComponent(id)}`;
@@ -139,12 +143,17 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
     startRun();
   }
   function startRun(reviseFrom?: number) {
-    void action(async () => {
+    if (project?.stages[stage].adopted_version != null || project?.staging?.[stage]) {
+      setError(""); setConfirm({ operation: reviseFrom === undefined ? "run" : "revise", reviseFrom });
+    } else void executeRun(reviseFrom);
+  }
+  function executeRun(reviseFrom?: number, staging?: "resume" | "restart", confirmed = false) {
+    return action(async () => {
       const note = reviseFrom === undefined ? "" : project?.stages[stage].reviews?.[reviseFrom]?.note ?? "";
       const text = runRequestText(stage, instructions, reviseFrom === undefined ? undefined : { version: reviseFrom, note });
       const notice = reviseFrom === undefined ? null : demoRevisionNotice(config.mode === "demo", note, stage);
       setRows(rows => [...rows, { kind: "user", id: `user:${Date.now()}`, text: text + (notice ? `\n\n${notice}` : "") }]);
-      await api(`${path}/stages/${stage}/run`, { instructions, ...(reviseFrom === undefined ? {} : { revise_from: reviseFrom }) });
+      await api(`${path}/stages/${stage}/run`, { instructions, confirmed, staging, ...(reviseFrom === undefined ? {} : { revise_from: reviseFrom }) });
     });
   }
   const state = project?.stages[stage];
@@ -152,7 +161,7 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
   const implemented = config.runnable_stages.includes(stage);
   const rawReason = project?.run_blocked_reasons[stage];
   const blockedReason = !implemented ? `${stageNames[stage]}暂未开放运行。` : rawReason ? readerMessage(rawReason) : null;
-  const runnable = !!project && !blockedReason && implemented && (state?.status === "ready" || state?.status === "pending_review");
+  const runnable = !!project && !blockedReason && implemented;
   const historyNotice = missingEventsNotice(project, rows);
   const summary = running || (implemented && state?.status !== "adopted" && project?.last_run?.stage === stage)
     ? currentRunDisplay(running, project?.last_run) : null;
@@ -164,6 +173,7 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
   return <main className="workspace">
     <section className="conversation" aria-label="对话和工具调用">
       <div className="panel-heading"><h2>对话与工具</h2><span className={`connection ${connection}`}>{connectionLabel[connection]}</span></div>
+      <InterruptedRunNotice run={project?.last_run} />
       {connection === "polling" && <p className="notice">断线期间文本与工具事件可能缺失；阶段、版本和运行结论以轮询快照为准。连接会自动重试。</p>}
       <div className="timeline" aria-label="运行事件">
         {historyNotice && <p className="muted history-notice">{historyNotice}</p>}
@@ -176,9 +186,9 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
         <label htmlFor="instructions">补充要求 · {stageNames[stage]}</label>
         <textarea id="instructions" placeholder="例如：两位角色，雨天，三分钟原创短片" value={instructions} onChange={e => setInstructions(e.target.value)} maxLength={8000} disabled={!!running || submitting} />
         <div className="composer-actions">
-          <span id="run-reason" className="muted">{running ? `正在运行${stageNames[running.stage]}${running.abort_requested ? " · 正在中断…" : ""}` : blockedReason ?? (stage === "prompts" ? "审阅并采用后完成六阶段" : "采用后才能继续下一步")}</span>
+          <span id="run-reason" className="muted">{running ? `正在运行${stageNames[running.stage]}${running.abort_requested ? " · 正在中断…" : ""}` : blockedReason ?? (project ? composerGuidance(project, stage) : "正在读取项目…")}</span>
           {running ? <button type="button" className="danger" disabled={submitting || running.abort_requested} onClick={() => void action(async () => { await api(`${path}/abort`, {}); })}>中断</button>
-            : <button className="primary" aria-describedby="run-reason" disabled={!runnable || submitting}>{submitting ? "正在提交…" : "运行阶段"}</button>}
+            : state?.status !== "stale" && <button className="primary" aria-describedby="run-reason" title={blockedReason ?? undefined} disabled={!runnable || submitting}>{submitting ? "正在提交…" : state?.adopted_version != null ? "返工运行" : "运行阶段"}</button>}
         </div>
         {progress && <p className="scene-progress" role="status">{progress}</p>}
       </form>
@@ -196,6 +206,12 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
         })}
       </nav>
       {project && stages.every(([key]) => project.stages[key].status === "adopted") && <p className="pipeline-complete" role="status">全流程已完成 · 六阶段产物均已采用</p>}
+      {state?.status === "stale" && <ReworkActions
+        busy={!!running || submitting} runReason={blockedReason}
+        reassembleReason={stage === "prompts" ? readerMessage(project?.reassemble_reason ?? "") || null : "仅分镜提示词支持重新拼装。"}
+        onRun={() => startRun()}
+        onConfirmValid={() => { setError(""); setConfirm({ operation: "confirm-valid" }); }}
+        onReassemble={() => { setError(""); setConfirm({ operation: "reassemble" }); }} />}
       {!implemented && <p className="notice">{stageNames[stage]}暂未开放运行。</p>}
       <div className="version-heading">
         <label>版本 <select aria-label="选择产物版本" value={version ?? ""} disabled={!versions.length} onChange={e => setVersion(Number(e.target.value))}>
@@ -208,6 +224,8 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
         const status = state?.reviews?.[v]?.status ?? "pending";
         return <button key={v} aria-pressed={version === v} onClick={() => setVersion(v)}>v{v} <span className={`review-badge ${status}`}>{reviewLabels[status]}</span></button>;
       })}</div>
+      {project && <ProvenancePanel project={project} stage={stage} version={version} />}
+      {state?.adopted_version != null && <p className="muted">当前采用：v{state.adopted_version}</p>}
       <div className="preview" aria-label="产物预览">
         {previewError ? <p className="error-banner" role="alert">{previewError}</p>
           : visiblePreview ? <ArtifactPreview stage={stage} value={visiblePreview.value} bible={bible} script={script} revision={revision} />
@@ -215,9 +233,11 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
       </div>
       <ReviewPanel key={`${stage}:${version}`} stage={stage} state={state} version={version} loaded={!!visiblePreview && !previewError}
         revision={revision} implemented={implemented}
+        programAssembled={version !== null && project?.provenance?.[stage]?.[version]?.generated_by === "reassemble"}
         busy={!!running || submitting} runReason={blockedReason} error={error} demo={config.mode === "demo"}
-        onReview={(operation, note) => action(async () => { await api(`${path}/stages/${stage}/${operation}`, { version, ...(note === undefined ? {} : { note }) }); })}
+        onReview={(operation, note) => action(async () => { await api(`${path}/stages/${stage}/${operation}`, { version, confirmed: operation === "adopt" && state?.adopted_version != null, ...(note === undefined ? {} : { note }) }); })}
         onRevise={() => { if (version !== null) startRun(version); }} />
+      {project?.staging?.[stage] && <p className="notice">存在未汇总暂存：{project.staging[stage]!.count} {stage === "prompts" ? "镜" : "场"}。运行时可选择继续或重新开始。{project.staging[stage]!.revise_from !== null ? `请从 v${project.staging[stage]!.revise_from} 的按意见修改入口继续。` : ""}</p>}
       {summary && <div className={`run-summary${summary.failed ? " failed" : ""}`}>
         <p>{running ? "当前运行" : "最近运行"}：{stageNames[summary.stage]} · {summary.text}{progress ? ` · ${progress}` : ""}</p>
         {displayRun && <p className="muted">运行开始：<time dateTime={displayRun.started_at}>{formatLocalDateTime(displayRun.started_at)}</time></p>}
@@ -227,6 +247,12 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
       {stage === "storyboard" && project?.stages.prompts.status === "ready" && <p className="notice">分镜已采用，分镜提示词已解锁（依赖已满足）；可切换到分镜提示词运行。</p>}
       <p className="muted artifact-note">{guidance.footer}</p>
     </aside>
+    {confirm && <ReworkDialog key={`${stage}:${confirm.operation}`} operation={confirm.operation} staging={(confirm.operation === "run" || confirm.operation === "revise") && !!project?.staging?.[stage]} busy={submitting} error={error}
+      onCancel={() => setConfirm(null)} onConfirm={async (reason, choice) => {
+        const ok = confirm.operation === "run" || confirm.operation === "revise" ? await executeRun(confirm.reviseFrom, choice, true)
+          : await action(async () => { await api(`${path}/stages/${stage}/${confirm.operation}`, { confirmed: true, reason }); });
+        if (ok) setConfirm(null); return ok;
+      }} />}
     {expanded && <dialog ref={previewDialog} className="expanded-preview" aria-labelledby="expanded-preview-title" onCancel={() => setExpanded(false)}>
       <header><h2 id="expanded-preview-title">{stageNames[stage]} · v{version} · 放大预览</h2><button type="button" onClick={() => setExpanded(false)}>收起预览</button></header>
       <div className="expanded-preview-content">{visiblePreview && <ArtifactPreview stage={stage} value={visiblePreview.value} bible={bible} script={script} revision={revision} />}</div>

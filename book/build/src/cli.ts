@@ -4,11 +4,18 @@ import { STAGES, parseStage } from "./contracts/index.js";
 import { ProjectStore } from "./project/store.js";
 import { scrubSecrets } from "./agent/model.js";
 
-const usage = "用法：new <title> | status <project> | run <project> <stage> | adopt <project> <stage> <version>";
+const usage = "用法：new <title> | status <project> | run <project> <stage> [--confirm] [--resume|--restart] | adopt <project> <stage> <version> [--confirm]";
 
 export async function main(args: string[], root = resolve(dirname(fileURLToPath(import.meta.url)), "..")): Promise<void> {
   if (process.platform !== "linux") throw new Error("请在 Linux / WSL 中运行");
-  const [command, ...rest] = args;
+  const [command, ...inputs] = args;
+  const withFlags = command === "run" || command === "adopt";
+  const flags = withFlags ? inputs.filter(value => value.startsWith("--")) : [];
+  if (flags.some(f => !["--confirm", "--resume", "--restart"].includes(f))) throw new Error(usage);
+  if (flags.includes("--resume") && flags.includes("--restart")) throw new Error("请选择继续或重新开始其中一种");
+  if (flags.length && !["adopt", "run"].includes(command)) throw new Error(usage);
+  if (command === "adopt" && flags.some(f => f !== "--confirm")) throw new Error(usage);
+  const rest = withFlags ? inputs.filter(value => !value.startsWith("--")) : inputs;
   const store = new ProjectStore(root);
   if (command === "new" && rest.length === 1) {
     const project = store.create(rest[0]);
@@ -24,7 +31,7 @@ export async function main(args: string[], root = resolve(dirname(fileURLToPath(
     if (!/^[1-9][0-9]*$/.test(rest[2])) throw new Error("版本号必须为正整数，如 1");
     const version = Number(rest[2]);
     if (!Number.isSafeInteger(version)) throw new Error("版本号超出安全整数范围");
-    store.adopt(rest[0], parseStage(rest[1]), version);
+    store.adopt(rest[0], parseStage(rest[1]), version, flags.includes("--confirm"));
     console.log(`已采用 ${rest[1]} v${version}`);
   } else if (command === "run" && rest.length === 2) {
     const stage = parseStage(rest[1]);
@@ -32,7 +39,7 @@ export async function main(args: string[], root = resolve(dirname(fileURLToPath(
     const { runStage } = await import("./agent/run.js");
     const session = await createStageSession({ root, store, projectId: rest[0], stage });
     try {
-      const result = await runStage(session, store, rest[0], stage);
+      const result = await runStage(session, store, rest[0], stage, "", undefined, undefined, { confirmed: flags.includes("--confirm"), staging: flags.includes("--resume") ? "resume" : flags.includes("--restart") ? "restart" : undefined });
       console.log(`stop_reason=${result.stop_reason}`);
       if (result.stop_reason !== "draft_written") throw new Error(`阶段运行未完成：${result.stop_reason}；${result.errors.join("; ")}`);
     } finally { session.dispose(); }

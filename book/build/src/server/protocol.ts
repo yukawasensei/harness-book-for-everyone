@@ -1,6 +1,8 @@
 import type { Stage } from "../contracts/index.js";
 import type { Project } from "../project/store.js";
 import type { runStage } from "../agent/run.js";
+import type { Basis } from "../project/provenance.js";
+import type { ProjectStore } from "../project/store.js";
 
 export interface RunInfo {
   id: string;
@@ -13,6 +15,9 @@ export interface ProjectDetail extends Project {
   running: RunInfo | null;
   last_run: RunResult | null;
   run_blocked_reasons: Record<Stage, string | null>;
+  staging?: Partial<Record<Stage, { count: number; revise_from: number | null; based_on: Basis } | null>>;
+  bible_impact?: ReturnType<ProjectStore["bibleImpact"]>;
+  reassemble_reason?: string | null;
 }
 export interface ServerConfig {
   mode: "demo" | "model";
@@ -26,6 +31,7 @@ type SessionEvent = (
   | { type: "tool_execution_end"; toolCallId: string; toolName: string; result: unknown; isError: boolean }
 ) & { stage: Stage; run_id: string };
 export type ProjectEvent = SessionEvent
+  | { type: "staging_restored"; stage: Stage; run_id: string; ids: string[]; unit: "场" | "镜" }
   | { type: "project_state"; project: ProjectDetail }
   | { type: "run_started"; run: RunInfo }
   | { type: "run_ended"; run: RunResult };

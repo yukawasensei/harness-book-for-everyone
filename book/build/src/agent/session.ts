@@ -101,6 +101,7 @@ export interface StageSessionOptions {
   projectId: string;
   stage: Stage;
   reviseFrom?: number;
+  staging?: "resume" | "restart";
   /** 测试用包内已配置模型描述，再替换 streamFunction；不请求真实模型。 */
   model?: { provider: string; id: string };
 }

@@ -102,6 +102,7 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | P05 | [从剧本抽取设定集](./book/build/chapters/p05.md) | tag `p2-05` |
 | P06 | [分镜脚本与引用一致性](./book/build/chapters/p06.md) | tag `p2-06` |
 | P07 | [模型写镜头，程序注入设定](./book/build/chapters/p07.md) | tag `p2-07` |
+| P08 | [版本与返工：改上游，下游怎么办](./book/build/chapters/p08.md) | tag `p2-08` |
 
 ## 安全基线 / Safety baseline
 
