@@ -7,7 +7,7 @@ body:
     id: chapter
     attributes:
       label: 章节 / tag · Chapter / tag
-      description: "例如 ch04、book-v1.1.1，或 labs/05 · e.g. ch04, book-v1.1.1, or labs/05"
+      description: "例如 ch04、book-v1.1.1 · e.g. ch04, book-v1.1.1"
       placeholder: "ch06 / book-v1.1.1"
     validations:
       required: true

@@ -1,6 +1,6 @@
 # 附录 · PM 验收清单 / Appendix · PM Sign-off Checklist
 
-> 对应章节：[第 2 章](./ch02.md) 至 [第 10 章](./ch10.md) · 评测基线：`evals/baseline.json` · 验收器：`src/check-trace.ts` 与 `src/check-artifacts.ts`
+> 对应章节：[第 2 章](./ch02.md) 至 [第 11 章](./ch11.md) · 评测基线：`evals/baseline.json` · 验收器：`src/check-trace.ts` 与 `src/check-artifacts.ts`
 
 ---
 
@@ -130,12 +130,13 @@
 #### 9. 变更回归自动化与基线比对
 - **要问的问题**：改了 Prompt、调了参数或升级了模型后，如何证明之前的 Case 没有暗中挂掉？
 - **合格的证据**：
-  - **命令与产物**：`npm run eval` 跑出新数据，与 `evals/baseline.json` 自动执行 `compareBaselines` 比对。
+  - **命令与产物**：默认 `npm run eval` 把结果写到 `evals/runs/local/`，与已提交的 `evals/baseline.json` 做 `compareBaselines`；**不会**自动刷新签收基线。要更新基线须 `UPDATE_BASELINE=1 MODEL_ID=ollama/qwen3.8:27b npm run eval`（未设 `CASES`、`repeat=1`、全部通过；失败保留旧基线与旧 trace）。
   - **断言逻辑**：差分数组中不存在 `kind: "regressed"`（原本 PASS 变为 FAIL 的案例为 0）。
   - **报表展示**：`npm run report` 显示 `pass=N/N` 及变动明细（`fixed` / `new` / `regressed`）。
 - **红旗（Red Flags）**：
   - “开发随手挑了 2 个样例试了一下，效果挺好的。”
   - “整体通过率还是 90%，虽然挂了两个旧用例，但新增的功能都通了。”
+  - “全量 `npm run eval` 跑绿了，所以仓库里的 `evals/baseline.json` 一定已经更新。”
 - **对应章节**：[第 6 章 · 评测基线与签字](./ch06.md)
 
 #### 10. 发布签字（Sign-off）硬门禁
@@ -288,3 +289,21 @@
 - **红旗（Red Flags）**：
   - “因为模型变弱了，指令理解差，所以路径越界或无限死循环是正常的，需要换回大模型才行。”
   - 安全依赖于“大模型足够聪明能听懂规则”，而不是“Harness 在外层用代码筑起硬闸门”。
+
+---
+
+### Ch11 · 从失败到修复
+
+#### 22. 拒绝率与完成率分开看
+- **要问的问题**：闸门挡住不合规调用之后，任务完成率是否同步改善？还是“5/5 拒绝、0/5 完成”？
+- **合格的证据**：同一 case 同时给出（a）`schema_validation_rejected` / `json_write_rejected` 等拒绝次数与是否进入 executor；（b）完整验收 PASS/FAIL。实例：DeepSeek 的 `custom-tool-schema-conflict` 定向 5/5 被拒、0 次执行，完成率仍 0/5。见[第 11 章](./ch11.md)。
+- **红旗（Red Flags）**：
+  - “错误参数都被拦住了，所以这条 case 就算修好了。”
+  - 只汇报 `stop_reason` 或拒绝事件，不汇报 case 完整验收通过率。
+
+#### 23. Trace 驱动修复与可关闭对照
+- **要问的问题**：评测失败后，是否按“读 trace → harness 改一处 → 重跑对比”处理？新闸门能否用环境变量关掉做对照？
+- **合格的证据**：相对路径 trace；`HARNESS_TOOL_INVENTORY` / `HARNESS_STRICT_SCHEMA` / `HARNESS_JSON_WRITE` 的开关说明；对比报告（如 `evals/runs/compare-trace-fixes.md`）写明小样本不能归因到单个开关。
+- **红旗（Red Flags）**：
+  - “改一下 prompt 重跑到绿就行，不用动 harness。”
+  - “三处一起开、通过率涨了，所以一定是某某开关的功劳。”

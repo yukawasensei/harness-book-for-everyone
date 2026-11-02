@@ -19,6 +19,9 @@
 
 1. **跟做主线** → [`book/harness/README.md`](./book/harness/README.md)（每章加了什么、怎么跑）
 2. **PM 验收清单** → [`book/harness/chapters/appendix-pm-checklist.md`](./book/harness/chapters/appendix-pm-checklist.md)
+3. **术语表 / Glossary** → [`notes/glossary.md`](./notes/glossary.md)
+
+早期课程资料见 tag `book-v1.3`。
 
 ## Quickstart · 克隆到绿基线
 
@@ -31,14 +34,20 @@ npm install
 npm test            # 离线全绿，不需要 Ollama
 npm run typecheck
 
-# 有 Ollama 时：跑全部 case，写基线并签字
-npm run eval
+# 有 Ollama 时：全量跑（默认只写 evals/runs/local/，不改签收基线）
+NO_PROXY=127.0.0.1,localhost npm run eval
+
+# 显式更新签收基线（须未设 CASES、repeat=1、全部通过；失败保留旧基线）
+# UPDATE_BASELINE=1 MODEL_ID=ollama/qwen3.8:27b npm run eval
+
+# DeepSeek：cp .env.example .env（填 DEEPSEEK_API_KEY，勿提交）后
+# MODEL_ID=deepseek/deepseek-flash npm run eval
 ```
 
 | 命令 | 需要 Ollama？ | 证明什么 |
 |---|---|---|
 | `npm test` | 否 | 闸门、验收器、隔离配置的单测全绿 |
-| `npm run eval` | **是**（或改用 DeepSeek API） | 每条 case 端到端 PASS，且相对上一份基线无回归 |
+| `npm run eval` | **是**（或改用 DeepSeek API） | 每条 case 端到端 PASS，且相对已提交基线无回归（默认不改 `evals/baseline.json`） |
 | `npm run report` | 否 | 读已提交的 `evals/baseline.json` |
 
 harness 只读仓库里的 `book/harness/pi-agent/models.json`，**不**加载你本机 `~/.pi` 的扩展、技能或凭据（见 Ch3）。**禁止**：把密钥写进仓库（`.env` 勿提交）。两种跑法见 [`book/harness/README.md`](./book/harness/README.md#两种跑法--two-ways-to-run)。
@@ -62,12 +71,12 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 
 ## 课表速览 / Curriculum map
 
-### 主线：book/harness（Ch0–Ch10）
+### 主线：book/harness（Ch0–Ch11）
 
 | 章 | 主题 | 状态 |
 |---:|---|---|
-| 0 | [跑通本地栈（Ollama + pi CLI）](./book/harness/chapters/ch00.md) | 用 `labs/01`、`labs/02` |
-| 1 | [看见循环（`pi --mode json` 事件链）](./book/harness/chapters/ch01.md) | 用 `labs/03` |
+| 0 | [跑通本地栈（Ollama + pi CLI）](./book/harness/chapters/ch00.md) | 书内步骤 |
+| 1 | [看见循环（`pi --mode json` 事件链）](./book/harness/chapters/ch01.md) | 书内步骤 |
 | 2 | [从零写最小 harness](./book/harness/chapters/ch02.md) | tag `ch02` |
 | 3 | [自己造工具 + 隔离 `~/.pi`](./book/harness/chapters/ch03.md) | tag `ch03` |
 | 4 | [刹车：轮数与超时](./book/harness/chapters/ch04.md) | tag `ch04` |
@@ -77,14 +86,7 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | 8 | [人机确认门 + 第一次写入](./book/harness/chapters/ch08.md) | tag `ch08` |
 | 9 | [成本与延迟预算](./book/harness/chapters/ch09.md) | tag `ch09` |
 | 10 | [综合项目：片场场记（精简版）](./book/harness/chapters/ch10.md) | tag `ch10` |
-
-### 旧版资料（仅作参考，已并入各章）
-
-旧笔记与 lab **不移动、不删除**，文件首行已标注对应新章。对照表见[重构提案](./notes/_curriculum-redesign-proposal.md)第 3 节。
-
-- [`notes/pm-learning/`](./notes/pm-learning/)：23 课 PM 图解 + 费曼笔记（仅作参考，已并入各章）
-- `labs/01`–`07`：逐课实验（仅作参考，已并入各章）。`labs/05-minimal-harness` 是闸门“成品版”，`labs/06-evals` 是它的评测；`labs/07-set-clerk` 是固定流水线 + 评测桩。
-- [`notes/course-plan.md`](./notes/course-plan.md)：旧 12 课计划（未纳入主线，仅作参考）
+| 11 | [从失败到修复](./book/harness/chapters/ch11.md) | tag `ch11` |
 
 ## 安全基线 / Safety baseline
 
@@ -101,4 +103,3 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 ## License
 
 MIT — see [`LICENSE`](./LICENSE). Copyright (c) 2026 harness-book-for-everyone contributors.
-

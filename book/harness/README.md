@@ -8,8 +8,8 @@
 
 | 章 | 书稿 | 代码 |
 |---:|---|---|
-| 0 | [跑通本地栈 / Run the Local Stack](./chapters/ch00.md) | `labs/01`、`labs/02` |
-| 1 | [看见循环 / See the Loop](./chapters/ch01.md) | `labs/03` |
+| 0 | [跑通本地栈 / Run the Local Stack](./chapters/ch00.md) | 书内步骤（pi CLI） |
+| 1 | [看见循环 / See the Loop](./chapters/ch01.md) | 书内步骤（pi CLI + `analyze_trace.py`） |
 | 2 | [从零写最小 harness / A Minimal Harness](./chapters/ch02.md) | tag `ch02` |
 | 3 | [自己造工具 + 隔离本机配置 / Your Own Tool, Isolated](./chapters/ch03.md) | tag `ch03` |
 | 4 | [刹车：轮数与超时 / Brakes](./chapters/ch04.md) | tag `ch04` |
@@ -19,6 +19,7 @@
 | 8 | [人机确认门 + 第一次写入 / HITL & First Write](./chapters/ch08.md) | tag `ch08` |
 | 9 | [成本与延迟预算 / Cost & Latency](./chapters/ch09.md) | tag `ch09` |
 | 10 | [综合项目：片场场记 / Capstone](./chapters/ch10.md) | tag `ch10` |
+| 11 | [从失败到修复 / From Failure to Fix](./chapters/ch11.md) | tag `ch11` |
 | 附录 | [PM 验收清单 / PM Sign-off Checklist](./chapters/appendix-pm-checklist.md) | 全书验收证据清单 |
 
 每章都有：要解决的问题、代码在哪、可复制的命令、看什么验收、作者本机真跑记录、产品拍板、费曼标准答。下面是各章能力和 case 的速查表。
@@ -145,7 +146,7 @@ NO_PROXY=127.0.0.1,localhost HITL_MODE=tty CASE_ID=hitl-approve-write npm start
 | fail-stop：任何一步被拦或被拒，整条线停下，不留半成品（`expect.artifacts_absent`） | `src/check-trace.ts` |
 | `npm run check` 与 `npm run eval` 都同时检查 trace 和产物 | `src/check-trace.ts`、`src/eval/run-evals.ts` |
 
-和旧版 `labs/07-set-clerk` 的区别：那里是**写死顺序的流水线**调用模型；这里是**同一个 pi agent** 自己决定怎么调用工具，harness 只负责守住边界和验收。
+设计取舍：不用写死顺序的流水线逐步调模型，而是让**同一个 pi agent** 自己决定怎么调用工具，harness 只负责守住边界和验收。
 
 ## 为什么要隔离 `~/.pi`
 
@@ -177,10 +178,11 @@ npm install
 npm test            # 离线：case 规格、trace 映射、验收器、schema/executor、类型转换、隔离（不需要 Ollama）
 npm run typecheck
 
-# 有本机 Ollama 时：跑全部 case，写基线并对比上一份（Ch6）
+# 有本机 Ollama 时：跑全部 case，对比已提交基线（Ch6）；默认只写 evals/runs/local/，不改基线
 npm run eval
 npm run report                            # 只读：看 evals/baseline.json
-CASES=read-happy,max-turns-brake npm run eval   # 只跑部分（不覆盖基线和已归档的 trace）
+CASES=read-happy,max-turns-brake npm run eval   # 只跑部分（不写签收基线）
+# UPDATE_BASELINE=1 MODEL_ID=ollama/qwen3.8:27b npm run eval   # 显式更新签收基线与 evals/traces/
 
 # 单跑一条（CASE_ID 选 case，默认 read-happy）
 NO_PROXY=127.0.0.1,localhost CASE_ID=custom-tool-call npm start
@@ -197,11 +199,14 @@ npm run check -- traces/latest.jsonl custom-tool-call    # PASS custom-tool-call
 | DeepSeek API | `deepseek/deepseek-flash` | 复制 `.env.example` 为 `.env`，填入 `DEEPSEEK_API_KEY`；**不要提交 `.env`**（已在 `.gitignore`） | 按 token 计费；无需本机 GPU |
 
 ```bash
-# 本地（免费、离线）
+# 本地（免费、离线）；默认写到 evals/runs/local/<model>/<run-id>/（git 忽略）
 MODEL_ID=ollama/qwen3.8:27b NO_PROXY=127.0.0.1,localhost npm run eval -- --repeat 5
 
 # DeepSeek API（会产生费用；harness 启动时读 .env，已有环境变量优先）
 MODEL_ID=deepseek/deepseek-flash npm run eval -- --repeat 5
+
+# 想写入可提交的归档：EVAL_ARCHIVE=1 CASES=read-happy npm run eval
+# → evals/runs/<model>/<run-id>/
 ```
 
 实测：20 条 case × repeat 5，DeepSeek Flash 估算约 **$0.026**（见 `evals/runs/compare-qwen3.8-27b-vs-deepseek-flash.md`；按配置价格 × 返回 token，非账单核对）。细节与 thinking 关闭约定见 `src/eval/usage.md`。
@@ -230,5 +235,3 @@ MODEL_ID=deepseek/deepseek-flash npm run eval -- --repeat 5
 | `latency-budget-brake` | ch09 | `slow`（`latency_budget_ms=1500`，无单步超时） | `stop_reason=latency_budget` |
 | `capstone-set-clerk` | ch10 | `read`、`write`（全部闸门） | 三份产物齐全且合规、写入顺序对、3 次确认、`success` |
 | `capstone-fail-stop` | ch10 | 同上，第一次写入被拒 | `human_denied`，`workspace/out` 里什么都没有 |
-
-设计来源：[`notes/_curriculum-redesign-proposal.md`](../../notes/_curriculum-redesign-proposal.md)。

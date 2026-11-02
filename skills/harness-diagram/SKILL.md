@@ -2,14 +2,14 @@
 name: harness-diagram
 description: >-
   Generate or refresh bilingual CN+EN Harness Book process diagrams for
-  notes/pm-learning/assets. Use when adding a lesson figure, regenerating a
+  book/harness/assets. Use when adding a lesson figure, regenerating a
   cream/ivory/dark diagram to the locked white textbook style, or when the user
   asks how course diagrams should look.
 ---
 
 # Harness diagram style (locked)
 
-Public course figures under `notes/pm-learning/assets/` share one locked look.
+Public course figures under `book/harness/assets/` share one locked look.
 Do **not** invent a new palette per lesson.
 
 ## Required look
@@ -42,7 +42,7 @@ No cream/beige/ivory/dark background, no photorealism, no heavy shadows,
 clean sans-serif, flat icons only.
 ```
 
-Pass a recent good figure (e.g. `harness-set-clerk.jpg`) as `reference_image_paths` when regenerating so style stays stable.
+Pass a recent good figure (e.g. `harness-capstone.jpg`) as `reference_image_paths` when regenerating so style stays stable.
 
 ## Do / Don't
 
@@ -60,8 +60,8 @@ Pass a recent good figure (e.g. `harness-set-clerk.jpg`) as `reference_image_pat
 
 ## Where files live
 
-- Assets: `notes/pm-learning/assets/harness-*.jpg`
-- Lesson notes reference them with relative `./assets/...` paths
+- Assets: `book/harness/assets/harness-*.jpg`
+- Chapters reference them with relative `../assets/...` paths
 - Style note also recorded in `OPEN_SOURCE.md` (diagram style locked)
 
 ## Acceptance checklist
