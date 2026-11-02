@@ -37,4 +37,6 @@
 
 ## 收尾（2026-11-02 15:10）
 - DeepSeek 接入（7927ed8）、对照真跑（28dffb3）、书稿（b4ce02a）都已推送到 main。
-- 待用户决定：是否打 book-v1.3 tag / 发 Release；是否清理 Ollama 里 gemma4 的残留；是否删除旧路径的符号链接 ~/ai-learning/pi-qwen-harness。
+- 已发版：book-v1.3（tag + GitHub Release，内容也覆盖 book-v1.2）。
+- gemma4:26b 残留（约 4.8 GB）先保留，用户有空时再续传，届时执行 task-A2-codex.md。
+- 用户已改用新路径打开项目；旧路径的符号链接等相关会话都关闭后再删。
