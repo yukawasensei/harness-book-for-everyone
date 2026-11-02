@@ -1,0 +1,5 @@
+projects/
+pi-agent/models-store.json
+.env
+.env.*
+!.env.example

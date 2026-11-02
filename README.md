@@ -88,6 +88,15 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | 10 | [综合项目：片场场记（精简版）](./book/harness/chapters/ch10.md) | tag `ch10` |
 | 11 | [从失败到修复](./book/harness/chapters/ch11.md) | tag `ch11` |
 
+### 第二篇（实操，连载中）：book/build · 分镜工坊
+
+用 pi SDK 做一个真正能用的文本内容生产 harness：选题 → 梗概 → 剧本 → 设定集 → 分镜 → 分镜提示词。外层由程序状态机管阶段，内层由受限 agent 写草稿，人决定采用哪一版。入口：[`book/build/README.md`](./book/build/README.md)。
+
+| 章 | 主题 | 状态 |
+|---:|---|---|
+| P00 | [拆流水线：先定产物，再请模型](./book/build/chapters/p00.md) | tag `p2-01` |
+| P01 | [搭骨架：程序管阶段，模型写草稿](./book/build/chapters/p01.md) | tag `p2-01` |
+
 ## 安全基线 / Safety baseline
 
 - 早期实验默认只读工具；危险工具必须由 **Harness allowlist** 排除，而不是靠模型“答应不用”。  
