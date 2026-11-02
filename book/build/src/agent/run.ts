@@ -5,10 +5,14 @@ import { scrubSecrets } from "./model.js";
 import { stagePrompt } from "./prompts.js";
 
 /** 单次阶段运行；会话保留原始 SDK 事件，自定义条目记录签收所需的运行摘要。 */
-export async function runStage(session: AgentSession, store: ProjectStore, projectId: string, stage: Stage) {
+export async function runStage(
+  session: AgentSession, store: ProjectStore, projectId: string, stage: Stage,
+  additionalInstructions = "", signal?: AbortSignal,
+) {
   const project = store.load(projectId);
   const before = project.stages[stage].versions.length;
-  const prompt = `项目标题：${project.title}\n请完成本阶段，并用 write_draft 提交草稿。`;
+  const prompt = `项目标题：${project.title}\n请完成本阶段，并用 write_draft 提交草稿。`
+    + (additionalInstructions.trim() ? `\n\n补充要求：\n${additionalInstructions.trim()}` : "");
   const errors: string[] = [];
   let stopReason = "no_draft";
   let turns = 0;
@@ -36,13 +40,21 @@ export async function runStage(session: AgentSession, store: ProjectStore, proje
       return { action: "end" };
     }
   };
+  const abort = () => {
+    stopReason = "aborted";
+    void session.abort().catch(error => errors.push(scrubSecrets(String(error))));
+  };
+  signal?.addEventListener("abort", abort, { once: true });
   try {
-    await session.prompt(prompt);
+    if (signal?.aborted) stopReason = "aborted";
+    else await session.prompt(prompt);
     if (stopReason === "no_draft" && store.load(projectId).stages[stage].versions.length > before) stopReason = "draft_written";
   } catch (error) {
     stopReason = "runtime_error";
     errors.push(scrubSecrets(error instanceof Error ? error.message : String(error)));
   } finally {
+    signal?.removeEventListener("abort", abort);
+    if (signal?.aborted) stopReason = "aborted";
     unsubscribe();
     session.sessionManager.appendCustomEntry("stage_run_end", {
       stage, duration_ms: Date.now() - started, turns, errors, stop_reason: stopReason,

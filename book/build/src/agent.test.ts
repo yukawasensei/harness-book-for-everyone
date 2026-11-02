@@ -203,6 +203,20 @@ test("模型只回复文本不算交付；记录 no_draft", async () => {
   } finally { f.cleanup(); }
 });
 
+test("补充要求进入实际用户提示和会话审计，不替换阶段系统提示", async () => {
+  const f = await setup([{ text: "收到" }]);
+  try {
+    await runStage(f.session, f.store, f.project.id, "topic", "只用两位角色，发生在雨天");
+    const messages = f.fake.contexts[0].messages;
+    const user = messages.find(message => message.role === "user");
+    assert.match(JSON.stringify(user), /补充要求：.*只用两位角色，发生在雨天/s);
+    assert.equal(getCurrentSystemPrompt(messages), TOPIC_PROMPT);
+    const start = f.session.sessionManager.getEntries().find(e => e.type === "custom" && e.customType === "stage_run_start");
+    assert.ok(start && start.type === "custom");
+    assert.match((start.data as { prompt: string }).prompt, /只用两位角色，发生在雨天/);
+  } finally { f.cleanup(); }
+});
+
 test("反复提交错误草稿在八轮停止，不生成版本", async () => {
   const f = await setup(Array.from({ length: 10 }, () => ({ call: "write_draft", args: { artifact: {} } })));
   try {

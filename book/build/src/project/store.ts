@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseStage, validateArtifact, type Artifacts, type Stage } from "../contracts/index.js";
 import { adoptDraft, assertRunnable, initialWorkflow, recordDraft, type Workflow } from "../workflow/index.js";
@@ -26,6 +26,17 @@ export class ProjectStore {
     mkdirSync(this.projectDir(project.id), { recursive: true });
     this.save(project);
     return project;
+  }
+
+  list(): Project[] {
+    let entries;
+    try { entries = readdirSync(this.root, { withFileTypes: true }); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+      throw error;
+    }
+    return entries.filter(entry => entry.isDirectory() && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/.test(entry.name))
+      .map(entry => this.load(entry.name));
   }
 
   load(id: string): Project {
@@ -78,7 +89,13 @@ export class ProjectStore {
     parseStage(stage);
     const state = this.load(id).stages[stage];
     if (state.status !== "adopted" || state.adopted_version === null) throw new Error(`${stage} 尚未采用版本`);
-    const artifact: unknown = JSON.parse(readFileSync(this.artifactPath(id, stage, state.adopted_version), "utf8"));
+    return this.readVersion(id, stage, state.adopted_version);
+  }
+
+  readVersion<S extends Stage>(id: string, stage: S, version: number): Artifacts[S] {
+    const file = this.artifactPath(id, stage, version);
+    if (!this.load(id).stages[stage].versions.includes(version)) throw new Error(`草稿版本不存在：${stage} v${version}`);
+    const artifact: unknown = JSON.parse(readFileSync(file, "utf8"));
     validateArtifact(stage, artifact);
     return artifact;
   }

@@ -3,3 +3,7 @@ pi-agent/models-store.json
 .env
 .env.*
 !.env.example
+web/dist/
+web/.vite/
+node_modules/.vite/
+*.tsbuildinfo

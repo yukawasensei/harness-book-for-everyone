@@ -1,12 +1,12 @@
 # 第二篇 · 分镜工坊 / Part II · Storyboard Studio
 
-第一篇用小实验讲 harness 的闸门；第二篇把闸门接成一个文本内容生产工具。本包与 `book/harness/` 独立安装：P00 定义产物契约，P01 搭建状态机、版本存储与受限会话骨架。
+第一篇用小实验讲 harness 的闸门；第二篇把闸门接成一个文本内容生产工具。本包与 `book/harness/` 独立安装：P00 定义产物契约，P01 搭建状态机、版本存储与受限会话骨架，P02 接上本地 Web 的事件与指令。
 
-入口：[P00 · 拆流水线](./chapters/p00.md) → [P01 · 搭骨架](./chapters/p01.md)。
+入口：[P00 · 拆流水线](./chapters/p00.md) → [P01 · 搭骨架](./chapters/p01.md) → [P02 · 接上 Web](./chapters/p02.md)。
 
 ## 安装与离线验证
 
-需要 Git、Node.js **22.19+**、npm，运行环境为 Linux / WSL。Ollama 可在宿主机运行。依赖固定为 pi SDK 1.4.0、TypeBox 1.3.27、TypeScript 5.9.3；请使用本包命令。
+需要 Git、Node.js **22.19+**、npm，运行环境为 Linux / WSL。Ollama 可在宿主机运行。依赖固定为 pi SDK 1.4.0、TypeBox 1.3.27、TypeScript 5.9.3、Vite 7.3.7、React 19.2.0；请使用本包命令。
 
 ```bash
 cd "$(git rev-parse --show-toplevel)/book/build"
@@ -15,7 +15,35 @@ npm test
 npm run typecheck
 ```
 
-`npm test` 是离线测试：假模型替换 `session.agent.streamFunction`，覆盖六阶段样例和坏数据、非法推进、工具与系统提示隔离、草稿写入、人工采用、会话落盘、CLI。它不证明模型创作质量，也不请求 Ollama 或 DeepSeek。
+`npm test` 是离线测试：假模型替换 `session.agent.streamFunction`，覆盖六阶段样例和坏数据、非法推进、工具与系统提示隔离、草稿写入、人工采用、会话落盘、CLI、临时 HTTP/SSE、并发保护、中断与页面的断线轮询逻辑。它不证明模型创作质量，也不请求 Ollama 或 DeepSeek。`npm run typecheck` 同时检查服务端与网页；`npm run build` 输出 `web/dist/`，该目录不提交。
+
+## 打开 Web 工作区
+
+仍在 `book/build`，先用离线演示看清事件路径：
+
+```bash
+HARNESS_DEMO=1 npm run dev
+```
+
+浏览器访问 **http://127.0.0.1:5173**。命令同时启动 Vite（5173）和 API（3001），都只监听 `127.0.0.1`；Vite 把 `/api` 代理到 **http://127.0.0.1:3001**，网页使用相对地址。端口占用会报错并停止这两个子进程，不自动换端口。按 Ctrl+C 结束自己的两个服务及未完成运行，不影响其他进程。
+
+填新项目标题 → 点“新建项目” → 保持“选题” → 可填补充要求 → 点“运行阶段”。几秒内左侧出现文本与 `read_upstream`、`write_draft` 卡片；假模型先交一份不合规草稿，再修正，故可同时看到错误和成功。右侧选 v1 查看 JSON → “采用此版本” → 梗概变 `ready`。运行中可点“中断”；想截运行中的界面，在卡片出现时截取。想再跑一次，采用前可生成新版本，或另建项目。
+
+顶部明确标出**离线演示 / 假模型**。它用原创静态样例替代模型回答，真实 SDK、工具、schema、版本保存与采用仍照常执行；补充要求进入用户提示，但演示回答不随要求改变。只有 topic 模板可用，其他阶段即使 ready 也显示“模板尚未实现”，不开放运行。
+
+使用真实模型时，先结束演示命令，再按下文准备本包模型配置，运行：
+
+```bash
+NO_PROXY=127.0.0.1,localhost npm run dev
+# 可选 DeepSeek（需先在本机配置本包密钥）：
+# MODEL_ID=deepseek/deepseek-flash npm run dev
+```
+
+不设 `HARNESS_DEMO=1` 才会请求真实模型，而且只在点击“运行阶段”后请求。此时新增项目，在选题填写要求并运行；左侧显示实际文本和工具结果，右侧出现版本后再审阅采用。模型只回复文字、出错或中断时，页面显示实际 `stop_reason`，不把它当作成功交付。
+
+断线后页面每两秒轮询项目详情，继续显示阶段、版本、当前运行和最近运行结论，EventSource 同时自动重连。重连先收项目快照；缺失文本不会补造。切换项目或重开网页不回放历史对话，但版本产物仍可读取。运行状态和最近结论保留在服务内存中，重启后清空；完整运行审计仍在项目 `sessions/`。
+
+这是没有鉴权的本机开发入口，不提供云端或多用户访问。API 只有项目业务路由，不接收任意文件路径。已有 CLI 可继续使用，但 Web 运行时不要在 CLI 修改同一项目；进程内的 409 锁不覆盖另一个进程。
 
 ## 先建项目，再跑一个阶段
 
@@ -57,7 +85,10 @@ book/build/
   src/workflow/              固定顺序与推进规则
   src/project/               版本存储与采用版本
   src/agent/                 阶段提示、两工具会话、运行摘要
+  src/server/                本地 REST、SSE、单项目运行锁
   src/cli.ts                 new / status / run / adopt
+  web/                       Vite + React 工作区
+  scripts/dev.mjs            同时启动 API 与网页
   examples/sample-project/   原创静态样例（六份 JSON）
   projects/<id>/             本机产物，git 忽略
     project.json
@@ -69,5 +100,5 @@ book/build/
 
 SessionManager 保存会话；自定义 `stage_run_start` / `stage_run_end` 条目记录模型、用户与系统提示、工具表、上下文说明、耗时、错误、`stop_reason`。SDK 会话元数据可能保留本地 cwd，尽管发给模型的系统提示已去掉 cwd；`projects/` 不提交，也不要直接当作公开 trace 发布。
 
-当前是单进程本地文件骨架，没有并发锁、崩溃事务恢复、多用户隔离或 Web 确认门。ID 正则检查格式；跨产物 ID 存在性、从剧本抽取完整设定、运行时固定描述原样注入留给 P5–P7；返工与下游失效留给 P8。静态样例的引用与拼装文本有单独测试，不能据此声称这些运行闸门已实现。
+当前是单进程本地文件骨架。Web 对同一项目的运行与采用做 409 互斥，尚无跨进程锁、崩溃事务恢复、多用户隔离或写入前挂起的 Web 确认门。ID 正则检查格式；跨产物 ID 存在性、从剧本抽取完整设定、运行时固定描述原样注入留给 P5–P7；返工与下游失效留给 P8。静态样例的引用与拼装文本有单独测试，不能据此声称这些运行闸门已实现。
 
