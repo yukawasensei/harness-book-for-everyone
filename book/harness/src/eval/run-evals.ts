@@ -1,7 +1,7 @@
-// Ch6 · 串行跑 case × repeat；默认单次保留旧签收基线行为。
+// Ch6 · 串行跑 case × repeat；默认写本地忽略目录，签收基线须显式更新。
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { checkCase, parseTrace, type CaseSpec } from "../check-trace.js";
@@ -17,6 +17,10 @@ const repeat = parseRepeat(process.argv.slice(2));
 const modelId = configuredModel(root); // 先检查；未登记时绝不创建结果目录或沿用旧 trace。
 const timeout = Number(process.env.EVAL_TIMEOUT_MS ?? 300_000);
 if (!Number.isSafeInteger(timeout) || timeout <= 0) throw new Error("EVAL_TIMEOUT_MS must be a positive integer");
+const updateBaseline = process.env.UPDATE_BASELINE === "1";
+if (updateBaseline && (modelId !== DEFAULT_MODEL || repeat !== 1 || process.env.CASES !== undefined)) {
+  throw new Error("UPDATE_BASELINE=1 requires full default Qwen, repeat=1, and CASES unset");
+}
 const cases = JSON.parse(readFileSync(resolve(root, "cases/cases.json"), "utf8")) as CaseSpec[];
 const only = process.env.CASES?.split(",").map(s => s.trim()).filter(Boolean);
 if (only?.some(id => !cases.some(c => c.id === id))) throw new Error(`unknown CASES id: ${only.filter(id => !cases.some(c => c.id === id)).join(",")}`);
@@ -27,9 +31,9 @@ const baselinePath = resolve(root, "evals/baseline.json");
 const previous = modelId === DEFAULT_MODEL && existsSync(baselinePath)
   ? JSON.parse(readFileSync(baselinePath, "utf8")) as Baseline : undefined;
 const startedAt = new Date().toISOString();
-const directory = runDirectory(modelId, repeat, Boolean(only));
-const runDir = directory ? resolve(root, directory, `${startedAt.replace(/[:.]/g, "-")}-${randomUUID().slice(0, 8)}`) : undefined;
-const tracesDir = runDir ? resolve(runDir, "traces") : resolve(root, "evals/traces");
+const directory = runDirectory(modelId, process.env.EVAL_ARCHIVE === "1");
+const runDir = resolve(root, directory, `${startedAt.replace(/[:.]/g, "-")}-${randomUUID().slice(0, 8)}`);
+const tracesDir = resolve(runDir, "traces");
 mkdirSync(tracesDir, { recursive: true });
 mkdirSync(resolve(root, "traces"), { recursive: true });
 const scrub = (text: string) => scrubPaths(scrubSecrets(text), root, repoRoot);
@@ -61,7 +65,7 @@ for (const spec of selected) {
       error = scrub([end?.error, child.error?.message, child.signal, `exit=${child.status}`, child.stderr?.trim()].filter(Boolean).join("; "));
       verdict = { pass: false, reasons: [...verdict.reasons, error] };
     }
-    const tracePath = relative(root, resolve(tracesDir, runDir ? `${spec.id}-${attempt}.jsonl` : `${spec.id}.jsonl`));
+    const tracePath = relative(root, resolve(tracesDir, `${spec.id}-${attempt}.jsonl`));
     const context = JSON.stringify({ eventType: "eval_context", timestamp: new Date(t0).toISOString(), model: modelId, attempt, repeat, prompt: spec.prompt, tools: spec.allowed_tools, contextNotes: { case: spec, timeoutMs: timeout, config: "pi-agent/models.json", isolation: "createIsolatedPi; in-memory session; thinking off" } });
     const archived = `${scrub(context)}\n${scrub(rawTrace)}`;
     writeFileSync(resolve(root, tracePath), archived, "utf8");
@@ -86,11 +90,17 @@ const comparable = previous && only ? { ...previous, results: previous.results.f
 const changes = compareBaselines(comparable, perCase);
 const report = `${formatStabilityReport(stability)}\n\n${formatReport(perCase, changes)}\n`;
 console.log(report);
-if (runDir) {
-  writeFileSync(resolve(runDir, "summary.json"), `${JSON.stringify({ ...stability, repeat, timeoutMs: timeout, partial: Boolean(only) }, null, 2)}\n`, "utf8");
-  writeFileSync(resolve(runDir, "report.md"), report, "utf8");
-  console.log(`Artifacts: ${relative(root, runDir)}/{summary.json,report.md,traces/}`);
-} else {
-  writeFileSync(baselinePath, `${JSON.stringify(current, null, 2)}\n`, "utf8");
-}
+writeFileSync(resolve(runDir, "summary.json"), `${JSON.stringify({ ...stability, repeat, timeoutMs: timeout, partial: Boolean(only) }, null, 2)}\n`, "utf8");
+writeFileSync(resolve(runDir, "report.md"), report, "utf8");
+console.log(`Artifacts: ${relative(root, runDir)}/{summary.json,report.md,traces/}`);
 process.exitCode = stability.passCount === stability.total && !changes.some(c => c.kind === "regressed") ? 0 : 1;
+if (updateBaseline && process.exitCode === 0) {
+  mkdirSync(resolve(root, "evals/traces"), { recursive: true });
+  const baselineResults = current.results.map(result => {
+    const tracePath = `evals/traces/${result.id}.jsonl`;
+    copyFileSync(resolve(tracesDir, `${result.id}-1.jsonl`), resolve(root, tracePath));
+    return { ...result, tracePath };
+  });
+  writeFileSync(baselinePath, `${JSON.stringify({ ...current, results: baselineResults }, null, 2)}\n`, "utf8");
+  console.log("Updated baseline: evals/baseline.json and evals/traces/");
+}

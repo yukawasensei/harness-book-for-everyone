@@ -1,0 +1,46 @@
+{"eventType":"eval_context","timestamp":"2026-11-02T07:28:25.171Z","model":"deepseek/deepseek-flash","attempt":1,"repeat":5,"prompt":"必须调用 slow 工具，delay_ms 填 3000。请耐心等它完成，不要放弃。","tools":["slow"],"contextNotes":{"case":{"id":"tool-timeout-brake","chapter":"ch04","note":"slow 要睡 3000ms，harness 只给 400ms；prompt 再怎么说“请耐心等”也没用。","prompt":"必须调用 slow 工具，delay_ms 填 3000。请耐心等它完成，不要放弃。","allowed_tools":["slow"],"tool_timeout_ms":400,"expect":{"tool_called":"slow","stop_reason":"tool_timeout"}},"timeoutMs":300000,"config":"pi-agent/models.json","isolation":"createIsolatedPi; in-memory session; thinking off"}}
+{"timestamp":"2026-11-02T07:28:26.631Z","eventType":"harness_start","case_id":"tool-timeout-brake","model":"deepseek/deepseek-flash","extensions":0,"activeTools":["slow"],"toolInventory":true,"strictSchema":true,"jsonWriteValidation":true,"maxTurns":8,"toolTimeoutMs":400,"contextBudgetChars":0,"toolResultMaxChars":0,"retry":{"maxRetries":0,"backoffMs":0,"onExhausted":"stop"},"writableDirs":[],"confirmTools":[],"tokenBudget":0,"latencyBudgetMs":0}
+{"timestamp":"2026-11-02T07:28:26.635Z","eventType":"agent_start"}
+{"timestamp":"2026-11-02T07:28:26.635Z","eventType":"turn_start"}
+{"timestamp":"2026-11-02T07:28:26.635Z","eventType":"message_start","role":"system"}
+{"timestamp":"2026-11-02T07:28:26.635Z","eventType":"message_end","role":"system"}
+{"timestamp":"2026-11-02T07:28:26.635Z","eventType":"message_start","role":"user"}
+{"timestamp":"2026-11-02T07:28:26.635Z","eventType":"message_end","role":"user"}
+{"timestamp":"2026-11-02T07:28:27.248Z","eventType":"message_start","role":"assistant"}
+{"timestamp":"2026-11-02T07:28:27.881Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.882Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.935Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.952Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.953Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.953Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.953Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.953Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.954Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.954Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.954Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.954Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.954Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.955Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.964Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.965Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.965Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.967Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.967Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.981Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.981Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.981Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.999Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:27.999Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:28.009Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:28.063Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:28.063Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:28.064Z","eventType":"message_end","role":"assistant","text":"I'll call the slow tool with a 3000ms delay.","usage":{"input":213,"output":51,"cacheRead":640,"cacheWrite":0,"reasoning":0,"totalTokens":904,"cost":{"input":0.0000639,"output":0.0000612,"cacheRead":0.00000384,"cacheWrite":0,"total":0.00012894}}}
+{"timestamp":"2026-11-02T07:28:28.064Z","eventType":"tool_execution_start","toolName":"slow","toolCallId":"call_00_wUF69tSSwzx4eTOCYYpL1733","args":{"delay_ms":3000}}
+{"timestamp":"2026-11-02T07:28:28.467Z","eventType":"harness_stop","stop_reason":"tool_timeout","toolName":"slow","timeoutMs":400}
+{"timestamp":"2026-11-02T07:28:28.468Z","eventType":"tool_execution_end","toolName":"slow","toolCallId":"call_00_wUF69tSSwzx4eTOCYYpL1733","isError":true,"error":"[{\"type\":\"text\",\"text\":\"tool timed out after 400ms\"}]"}
+{"timestamp":"2026-11-02T07:28:28.468Z","eventType":"message_start","role":"toolResult"}
+{"timestamp":"2026-11-02T07:28:28.468Z","eventType":"message_end","role":"toolResult"}
+{"timestamp":"2026-11-02T07:28:28.468Z","eventType":"turn_end"}
+{"timestamp":"2026-11-02T07:28:28.469Z","eventType":"agent_end"}
+{"timestamp":"2026-11-02T07:28:28.469Z","eventType":"agent_settled"}
+{"timestamp":"2026-11-02T07:28:28.470Z","eventType":"harness_end","stop_reason":"tool_timeout","turns":0,"tokens":904,"usage":{"input":213,"output":51,"cacheRead":640,"cacheWrite":0,"totalTokens":904,"cost":{"input":0.0000639,"output":0.0000612,"cacheRead":0.00000384,"cacheWrite":0,"total":0.00012894}},"case_id":"tool-timeout-brake","model":"deepseek/deepseek-flash","tools":["slow"],"durationMs":1838}

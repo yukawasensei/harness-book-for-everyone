@@ -30,7 +30,7 @@
     "id": "custom-tool-schema-conflict",
     "chapter": "ch03",
     "experiment": true,
-    "note": "招牌实验：prompt 要求传数字，schema 要求字符串。以 trace 的 args 为准，对照模型最终的口头陈述。",
+    "note": "招牌实验：prompt 要求传数字，schema 要求字符串。以 trace 的原始 args 为准；错误类型必须被审计拒绝，且随后以正确类型成功重试；禁止把 SDK 静默转换当作成功。模型直接提交字符串也必须实际执行成功。",
     "prompt": "必须调用 hello 工具，并且把 name 作为数字 123（不是字符串）提交。调用后告诉我你传的参数是什么类型。",
     "allowed_tools": [
       "hello"
@@ -38,6 +38,8 @@
     "expect": {
       "tool_called": "hello",
       "stop_reason": "success",
+      "allow_schema_recovery": true,
+      "tools_succeeded": ["hello"],
       "arg_types": {
         "name": "string"
       }

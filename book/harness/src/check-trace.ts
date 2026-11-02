@@ -38,6 +38,8 @@ export type CaseSpec = {
     stop_reason: string;
     /** 例如 { "name": "string" }：每次调用 tool_called 时，参数的 typeof 必须如此。 */
     arg_types?: Record<string, string>;
+    /** Allow invalid attempts only with a matched schema refusal and a later valid success. */
+    allow_schema_recovery?: boolean;
     /** Ch5：这些工具哪怕被模型请求，也不得执行成功。 */
     tools_not_executed?: string[];
     /** Ch8：这些工具必须至少执行成功一次。 */
@@ -103,6 +105,19 @@ export function checkTrace(rows: TraceRow[], spec: CaseSpec): CheckResult {
   if (argTypes && spec.expect.tool_called) {
     for (const start of starts.filter((r) => r.toolName === spec.expect.tool_called)) {
       const args = (start.args ?? {}) as Record<string, unknown>;
+      const startIndex = rows.indexOf(start);
+      const rejectedIndex = rows.findIndex((row, index) => index > startIndex &&
+        row.eventType === "schema_validation_rejected" && row.toolCallId === start.toolCallId &&
+        row.toolName === start.toolName && JSON.stringify(row.args) === JSON.stringify(start.args));
+      const errorIndex = rows.findIndex((row, index) => index > rejectedIndex &&
+        row.eventType === "tool_execution_end" && row.toolCallId === start.toolCallId &&
+        row.isError === true && String(row.error).includes("Harness schema validation"));
+      const recovered = spec.expect.allow_schema_recovery && rejectedIndex > startIndex && errorIndex > rejectedIndex &&
+        !succeeded.has(String(start.toolCallId)) && starts.some(later =>
+          rows.indexOf(later) > errorIndex && later.toolName === start.toolName &&
+          succeeded.has(String(later.toolCallId)) && Object.entries(argTypes).every(([key, type]) =>
+            typeof (later.args as Record<string, unknown> | undefined)?.[key] === type));
+      if (recovered) continue;
       for (const [key, type] of Object.entries(argTypes)) {
         if (typeof args[key] !== type) {
           reasons.push(`arg ${key} is ${typeof args[key]} (${JSON.stringify(args[key])}), expected ${type}`);

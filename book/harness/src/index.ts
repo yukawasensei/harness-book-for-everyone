@@ -27,6 +27,9 @@ import { configuredModel, splitModelId } from "./eval/model-config.js";
 import { scrubSecrets } from "./secrets.js";
 import { sumUsage } from "./eval/usage.js";
 import type { Usage } from "@earendil-works/pi-ai";
+import { injectToolInventory } from "./tool-inventory.js";
+import { rejectInvalidArguments } from "./gates/strict-schema.js";
+import { rejectInvalidJsonWrite } from "./gates/json-write.js";
 
 if (process.platform !== "linux") throw new Error("Run the harness inside Linux/WSL");
 
@@ -94,6 +97,10 @@ const { session, extensionsResult } = await createAgentSession({
   customTools,
   sessionManager: SessionManager.inMemory(cwd),
 });
+const toolInventory = process.env.HARNESS_TOOL_INVENTORY !== "0";
+const strictSchema = process.env.HARNESS_STRICT_SCHEMA !== "0";
+const jsonWriteValidation = process.env.HARNESS_JSON_WRITE !== "0";
+await injectToolInventory(session, toolInventory);
 
 // 开跑前留证：这次到底加载了几个扩展、开放了哪些工具、闸门设成多少。
 writeTrace({
@@ -103,6 +110,9 @@ writeTrace({
   model: modelId,
   extensions: extensionsResult.extensions.length,
   activeTools: session.getActiveToolNames(),
+  toolInventory,
+  strictSchema,
+  jsonWriteValidation,
   maxTurns,
   toolTimeoutMs,
   contextBudgetChars,
@@ -140,10 +150,20 @@ session.agent.beforeToolCall = async ({ toolCall, args }) => {
     run.stop(over.stopReason, over.details);
     return { block: true, reason: `Harness: ${over.stopReason}`, terminate: true };
   }
+  // args has already been coerced by pi; validate the untouched model arguments instead.
+  const tool = session.agent.state.tools.find(tool => tool.name === toolCall.name);
+  if (strictSchema && tool) {
+    const refusal = rejectInvalidArguments(tool, toolCall.id, toolCall.arguments, writeTrace);
+    if (refusal) return refusal; // A tool error permits correction on the next turn.
+  }
   const decision = decideToolCall({ toolName: toolCall.name, args }, { allowedTools: spec.allowed_tools, workspaceRoot: cwd, writableDirs });
   if (!decision.allow) {
     run.stop(decision.stopReason, decision.details);
     return { block: true, reason: `Harness policy: ${decision.stopReason}`, terminate: true };
+  }
+  if (jsonWriteValidation) {
+    const refusal = rejectInvalidJsonWrite(toolCall.name, toolCall.id, args, writeTrace);
+    if (refusal) return refusal; // Before approval and filesystem effects; allow a corrected retry.
   }
   if (!confirmTools.includes(toolCall.name)) return undefined;
   writeTrace({ timestamp: now(), eventType: "hitl_request", toolName: toolCall.name, toolCallId: toolCall.id });

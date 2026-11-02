@@ -1,0 +1,30 @@
+{"eventType":"eval_context","timestamp":"2026-11-02T07:28:42.185Z","model":"deepseek/deepseek-flash","attempt":4,"repeat":5,"prompt":"必须调用 slow 工具，delay_ms 填 3000。请耐心等它完成，不要放弃。","tools":["slow"],"contextNotes":{"case":{"id":"tool-timeout-brake","chapter":"ch04","note":"slow 要睡 3000ms，harness 只给 400ms；prompt 再怎么说“请耐心等”也没用。","prompt":"必须调用 slow 工具，delay_ms 填 3000。请耐心等它完成，不要放弃。","allowed_tools":["slow"],"tool_timeout_ms":400,"expect":{"tool_called":"slow","stop_reason":"tool_timeout"}},"timeoutMs":300000,"config":"pi-agent/models.json","isolation":"createIsolatedPi; in-memory session; thinking off"}}
+{"timestamp":"2026-11-02T07:28:43.668Z","eventType":"harness_start","case_id":"tool-timeout-brake","model":"deepseek/deepseek-flash","extensions":0,"activeTools":["slow"],"toolInventory":true,"strictSchema":true,"jsonWriteValidation":true,"maxTurns":8,"toolTimeoutMs":400,"contextBudgetChars":0,"toolResultMaxChars":0,"retry":{"maxRetries":0,"backoffMs":0,"onExhausted":"stop"},"writableDirs":[],"confirmTools":[],"tokenBudget":0,"latencyBudgetMs":0}
+{"timestamp":"2026-11-02T07:28:43.671Z","eventType":"agent_start"}
+{"timestamp":"2026-11-02T07:28:43.672Z","eventType":"turn_start"}
+{"timestamp":"2026-11-02T07:28:43.672Z","eventType":"message_start","role":"system"}
+{"timestamp":"2026-11-02T07:28:43.672Z","eventType":"message_end","role":"system"}
+{"timestamp":"2026-11-02T07:28:43.672Z","eventType":"message_start","role":"user"}
+{"timestamp":"2026-11-02T07:28:43.672Z","eventType":"message_end","role":"user"}
+{"timestamp":"2026-11-02T07:28:44.068Z","eventType":"message_start","role":"assistant"}
+{"timestamp":"2026-11-02T07:28:44.455Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.455Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.468Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.469Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.469Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.469Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.472Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.472Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.472Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.487Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.540Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T07:28:44.541Z","eventType":"message_end","role":"assistant","usage":{"input":213,"output":38,"cacheRead":640,"cacheWrite":0,"reasoning":0,"totalTokens":891,"cost":{"input":0.0000639,"output":0.0000456,"cacheRead":0.00000384,"cacheWrite":0,"total":0.00011334}}}
+{"timestamp":"2026-11-02T07:28:44.541Z","eventType":"tool_execution_start","toolName":"slow","toolCallId":"call_00_raB4Hic8G1OsoJwhG9nh1278","args":{"delay_ms":3000}}
+{"timestamp":"2026-11-02T07:28:44.945Z","eventType":"harness_stop","stop_reason":"tool_timeout","toolName":"slow","timeoutMs":400}
+{"timestamp":"2026-11-02T07:28:44.945Z","eventType":"tool_execution_end","toolName":"slow","toolCallId":"call_00_raB4Hic8G1OsoJwhG9nh1278","isError":true,"error":"[{\"type\":\"text\",\"text\":\"tool timed out after 400ms\"}]"}
+{"timestamp":"2026-11-02T07:28:44.946Z","eventType":"message_start","role":"toolResult"}
+{"timestamp":"2026-11-02T07:28:44.946Z","eventType":"message_end","role":"toolResult"}
+{"timestamp":"2026-11-02T07:28:44.946Z","eventType":"turn_end"}
+{"timestamp":"2026-11-02T07:28:44.946Z","eventType":"agent_end"}
+{"timestamp":"2026-11-02T07:28:44.947Z","eventType":"agent_settled"}
+{"timestamp":"2026-11-02T07:28:44.947Z","eventType":"harness_end","stop_reason":"tool_timeout","turns":0,"tokens":891,"usage":{"input":213,"output":38,"cacheRead":640,"cacheWrite":0,"totalTokens":891,"cost":{"input":0.0000639,"output":0.0000456,"cacheRead":0.00000384,"cacheWrite":0,"total":0.00011334}},"case_id":"tool-timeout-brake","model":"deepseek/deepseek-flash","tools":["slow"],"durationMs":1279}

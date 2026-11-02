@@ -1,0 +1,519 @@
+{
+  "model": "deepseek/deepseek-flash",
+  "startedAt": "2026-11-02T07:28:03.255Z",
+  "finishedAt": "2026-11-02T07:29:50.614Z",
+  "passCount": 10,
+  "total": 15,
+  "cases": [
+    {
+      "id": "custom-tool-schema-conflict",
+      "chapter": "ch03",
+      "passCount": 0,
+      "total": 5,
+      "passRate": 0,
+      "flaky": true,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 4413,
+      "attempts": [
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/custom-tool-schema-conflict-1.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "tool hello never succeeded",
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 4059,
+          "exitCode": 0,
+          "usage": {
+            "input": 478,
+            "output": 164,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1922,
+            "cost": {
+              "input": 0.0001434,
+              "output": 0.0001968,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00034787999999999996
+            }
+          }
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/custom-tool-schema-conflict-2.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "tool hello never succeeded",
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 5023,
+          "exitCode": 0,
+          "usage": {
+            "input": 341,
+            "output": 219,
+            "cacheRead": 1408,
+            "cacheWrite": 0,
+            "totalTokens": 1968,
+            "cost": {
+              "input": 0.00010229999999999999,
+              "output": 0.0002628,
+              "cacheRead": 0.000008448,
+              "cacheWrite": 0,
+              "total": 0.000373548
+            }
+          }
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/custom-tool-schema-conflict-3.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "tool hello never succeeded",
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 4576,
+          "exitCode": 0,
+          "usage": {
+            "input": 341,
+            "output": 202,
+            "cacheRead": 1408,
+            "cacheWrite": 0,
+            "totalTokens": 1951,
+            "cost": {
+              "input": 0.00010229999999999999,
+              "output": 0.00024239999999999998,
+              "cacheRead": 0.000008448,
+              "cacheWrite": 0,
+              "total": 0.000353148
+            }
+          }
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/custom-tool-schema-conflict-4.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "tool hello never succeeded",
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 3841,
+          "exitCode": 0,
+          "usage": {
+            "input": 341,
+            "output": 146,
+            "cacheRead": 1408,
+            "cacheWrite": 0,
+            "totalTokens": 1895,
+            "cost": {
+              "input": 0.00010229999999999999,
+              "output": 0.00017519999999999998,
+              "cacheRead": 0.000008448,
+              "cacheWrite": 0,
+              "total": 0.00028594799999999995
+            }
+          }
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/custom-tool-schema-conflict-5.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "tool hello never succeeded",
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 4413,
+          "exitCode": 0,
+          "usage": {
+            "input": 341,
+            "output": 172,
+            "cacheRead": 1408,
+            "cacheWrite": 0,
+            "totalTokens": 1921,
+            "cost": {
+              "input": 0.00010229999999999999,
+              "output": 0.00020639999999999998,
+              "cacheRead": 0.000008448,
+              "cacheWrite": 0,
+              "total": 0.00031714799999999995
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "tool-timeout-brake",
+      "chapter": "ch04",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "tool_timeout": 5
+      },
+      "medianDurationMs": 5403,
+      "attempts": [
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/tool-timeout-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5928,
+          "exitCode": 2,
+          "usage": {
+            "input": 213,
+            "output": 51,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 904,
+            "cost": {
+              "input": 0.0000639,
+              "output": 0.0000612,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00012894
+            }
+          }
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/tool-timeout-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5334,
+          "exitCode": 2,
+          "usage": {
+            "input": 213,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 891,
+            "cost": {
+              "input": 0.0000639,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00011334
+            }
+          }
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/tool-timeout-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5752,
+          "exitCode": 2,
+          "usage": {
+            "input": 213,
+            "output": 53,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 906,
+            "cost": {
+              "input": 0.0000639,
+              "output": 0.0000636,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00013134
+            }
+          }
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/tool-timeout-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5398,
+          "exitCode": 2,
+          "usage": {
+            "input": 213,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 891,
+            "cost": {
+              "input": 0.0000639,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00011334
+            }
+          }
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/tool-timeout-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5403,
+          "exitCode": 2,
+          "usage": {
+            "input": 213,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 891,
+            "cost": {
+              "input": 0.0000639,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00011334
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "capstone-set-clerk",
+      "chapter": "ch10",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 11713,
+      "attempts": [
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/capstone-set-clerk-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 11713,
+          "exitCode": 0,
+          "usage": {
+            "input": 1187,
+            "output": 1292,
+            "cacheRead": 7552,
+            "cacheWrite": 0,
+            "totalTokens": 10031,
+            "cost": {
+              "input": 0.00035609999999999993,
+              "output": 0.0015504,
+              "cacheRead": 0.000045311999999999996,
+              "cacheWrite": 0,
+              "total": 0.001951812
+            }
+          }
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/capstone-set-clerk-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 12424,
+          "exitCode": 0,
+          "usage": {
+            "input": 1043,
+            "output": 1517,
+            "cacheRead": 8704,
+            "cacheWrite": 0,
+            "totalTokens": 11264,
+            "cost": {
+              "input": 0.00031289999999999996,
+              "output": 0.0018203999999999998,
+              "cacheRead": 0.000052224,
+              "cacheWrite": 0,
+              "total": 0.002185524
+            }
+          }
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/capstone-set-clerk-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 13046,
+          "exitCode": 0,
+          "usage": {
+            "input": 969,
+            "output": 1335,
+            "cacheRead": 7808,
+            "cacheWrite": 0,
+            "totalTokens": 10112,
+            "cost": {
+              "input": 0.00029069999999999996,
+              "output": 0.001602,
+              "cacheRead": 0.000046847999999999996,
+              "cacheWrite": 0,
+              "total": 0.001939548
+            }
+          }
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/capstone-set-clerk-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 10876,
+          "exitCode": 0,
+          "usage": {
+            "input": 923,
+            "output": 1020,
+            "cacheRead": 7424,
+            "cacheWrite": 0,
+            "totalTokens": 9367,
+            "cost": {
+              "input": 0.0002769,
+              "output": 0.0012239999999999998,
+              "cacheRead": 0.000044544,
+              "cacheWrite": 0,
+              "total": 0.001545444
+            }
+          }
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T07-28-03-255Z-3226fdba/traces/capstone-set-clerk-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 9567,
+          "exitCode": 0,
+          "usage": {
+            "input": 635,
+            "output": 1036,
+            "cacheRead": 4352,
+            "cacheWrite": 0,
+            "totalTokens": 6023,
+            "cost": {
+              "input": 0.0001905,
+              "output": 0.0012432,
+              "cacheRead": 0.000026112,
+              "cacheWrite": 0,
+              "total": 0.001459812
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input": 7664,
+    "output": 7321,
+    "cacheRead": 45952,
+    "cacheWrite": 0,
+    "totalTokens": 60937,
+    "cost": {
+      "input": 0.0022992,
+      "output": 0.0087852,
+      "cacheRead": 0.00027571199999999995,
+      "cacheWrite": 0,
+      "total": 0.011360111999999999
+    }
+  },
+  "repeat": 5,
+  "timeoutMs": 300000,
+  "partial": true
+}

@@ -59,6 +59,7 @@ export function toTraceRow(event: { type: string; [key: string]: unknown }, now 
   }
   if (event.type === "tool_execution_end") {
     row.isError = event.isError;
+    if (event.isError) row.error = scrubSecrets(JSON.stringify((event.result as { content?: unknown })?.content ?? []));
     // executor 自己报告的 details（例如 receivedType）：校验/类型转换之后，executor 真正拿到了什么。
     const details = (event.result as { details?: unknown } | undefined)?.details;
     if (details && typeof details === "object" && Object.keys(details).length > 0) row.details = details;

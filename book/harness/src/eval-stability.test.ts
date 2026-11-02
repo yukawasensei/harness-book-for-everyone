@@ -54,12 +54,18 @@ test("old single-run baseline is reportable; all green is stable", () => {
   assert.throws(() => aggregateRuns([run([result("a", true, 1)]), { ...run([]), model: "ollama/other" }]), /same model/);
 });
 
-test("baseline is reserved for full default-model single runs; slugs cannot escape", () => {
-  assert.equal(runDirectory("qwen3.8:27b", 1, false), undefined);
-  assert.equal(runDirectory("qwen3.8:27b", 5, false), "evals/runs/qwen3.8-27b");
-  assert.equal(runDirectory("qwen3.8:27b", 1, true), "evals/runs/qwen3.8-27b");
-  assert.equal(runDirectory("vendor/other:4b", 1, false), "evals/runs/vendor-other-4b");
-  assert.ok(!runDirectory("../../escape", 1, false)!.split("/").includes(".."));
+test("eval output is local by default for every model", () => {
+  assert.equal(runDirectory("qwen3.8:27b"), "evals/runs/local/qwen3.8-27b");
+  assert.equal(runDirectory("ollama/qwen3.8:27b"), "evals/runs/local/qwen3.8-27b");
+  assert.equal(runDirectory("vendor/other:4b"), "evals/runs/local/vendor-other-4b");
+  assert.ok(!runDirectory("../../escape")!.split("/").includes(".."));
+});
+
+test("explicit archive output keeps the existing model paths", () => {
+  assert.equal(runDirectory("ollama/qwen3.8:27b", true), "evals/runs/qwen3.8-27b");
+  assert.equal(runDirectory("deepseek/deepseek-flash", true), "evals/runs/deepseek-deepseek-flash");
+  assert.equal(runDirectory("vendor/other:4b", false), "evals/runs/local/vendor-other-4b");
+  assert.ok(!runDirectory("../../escape", true).split("/").includes(".."));
 });
 
 test("archived paths are relative, including errors and denied paths outside harness", () => {

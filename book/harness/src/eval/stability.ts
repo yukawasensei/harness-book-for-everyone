@@ -36,12 +36,11 @@ export function parseRepeat(args: string[]): number {
   return repeat;
 }
 
-/** undefined 表示唯一允许更新签收基线的运行。其他运行永不触碰旧 trace。 */
-export function runDirectory(modelId: string, repeat: number, partial: boolean): string | undefined {
-  if ([DEFAULT_MODEL, "qwen3.8:27b"].includes(modelId) && repeat === 1 && !partial) return undefined;
+/** 默认本地结果不参与提交；签收基线另由 UPDATE_BASELINE 显式更新。 */
+export function runDirectory(modelId: string, archive = false): string {
   // Keep existing Ollama artifact paths stable; remote providers retain their prefix.
   const slug = modelId.replace(/^ollama\//, "").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^[.-]+|[.-]+$/g, "") || "model";
-  return `evals/runs/${slug}`;
+  return `evals/runs/${archive ? "" : "local/"}${slug}`;
 }
 
 /** 只改变归档文本；验收仍使用未改写的 trace 和本轮真实产物。 */

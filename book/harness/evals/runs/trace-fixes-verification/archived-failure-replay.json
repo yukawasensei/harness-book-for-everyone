@@ -1,0 +1,130 @@
+{
+  "schema": [
+    {
+      "model": "Qwen",
+      "attempt": 1,
+      "trace": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-1.jsonl",
+      "rawTypes": [
+        "string"
+      ],
+      "strictGateWouldReject": 0,
+      "newCheckerPass": true
+    },
+    {
+      "model": "Qwen",
+      "attempt": 2,
+      "trace": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-2.jsonl",
+      "rawTypes": [
+        "string"
+      ],
+      "strictGateWouldReject": 0,
+      "newCheckerPass": true
+    },
+    {
+      "model": "Qwen",
+      "attempt": 3,
+      "trace": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-3.jsonl",
+      "rawTypes": [
+        "string"
+      ],
+      "strictGateWouldReject": 0,
+      "newCheckerPass": true
+    },
+    {
+      "model": "Qwen",
+      "attempt": 4,
+      "trace": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-4.jsonl",
+      "rawTypes": [
+        "string"
+      ],
+      "strictGateWouldReject": 0,
+      "newCheckerPass": true
+    },
+    {
+      "model": "Qwen",
+      "attempt": 5,
+      "trace": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-5.jsonl",
+      "rawTypes": [
+        "string"
+      ],
+      "strictGateWouldReject": 0,
+      "newCheckerPass": true
+    },
+    {
+      "model": "DeepSeek",
+      "attempt": 1,
+      "trace": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-1.jsonl",
+      "rawTypes": [
+        "number"
+      ],
+      "strictGateWouldReject": 1,
+      "newCheckerPass": false
+    },
+    {
+      "model": "DeepSeek",
+      "attempt": 2,
+      "trace": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-2.jsonl",
+      "rawTypes": [
+        "number"
+      ],
+      "strictGateWouldReject": 1,
+      "newCheckerPass": false
+    },
+    {
+      "model": "DeepSeek",
+      "attempt": 3,
+      "trace": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-3.jsonl",
+      "rawTypes": [
+        "number"
+      ],
+      "strictGateWouldReject": 1,
+      "newCheckerPass": false
+    },
+    {
+      "model": "DeepSeek",
+      "attempt": 4,
+      "trace": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-4.jsonl",
+      "rawTypes": [
+        "number"
+      ],
+      "strictGateWouldReject": 1,
+      "newCheckerPass": false
+    },
+    {
+      "model": "DeepSeek",
+      "attempt": 5,
+      "trace": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-5.jsonl",
+      "rawTypes": [
+        "number"
+      ],
+      "strictGateWouldReject": 1,
+      "newCheckerPass": false
+    }
+  ],
+  "board": {
+    "trace": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-set-clerk-5.jsonl",
+    "wouldBlock": true,
+    "rejections": [
+      {
+        "timestamp": "2026-11-02T07:24:46.406Z",
+        "eventType": "json_write_rejected",
+        "toolName": "write",
+        "toolCallId": "call_02_kAJmSMIMxT6b0bOvC7u80452",
+        "path": "workspace/out/board.json",
+        "line": 46,
+        "column": 40,
+        "reason": "Harness JSON validation: line 46, column 40: Expected ',' or '}' after property value in JSON at position 966 (line 46 column 40). File was not written. Retry write with valid JSON, escaping embedded quotes."
+      }
+    ]
+  },
+  "timeout": {
+    "trace": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-timeout-brake-1.jsonl",
+    "activeTools": [
+      "slow"
+    ],
+    "toolCalls": 0,
+    "finalText": [
+      "我没有名为 `slow` 的工具。当前可用的工具只有：\n\n- `bash`（shell 命令）\n- `read`（读文件）\n- `edit`（编辑文件）\n- `write`（写文件）\n- 以及 pi 内置工具\n\n如果你只是想等 3 秒，我可以用 `bash` 执行 `sleep 3` 来达到同样效果。需要我这样做吗？"
+    ]
+  }
+}

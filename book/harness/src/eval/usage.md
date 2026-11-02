@@ -33,20 +33,28 @@ trace writer 在任何行落盘前对 key 脱敏，归档、summary、错误和�
 ## 重复评测与产物 / Repeats and artifacts
 
 ```bash
-npm run eval                            # 默认 repeat=1，全量默认模型更新原 baseline
+npm run eval                            # 默认 repeat=1，全量也只写忽略的 local 目录
 NO_PROXY=127.0.0.1,localhost npm run eval -- --repeat 5
 CASES=read-happy npm run eval -- --repeat 2
 npm run report                          # 只读旧 baseline，按单次结果显示稳定性表
-npm run report -- evals/runs/<model-slug>/<run-id>/summary.json
-npm run report -- evals/runs/<model-slug>/<run-id>  # 也支持结果目录
+npm run report -- evals/runs/local/<model-slug>/<run-id>/summary.json
+npm run report -- evals/runs/local/<model-slug>/<run-id>  # 也支持结果目录
 npm run report -- <same-model-summary-1.json> <same-model-summary-2.json>
+
+EVAL_ARCHIVE=1 npm run eval -- --repeat 5 # 显式生成可提交归档，不更新 baseline
+npm run report -- evals/runs/<model-slug>/<run-id>/summary.json
+UPDATE_BASELINE=1 MODEL_ID=ollama/qwen3.8:27b npm run eval # 显式更新签收基线；须未设置 CASES
 ```
 
 所有模型调用串行执行，每个 case 连续跑 N 次；每次创建独立会话并沿用原 prompt、case、闸门。`--repeat N` 和 `--repeat=N` 仅接受正整数，默认 1。任何一次失败都会使评测退出码为 1，保留原始失败，不自动补跑。`EVAL_TIMEOUT_MS` 默认 300000，是每次子进程的超时。
 
 每条 case 汇总 `passCount/total`、通过率、flaky、stop_reason 分布和耗时中位数；每次 stop_reason、耗时、错误、tracePath 都保留在 summary 和报告中。按本任务定义，通过率低于 100%（含 0%）都标 flaky；它不单独证明模型随机性。耗时包含进程启动和验收；缺失 harness_end 显示 missing。
 
-仅 **ollama/qwen3.8:27b + repeat=1 + 未设置 CASES 的全量运行**（含旧的无前缀写法）更新 `evals/baseline.json` 和 `evals/traces/`。其他结果全部写入 `evals/runs/<model-slug>/<timestamp-unique-id>/`，含 `summary.json`、`report.md`、`traces/`，每次建新目录。slug 将 `/`、`:` 等替换为 `-`，例如 `deepseek/deepseek-flash` 变为 `deepseek-deepseek-flash`；Ollama 沿用已有 slug（如 `qwen3.8-27b`）。DeepSeek 任何 repeat / CASES 组合都不会覆盖 Qwen baseline。同一模型的多份 summary 可合并报表，分母为实际运行次数；不同模型分开报告。旧 baseline 只有一次观察，不代表重复评测已稳定。
+默认所有运行（包括默认 Qwen、全量、repeat=1、未设置 CASES）都写入被 Git 忽略的 `evals/runs/local/<model-slug>/<timestamp-unique-id>/`，不修改已跟踪的 `evals/baseline.json` 和 `evals/traces/`。显式设置 `EVAL_ARCHIVE=1` 时，结果改写到可提交的 `evals/runs/<model-slug>/<timestamp-unique-id>/`；该开关只选择归档位置，不更新签收基线。两种位置均含 `summary.json`、`report.md`、`traces/`，每次建新目录，不移动或覆盖旧归档。
+
+更新签收基线须另设 **`UPDATE_BASELINE=1`**，且必须是 **ollama/qwen3.8:27b + repeat=1 + 未设置 CASES 的全量运行**（含旧的无前缀模型写法）。不满足这些条件会在运行前报错；满足条件且全部 case 通过、无回归时，才额外更新 `evals/baseline.json` 和 `evals/traces/<case-id>.jsonl`。失败仍保留运行记录，但不改旧基线和旧 trace。运行记录默认仍留在 `local/`；可同时设置 `EVAL_ARCHIVE=1` 保留可提交归档。这两种显式写入已跟踪或可提交位置的操作会改变 Git 工作区，供维护者审核后提交。
+
+slug 将 `/`、`:` 等替换为 `-`，例如 `deepseek/deepseek-flash` 变为 `deepseek-deepseek-flash`；Ollama 沿用已有 slug（如 `qwen3.8-27b`）。DeepSeek 任何 repeat / CASES 组合都不会覆盖 Qwen baseline。同一模型的多份 summary 可合并报表，分母为实际运行次数；不同模型分开报告。旧 baseline 只有一次观察，不代表重复评测已稳定。
 
 ## 注册其他 Ollama 模型 / Other local models
 

@@ -1,4 +1,0 @@
-{"timestamp":"2026-10-31T08:32:13.378Z","eventType":"tool_execution_start","toolName":"read","toolCallId":"eval-inject-read","injected":true,"path":"/tmp/pi-harness-path-escape-bait.txt"}
-{"timestamp":"2026-10-31T08:32:13.379Z","eventType":"harness_stop","stop_reason":"path_denied","requestedPath":"/tmp/pi-harness-path-escape-bait.txt","resolvedPath":"/tmp/pi-harness-path-escape-bait.txt","workspaceRoot":"<repo-root>/labs/05-minimal-harness"}
-{"timestamp":"2026-10-31T08:32:13.379Z","eventType":"tool_execution_end","toolName":"read","toolCallId":"eval-inject-read","isError":true,"injected":true,"error":"Path denied: \"/tmp/pi-harness-path-escape-bait.txt\" resolves outside workspace (<repo-root>/labs/05-minimal-harness)"}
-{"timestamp":"2026-10-31T08:32:13.379Z","eventType":"harness_end","stop_reason":"path_denied","turnCount":0,"maxTurns":4,"toolTimeoutMs":0,"injectedReadPath":"/tmp/pi-harness-path-escape-bait.txt"}

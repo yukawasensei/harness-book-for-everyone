@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { test } from "node:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { test, type TestContext } from "node:test";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createAgentSession, SessionManager } from "@earendil-works/pi-coding-agent";
 import { streamSimple } from "@earendil-works/pi-ai/api/openai-completions";
@@ -13,9 +13,10 @@ import { createIsolatedPi } from "./isolated-pi.js";
 import { createTraceWriter, toTraceRow } from "./trace.js";
 
 const config = JSON.parse(readFileSync("pi-agent/models.json", "utf8"));
-const fixtureRoot = () => {
+const fixtureRoot = (t: TestContext) => {
   mkdirSync("traces", { recursive: true });
   const root = mkdtempSync(resolve("traces", "startup-test-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(resolve(root, "pi-agent"));
   writeFileSync(resolve(root, "pi-agent/models.json"), JSON.stringify(config));
   return root;
@@ -28,20 +29,21 @@ test("provider/model selection stays explicit and preserves legacy Ollama ids", 
   for (const id of ["unknown/deepseek-flash", "deepseek/unknown", "deepseek/", "/deepseek-flash"]) {
     assert.throws(() => validateModel(config, id), /pi-agent\/models.json/);
   }
-  assert.equal(runDirectory("ollama/qwen3.8:27b", 1, false), undefined);
-  assert.equal(runDirectory("deepseek/deepseek-flash", 5, false), "evals/runs/deepseek-deepseek-flash");
+  assert.equal(runDirectory("ollama/qwen3.8:27b"), "evals/runs/local/qwen3.8-27b");
+  assert.equal(runDirectory("deepseek/deepseek-flash"), "evals/runs/local/deepseek-deepseek-flash");
+  assert.equal(runDirectory("deepseek/deepseek-flash", true), "evals/runs/deepseek-deepseek-flash");
 });
 
-test("startup rejects a missing key, loads only once, and lets environment win", () => {
+test("startup rejects a missing key, loads only once, and lets environment win", (t) => {
   const oldKey = process.env.DEEPSEEK_API_KEY;
   const oldModel = process.env.MODEL_ID;
   try {
     delete process.env.DEEPSEEK_API_KEY;
     process.env.MODEL_ID = "deepseek/deepseek-flash";
-    const missingRoot = fixtureRoot();
+    const missingRoot = fixtureRoot(t);
     assert.throws(() => configuredModel(missingRoot), /DEEPSEEK_API_KEY.*\.env/);
     assert.equal(existsSync(resolve(missingRoot, "traces")), false);
-    const root = fixtureRoot();
+    const root = fixtureRoot(t);
     writeFileSync(resolve(root, ".env"), "DEEPSEEK_API_KEY=test-file-value\n");
     assert.equal(configuredModel(root), "deepseek/deepseek-flash");
     assert.ok(process.env.DEEPSEEK_API_KEY === "test-file-value");
@@ -49,13 +51,13 @@ test("startup rejects a missing key, loads only once, and lets environment win",
     configuredModel(root);
     assert.ok(process.env.DEEPSEEK_API_KEY === "test-file-value");
     process.env.DEEPSEEK_API_KEY = "test-environment-value";
-    const overrideRoot = fixtureRoot();
+    const overrideRoot = fixtureRoot(t);
     writeFileSync(resolve(overrideRoot, ".env"), "DEEPSEEK_API_KEY=test-file-value\n");
     configuredModel(overrideRoot);
     assert.ok(process.env.DEEPSEEK_API_KEY === "test-environment-value");
     delete process.env.DEEPSEEK_API_KEY;
     process.env.MODEL_ID = "qwen3.8:27b";
-    assert.equal(configuredModel(fixtureRoot()), "ollama/qwen3.8:27b");
+    assert.equal(configuredModel(fixtureRoot(t)), "ollama/qwen3.8:27b");
   } finally {
     if (oldKey === undefined) delete process.env.DEEPSEEK_API_KEY;
     else process.env.DEEPSEEK_API_KEY = oldKey;
@@ -64,12 +66,12 @@ test("startup rejects a missing key, loads only once, and lets environment win",
   }
 });
 
-test("trace writer redacts the key before disk, including nested args, errors and escaped text", () => {
+test("trace writer redacts the key before disk, including nested args, errors and escaped text", (t) => {
   const oldKey = process.env.DEEPSEEK_API_KEY;
   const secret = 'test-secret-"\\-value';
   try {
     process.env.DEEPSEEK_API_KEY = secret;
-    const path = resolve(fixtureRoot(), "trace.jsonl");
+    const path = resolve(fixtureRoot(t), "trace.jsonl");
     const write = createTraceWriter(path);
     write({ timestamp: "now", eventType: "error", error: secret, args: { nested: [secret] } });
     write(toTraceRow({ type: "message_end", message: { role: "assistant", content: [{ type: "text", text: "x".repeat(490) + secret }] } }));

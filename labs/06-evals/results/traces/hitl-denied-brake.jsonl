@@ -1,6 +1,0 @@
-{"timestamp":"2026-11-01T14:58:06.975Z","eventType":"hitl_request","toolName":"confirm_gate","toolCallId":"eval-hitl-1","requiredTools":["confirm_gate","write","bash"],"hitlTimeoutMs":0,"injectedDecision":"deny"}
-{"timestamp":"2026-11-01T14:58:06.975Z","eventType":"tool_execution_start","toolName":"confirm_gate","toolCallId":"eval-hitl-1","injected":true,"awaitingHitl":true}
-{"timestamp":"2026-11-01T14:58:06.975Z","eventType":"hitl_decision","toolName":"confirm_gate","decision":"deny","allow":false,"stop_reason":"human_denied"}
-{"timestamp":"2026-11-01T14:58:06.975Z","eventType":"tool_execution_end","toolName":"confirm_gate","toolCallId":"eval-hitl-1","isError":true,"injected":true,"error":"hitl deny","stop_reason":"human_denied"}
-{"timestamp":"2026-11-01T14:58:06.975Z","eventType":"harness_stop","stop_reason":"human_denied","toolName":"confirm_gate","decision":"deny"}
-{"timestamp":"2026-11-01T14:58:06.975Z","eventType":"harness_end","stop_reason":"human_denied","turnCount":0,"maxTurns":4,"toolTimeoutMs":0,"hitlDecision":"deny","requiredTools":["confirm_gate","write","bash"]}
