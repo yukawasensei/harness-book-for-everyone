@@ -1,15 +1,19 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import React, { useEffect, useRef, useState, type FormEvent } from "react";
 import type { StageState } from "../../src/workflow/index.js";
-import { DEMO_CHANGE_NOTE, DEMO_REVISION_NOTICE, demoRevisionNotice, reviewLabels } from "./presentation";
+import type { SceneChanges, Stage } from "../../src/contracts/index.js";
+import { demoChangeNote, DEMO_REVISION_NOTICE, demoRevisionNotice, reviewLabels, revisionDescription } from "./presentation";
 
-export function ReviewPanel({ state, version, loaded, busy, runReason, error, demo, onReview, onRevise }: {
+export function ReviewPanel({ stage, state, revision, version, loaded, busy, runReason, error, demo, onReview, onRevise }: {
+  stage: Stage;
+  revision?: SceneChanges;
   state?: StageState; version: number | null; loaded: boolean; busy: boolean; demo: boolean;
   runReason: string | null; error: string;
   onReview: (operation: "adopt" | "discard" | "request-changes", note?: string) => Promise<boolean>;
   onRevise: () => void;
 }) {
   const [open, setOpen] = useState<"changes" | "discard" | null>(null);
-  const [note, setNote] = useState(demo ? DEMO_CHANGE_NOTE : "");
+  const exampleNote = demoChangeNote(stage);
+  const [note, setNote] = useState(demo ? exampleNote : "");
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
   const review = version === null ? null : state?.reviews?.[version];
@@ -19,8 +23,8 @@ export function ReviewPanel({ state, version, loaded, busy, runReason, error, de
       : !loaded ? "请等版本内容加载完成后再审阅。"
         : status !== "pending" ? `此版本${reviewLabels[status]}，不能重复审阅。` : null;
   const adoptReason = state?.status === "adopted" ? "已采用的版本暂不支持更换。" : reason;
-  const savedDemoNotice = review?.note ? demoRevisionNotice(demo, review.note) : null;
-  const editedDemoNotice = demoRevisionNotice(demo, note);
+  const savedDemoNotice = review?.note ? demoRevisionNotice(demo, review.note, stage) : null;
+  const editedDemoNotice = demoRevisionNotice(demo, note, stage);
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (reason || !open || (open === "changes" && !note.trim())) return;
@@ -28,6 +32,7 @@ export function ReviewPanel({ state, version, loaded, busy, runReason, error, de
   }
   return <section className="review-panel" aria-label="版本审阅">
     {version !== null && <p>v{version} <span className={`review-badge ${status}`}>{reviewLabels[status]}</span></p>}
+    {revisionDescription(revision) && <p className="revision-summary">{revisionDescription(revision)}</p>}
     {demo && version !== null && version > 1 && <p className="notice demo-revision-notice">{DEMO_REVISION_NOTICE}</p>}
     {review?.note && <p className="review-note">审阅意见：{review.note}</p>}
     {review?.at && <p className="muted">审阅时间：{new Date(review.at).toLocaleString()}</p>}
@@ -48,7 +53,7 @@ export function ReviewPanel({ state, version, loaded, busy, runReason, error, de
         {open === "changes" ? <>
           <label htmlFor="review-note">修改意见（必填）</label>
           <textarea id="review-note" autoFocus required maxLength={8000} value={note} onChange={e => setNote(e.target.value)} disabled={busy} placeholder="说明希望保留什么、具体改哪里" />
-          {demo && <p className="muted">演示示例：{DEMO_CHANGE_NOTE}</p>}
+          {demo && <p className="muted">演示示例：{exampleNote}</p>}
           {editedDemoNotice && <p className="notice demo-revision-notice">{editedDemoNotice}</p>}
           <p className="muted">确认后保留原稿；再点“按意见修改”才会启动运行。</p>
         </> : <p>版本保留可追溯，但之后不能采用。确定要丢弃 v{version} 吗？</p>}

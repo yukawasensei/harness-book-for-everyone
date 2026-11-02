@@ -60,7 +60,7 @@ export class StageRuns {
     // 在第一次 await 之前占位，创建会话期间也拒绝重复运行与采用。
     this.active.set(id, run);
     let session: AgentSession;
-    try { session = await this.sessionFactory({ root: this.root, store: this.store, projectId: id, stage }); }
+    try { session = await this.sessionFactory({ root: this.root, store: this.store, projectId: id, stage, reviseFrom }); }
     catch (error) {
       this.active.delete(id);
       run.finish();
@@ -88,7 +88,7 @@ export class StageRuns {
           break;
         case "tool_execution_end":
           this.events.publish(id, { type: event.type, toolCallId: event.toolCallId, toolName: event.toolName, result: event.result, isError: event.isError, ...context });
-          if (event.toolName === "write_draft" && !event.isError) this.notify(id);
+          if (["write_draft", "finalize_draft"].includes(event.toolName) && !event.isError) this.notify(id);
           break;
       }
     });

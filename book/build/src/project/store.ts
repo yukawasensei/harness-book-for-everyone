@@ -1,13 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { appendFileSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseStage, validateArtifact, type Artifacts, type Stage } from "../contracts/index.js";
+import { parseStage, validateArtifact, validateVersionMetadata, type Artifacts, type Stage, type VersionMetadata } from "../contracts/index.js";
 import { adoptDraft, assertRunnable, initialWorkflow, recordDraft, reviewDraft, reviewOf, type Workflow } from "../workflow/index.js";
 
 export interface Project {
   id: string;
   title: string;
   stages: Workflow;
+  version_metadata?: Partial<Record<Stage, Record<number, VersionMetadata>>>;
 }
 
 /** 本章使用单进程本地存储；并发写入、崩溃恢复和多用户权限不在此契约内。 */
@@ -79,6 +80,18 @@ export class ProjectStore {
     recordDraft(project.stages, stage, version);
     this.save(project);
     return version;
+  }
+
+  /** 元数据随项目落盘，独立于可改变的审阅结论，刷新与审阅均保留。 */
+  saveVersionMetadata(id: string, stage: Stage, version: number, metadata: VersionMetadata): void {
+    parseStage(stage);
+    const project = this.load(id);
+    if (!project.stages[stage].versions.includes(version)) throw new Error(`草稿版本不存在：${stage} v${version}`);
+    validateVersionMetadata(metadata);
+    const source = metadata.revision.revise_from;
+    if (source !== null && (source >= version || !project.stages[stage].versions.includes(source))) throw new Error("修改来源版本不存在或不早于新版本");
+    ((project.version_metadata ??= {})[stage] ??= {})[version] = structuredClone(metadata);
+    this.save(project);
   }
 
   adopt(id: string, stage: Stage, version: number): Project {

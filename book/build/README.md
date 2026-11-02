@@ -1,8 +1,8 @@
 # 第二篇 · 分镜工坊 / Part II · Storyboard Studio
 
-第一篇用小实验讲 harness 的闸门；第二篇把闸门接成一个文本内容生产工具。本包与 `book/harness/` 独立安装：P00 定义产物契约，P01 搭建状态机、版本存储与受限会话骨架，P02 接上本地 Web 的事件与指令，P03 加上选题与梗概的版本审阅和修改运行。
+第一篇用小实验讲 harness 的闸门；第二篇把闸门接成一个文本内容生产工具。本包与 `book/harness/` 独立安装：P00 定义产物契约，P01 搭建状态机、版本存储与受限会话骨架，P02 接上本地 Web 的事件与指令，P03 加上选题与梗概的版本审阅和修改运行，P04 用逐场提交与程序拼装管理剧本输出预算。
 
-入口：[P00 · 拆流水线](./chapters/p00.md) → [P01 · 搭骨架](./chapters/p01.md) → [P02 · 接上 Web](./chapters/p02.md) → [P03 · 选题与梗概](./chapters/p03.md)。
+入口：[P00 · 拆流水线](./chapters/p00.md) → [P01 · 搭骨架](./chapters/p01.md) → [P02 · 接上 Web](./chapters/p02.md) → [P03 · 选题与梗概](./chapters/p03.md) → [P04 · 剧本与输出预算](./chapters/p04.md)。
 
 ## 安装与离线验证
 
@@ -27,9 +27,9 @@ HARNESS_DEMO=1 npm run dev
 
 浏览器访问 **http://127.0.0.1:5173**。命令同时启动 Vite（5173）和 API（3001），都只监听 `127.0.0.1`；Vite 把 `/api` 代理到 **http://127.0.0.1:3001**，网页使用相对地址。端口占用会报错并停止这两个子进程，不自动换端口。按 Ctrl+C 结束自己的两个服务及未完成运行，不影响其他进程。
 
-填新项目标题 → 点“新建项目” → 保持“选题” → 可填补充要求 → 点“运行阶段”。几秒内左侧出现文本与 `read_upstream`、`write_draft` 卡片；假模型先交一份不合规草稿，再修正，故可同时看到错误和成功。右侧选 v1 查看 JSON → “要求修改”填意见 → “按意见修改 v1” → v2 出现后选中并采用 → 梗概变 `ready` → 切到梗概运行并采用。另建项目运行选题后可点“丢弃”，版本保留且不能再采用。运行中可点“中断”；想截运行中的界面，在卡片出现时截取。想再跑一次，采用前可生成新版本，或另建项目。
+填新项目标题 → 点“新建项目” → 保持“选题” → 可填补充要求 → 点“运行阶段”。几秒内左侧出现文本与 `read_upstream`、`write_draft` 卡片；假模型先交一份不合规草稿，再修正，故可同时看到错误和成功。右侧选 v1 查看 JSON → “要求修改”填意见 → “按意见修改 v1” → v2 出现后选中并采用 → 梗概变 `ready` → 切到梗概运行并采用。再切到剧本运行：先看到漏填台词角色的单场错误与修正重交，随后 S02、S03 暂存，最后汇总为待审阅 v1；再要求修改，使用预填的“只修改 S02”意见并启动修改，只重交 S02 后生成 v2，汇总卡片显示重交与沿用场号。截图可覆盖逐场工具、错误与修正、汇总及右侧剧本预览。另建项目运行选题后可点“丢弃”，版本保留且不能再采用。运行中可点“中断”；想截运行中的界面，在卡片出现时截取。想再跑一次，采用前可生成新版本，或另建项目。
 
-顶部明确标出**离线演示 / 假模型**。它用原创静态样例替代模型回答，真实 SDK、工具、schema、版本保存与采用仍照常执行；补充要求进入用户提示，但演示回答不随要求改变。topic 与 synopsis 模板可用；演示的第二份答案也是固定原创文本，不会理解任意修改意见。其他阶段即使 ready 也显示“模板尚未实现”，不开放运行。
+顶部明确标出**离线演示 / 假模型**。它用原创静态样例替代模型回答，真实 SDK、工具、schema、版本保存与采用仍照常执行；补充要求进入用户提示，但演示回答不随要求改变。topic、synopsis 与 script 模板可用；演示的第二份答案也是固定原创文本，不会理解任意修改意见。其他阶段即使 ready 也显示“模板尚未实现”，不开放运行。
 
 使用真实模型时，先结束演示命令，再按下文准备本包模型配置，运行：
 
@@ -67,7 +67,7 @@ npm start -- adopt "$PROJECT_ID" topic 1
 npm start -- status "$PROJECT_ID"
 ```
 
-跑出合规草稿后为 `pending_review`；人工 `adopt` 后才是 `adopted`，同时 `synopsis` 变为 `ready`。P01 先实现 topic，P03 已加入 synopsis 模板；其他阶段运行会明确报“模板尚未实现”。状态机、版本存储与 schema 已覆盖全部六阶段。
+跑出合规草稿后为 `pending_review`；人工 `adopt` 后才是 `adopted`，同时 `synopsis` 变为 `ready`。topic、synopsis、script 三阶段可运行；其他阶段运行会明确报“模板尚未实现”。状态机、版本存储与 schema 已覆盖全部六阶段。
 
 可选 DeepSeek：复制 `.env.example` 为本包 `.env`，仅在本机填入 `DEEPSEEK_API_KEY`（勿提交、勿打印），再执行：
 
@@ -84,7 +84,7 @@ book/build/
   src/contracts/             六阶段 TypeBox schema
   src/workflow/              固定顺序与推进规则
   src/project/               版本存储与采用版本
-  src/agent/                 阶段提示、两工具会话、运行摘要
+  src/agent/                 阶段提示、工具白名单、分场暂存与运行摘要
   src/server/                本地 REST、SSE、单项目运行锁
   src/cli.ts                 new / status / run / adopt
   web/                       Vite + React 工作区
@@ -97,7 +97,7 @@ book/build/
     sessions/*.jsonl
 ```
 
-运行输出 `stop_reason=draft_written` 只表示草稿已保存。模型只回复文字是 `no_draft`；连续工具调用最多八轮，超限为 `max_turns`；模型出错、取消与运行异常分别记录 `model_error`、`aborted`、`runtime_error`，CLI 返回非零。失败时已保存的草稿保留供检查，不自动采用。
+运行输出 `stop_reason=draft_written` 只表示草稿已保存。模型只回复文字是 `no_draft`；选题与梗概最多八轮模型响应，剧本最多二十轮，超限为 `max_turns`；模型出错、取消与运行异常分别记录 `model_error`、`aborted`、`runtime_error`，CLI 返回非零。失败时已保存的版本保留供检查，不自动采用。剧本的 `write_scene` 只暂存单场，`finalize_draft` 排序并校验后才生成版本；未汇总不出版本，已暂存的场可在会话工具记录与结束条目的 `in_progress` 快照中查看，普通运行不继承；按意见修改则预装指定原稿，只重交受影响的场，删场用 `remove_scene`，摘要记录重交、沿用与删除的场号。详见 [P04](./chapters/p04.md)。
 
 SessionManager 保存会话；自定义 `stage_run_start` / `stage_run_end` 条目记录模型、用户与系统提示、工具表、上下文说明、耗时、错误、`stop_reason`。SDK 会话元数据可能保留本地 cwd，尽管发给模型的系统提示已去掉 cwd；`projects/` 不提交，也不要直接当作公开 trace 发布。
 

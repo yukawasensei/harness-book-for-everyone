@@ -4,9 +4,10 @@ import type { ProjectDetail, ServerConfig } from "../../src/server/protocol.js";
 import { api } from "./api";
 import { connectProject, type Connection } from "./live";
 import { appendEvent, type TimelineRow } from "./timeline";
-import { demoRevisionNotice, missingEventsNotice, readerMessage, reviewLabels, runRequestText, runSummary, stageBadge, stageNames, toolErrorText } from "./presentation";
+import { demoRevisionNotice, missingEventsNotice, readerMessage, reviewLabels, runRequestText, currentRunDisplay, scriptProgress, stageBadge, stageNames, toolErrorText, toolResultText } from "./presentation";
 import { rememberSelectedProject, restoreSelectedProject } from "./project-selection";
 import { ReviewPanel } from "./ReviewPanel";
+import { ArtifactPreview } from "./ArtifactPreview";
 
 const stages: [Stage, string][] = [
   ["topic", "选题"], ["synopsis", "梗概"], ["script", "剧本"],
@@ -115,7 +116,7 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
     void action(async () => {
       const note = reviseFrom === undefined ? "" : project?.stages[stage].reviews?.[reviseFrom]?.note ?? "";
       const text = runRequestText(stage, instructions, reviseFrom === undefined ? undefined : { version: reviseFrom, note });
-      const notice = reviseFrom === undefined ? null : demoRevisionNotice(config.mode === "demo", note);
+      const notice = reviseFrom === undefined ? null : demoRevisionNotice(config.mode === "demo", note, stage);
       setRows(rows => [...rows, { kind: "user", id: `user:${Date.now()}`, text: text + (notice ? `\n\n${notice}` : "") }]);
       await api(`${path}/stages/${stage}/run`, { instructions, ...(reviseFrom === undefined ? {} : { revise_from: reviseFrom }) });
     });
@@ -127,7 +128,8 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
   const blockedReason = rawReason ? readerMessage(rawReason) : null;
   const runnable = !!project && !blockedReason && implemented && (state?.status === "ready" || state?.status === "pending_review");
   const historyNotice = missingEventsNotice(project, rows);
-  const summary = project?.last_run ? runSummary(project.last_run) : null;
+  const summary = currentRunDisplay(running, project?.last_run);
+  const progress = scriptProgress(running, rows);
   const visiblePreview = preview?.stage === stage && preview.version === version ? preview : null;
   return <main className="workspace">
     <section className="conversation" aria-label="对话和工具调用">
@@ -148,6 +150,7 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
           {running ? <button type="button" className="danger" disabled={submitting || running.abort_requested} onClick={() => void action(async () => { await api(`${path}/abort`, {}); })}>中断</button>
             : <button className="primary" aria-describedby="run-reason" disabled={!runnable || submitting}>{submitting ? "正在提交…" : "运行阶段"}</button>}
         </div>
+        {progress && <p className="scene-progress" role="status">{progress}</p>}
       </form>
     </section>
     <aside className="artifacts" aria-label="阶段和产物">
@@ -175,17 +178,18 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
       })}</div>
       <div className="preview" aria-label="产物预览">
         {previewError ? <p className="error-banner" role="alert">{previewError}</p>
-          : visiblePreview ? <pre>{JSON.stringify(visiblePreview.value, null, 2)}</pre>
+          : visiblePreview ? <ArtifactPreview stage={stage} value={visiblePreview.value} />
             : <p className="muted">{version === null ? "运行后可在这里查看和审阅草稿。" : "正在读取版本…"}</p>}
       </div>
-      <ReviewPanel key={`${stage}:${version}`} state={state} version={version} loaded={!!visiblePreview && !previewError}
+      <ReviewPanel key={`${stage}:${version}`} stage={stage} state={state} version={version} loaded={!!visiblePreview && !previewError}
+        revision={version === null ? undefined : project?.version_metadata?.[stage]?.[version]?.revision}
         busy={!!running || submitting} runReason={blockedReason} error={error} demo={config.mode === "demo"}
         onReview={(operation, note) => action(async () => { await api(`${path}/stages/${stage}/${operation}`, { version, ...(note === undefined ? {} : { note }) }); })}
         onRevise={() => { if (version !== null) startRun(version); }} />
-      {project?.last_run && summary && <div className={`run-summary${summary.failed ? " failed" : ""}`}>
-        <p>最近运行：{stageNames[project.last_run.stage]} · {summary.text}</p>
-        <code className="muted">stop_reason={project.last_run.stop_reason}</code>
-        <ErrorDetails errors={project.last_run.errors} />
+      {summary && <div className={`run-summary${summary.failed ? " failed" : ""}`}>
+        <p>{running ? "当前运行" : "最近运行"}：{stageNames[summary.stage]} · {summary.text}{progress ? ` · ${progress}` : ""}</p>
+        {summary.stopReason && <code className="muted">stop_reason={summary.stopReason}</code>}
+        <ErrorDetails errors={summary.errors} />
       </div>}
       <p className="muted artifact-note">先查看草稿，再决定采用、丢弃或要求修改。</p>
     </aside>
@@ -196,9 +200,10 @@ function TimelineItem({ row }: { row: TimelineRow }) {
   if (row.kind !== "tool") return <article className={`message ${row.kind}`}><span className="message-label">{row.kind === "user" ? "你" : row.kind === "text" ? "助手" : "运行记录"}</span><p>{row.text}</p><ErrorDetails errors={row.details ?? []} /></article>;
   const args = JSON.stringify(row.args, null, 2) ?? "";
   return <article className={`tool-card ${row.status}`}>
-    <div><strong>{row.name}</strong><span>{({ running: "执行中", success: "成功", error: "错误", unknown: "结果未收到" })[row.status]}</span></div>
+    <div><strong>{({ write_scene: "提交单场 · write_scene", remove_scene: "删除单场 · remove_scene", finalize_draft: "汇总剧本 · finalize_draft" } as Record<string, string>)[row.name] ?? row.name}</strong><span>{({ running: "执行中", success: "成功", error: "错误", unknown: "结果未收到" })[row.status]}</span></div>
     <pre>{args.length > 600 ? `${args.slice(0, 600)}…` : args}</pre>
-    {row.status === "error" && <p className="tool-error-reason">{toolErrorText(row.result)}</p>}
+    {row.status === "error" && <p className="tool-error-reason">{toolErrorText(row.result, { toolName: row.name, args: row.args })}</p>}
+    {row.status === "success" && row.name === "finalize_draft" && <p>{toolResultText(row.result)}</p>}
     {row.result !== undefined && <details><summary>查看原始工具结果</summary><pre>{JSON.stringify(row.result, null, 2)}</pre></details>}
   </article>;
 }

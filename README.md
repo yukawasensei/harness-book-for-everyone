@@ -98,6 +98,7 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | P01 | [搭骨架：程序管阶段，模型写草稿](./book/build/chapters/p01.md) | tag `p2-01` |
 | P02 | [接上 Web：事件流与指令](./book/build/chapters/p02.md) | tag `p2-02` |
 | P03 | [选题与梗概：采用之前的审阅门](./book/build/chapters/p03.md) | tag `p2-03` |
+| P04 | [剧本：把输出预算变成产品规则](./book/build/chapters/p04.md) | tag `p2-04` |
 
 ## 安全基线 / Safety baseline
 

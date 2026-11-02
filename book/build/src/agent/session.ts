@@ -2,21 +2,25 @@ import { resolve } from "node:path";
 import { InMemoryCredentialStore, Type } from "@earendil-works/pi-ai";
 import {
   createAgentSession, defineTool, DefaultResourceLoader, ModelRuntime,
-  SessionManager, SettingsManager, type ExtensionFactory,
+  SessionManager, SettingsManager, type ExtensionFactory, type AgentSession,
 } from "@earendil-works/pi-coding-agent";
-import { parseStage, schemas, type Stage } from "../contracts/index.js";
+import { parseStage, schemas, SceneSchema, type Stage } from "../contracts/index.js";
 import { ProjectStore } from "../project/store.js";
 import { assertRunnable, DEPENDENCIES } from "../workflow/index.js";
 import { configuredModel } from "./model.js";
 import { stagePrompt } from "./prompts.js";
+import { ScriptDraft } from "./script-draft.js";
 
-export function createStageTools(store: ProjectStore, projectId: string, stage: Stage) {
+const scriptDrafts = new WeakMap<AgentSession, ScriptDraft>();
+export const sessionScriptDraft = (session: AgentSession) => scriptDrafts.get(session);
+
+export function createStageTools(store: ProjectStore, projectId: string, stage: Stage, draft = new ScriptDraft(store, projectId)) {
   parseStage(stage);
   const dependencies = DEPENDENCIES[stage];
   const readParameters = dependencies.length === 0
     ? Type.Object({}, { additionalProperties: false })
     : Type.Object({ stage: Type.Union(dependencies.map(dependency => Type.Literal(dependency))) }, { additionalProperties: false });
-  return [
+  const readTool =
     defineTool<typeof readParameters, { stage: Stage | null }>({
       name: "read_upstream", label: "读上游 / Read upstream",
       description: `按 stage 读取本阶段依赖的人工采用版本；允许：${dependencies.join(", ") || "无（topic 用空参数返回 null）"}。不接受文件路径或版本号。`,
@@ -35,8 +39,39 @@ export function createStageTools(store: ProjectStore, projectId: string, stage: 
         const artifact = store.readAdopted(projectId, dependency);
         return { content: [{ type: "text", text: JSON.stringify(artifact) }], details: { stage: dependency } };
       },
+    });
+  if (stage === "script") return [readTool,
+    defineTool({
+      name: "write_scene", label: "提交单场 / Write scene",
+      description: `提交一场到本次运行的进行中草稿；同 scene_id 可覆盖。不会生成版本。单场契约：${JSON.stringify(SceneSchema)}`,
+      parameters: Type.Object({ scene: Type.Unknown() }, { additionalProperties: false }),
+      async execute(_callId, params) {
+        const details = draft.write(params.scene);
+        return { content: [{ type: "text" as const, text: `已暂存 ${details.scene_id}；共 ${details.scene_count} 场，尚未生成版本。` }], details };
+      },
     }),
     defineTool({
+      name: "remove_scene", label: "删除单场 / Remove scene",
+      description: "按 scene_id 删除本次进行中草稿的一场；删除后请重排后续场号，从 S01 连续，finalize 会复核。不会改动原版本。",
+      parameters: Type.Object({ scene_id: Type.String({ pattern: "^S[0-9]{2}$" }) }, { additionalProperties: false }),
+      async execute(_callId, params) {
+        const details = draft.remove(params.scene_id);
+        return { content: [{ type: "text" as const, text: `已从暂存区删除 ${details.scene_id}；请检查并重排后续场号，再 finalize。` }], details };
+      },
+    }),
+    defineTool({
+      name: "finalize_draft", label: "汇总剧本 / Finalize draft",
+      description: "将本次进行中各场按 scene_id 排序，校验完整剧本后保存为待审阅新版本；不自动采用。无参数。",
+      parameters: Type.Object({}, { additionalProperties: false }),
+      async execute() {
+        const details = draft.finalize();
+        const changes = details.scene_changes;
+        const comparison = changes.revise_from === null ? "" : `本版相对 v${changes.revise_from}：重交/新增 ${changes.resubmitted.join("、") || "无"}；沿用 ${changes.reused.join("、") || "无"}；删除 ${changes.removed.join("、") || "无"}。`;
+        return { content: [{ type: "text" as const, text: `已保存 script v${details.version}；待审阅。${comparison}${details.warnings.join("\n")}` }], details };
+      },
+    }),
+  ];
+  return [readTool, defineTool({
       name: "write_draft", label: "写草稿 / Write draft",
       description: `提交本阶段完整 JSON 产物，只保存草稿，不采用。产物契约：${JSON.stringify(schemas[stage])}`,
       // artifact 故意用 Unknown：SDK 不得先转换字段类型。真实契约由存储层严格校验。
@@ -57,6 +92,7 @@ export interface StageSessionOptions {
   store: ProjectStore;
   projectId: string;
   stage: Stage;
+  reviseFrom?: number;
   /** 测试用包内已配置模型描述，再替换 streamFunction；不请求真实模型。 */
   model?: { provider: string; id: string };
 }
@@ -88,12 +124,14 @@ export async function createStageSession(options: StageSessionOptions) {
     extensionFactories: [{ name: "stage-system-prompt", factory: replacePrompt }],
   });
   await resourceLoader.reload();
-  const tools = createStageTools(store, projectId, stage);
+  const draft = new ScriptDraft(store, projectId);
+  const tools = createStageTools(store, projectId, stage, draft);
   const { session } = await createAgentSession({
     cwd: root, agentDir, model, modelRuntime, settingsManager, resourceLoader,
     thinkingLevel: "off", noTools: "all",
     tools: tools.map(t => t.name), customTools: tools,
     sessionManager: SessionManager.create(root, store.sessionDir(projectId)),
   });
+  if (stage === "script") scriptDrafts.set(session, draft);
   return session;
 }

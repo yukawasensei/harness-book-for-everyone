@@ -3,7 +3,7 @@ import { setTimeout } from "node:timers/promises";
 import { test } from "node:test";
 import { connectProject, type EventConnection, type Connection } from "../web/src/live.js";
 import { appendEvent } from "../web/src/timeline.js";
-import { missingEventsNotice, runSummary, toolErrorText, stageBadge, readerMessage, runRequestText, DEMO_CHANGE_NOTE, demoRevisionNotice, reviewLabels } from "../web/src/presentation.js";
+import { missingEventsNotice, runSummary, toolErrorText, toolResultText, stageBadge, readerMessage, runRequestText, DEMO_CHANGE_NOTE, DEMO_SCRIPT_CHANGE_NOTE, demoChangeNote, demoRevisionNotice, reviewLabels } from "../web/src/presentation.js";
 import { rememberSelectedProject, restoreSelectedProject } from "../web/src/project-selection.js";
 import type { ProjectDetail, ProjectEvent, RunResult } from "./server/protocol.js";
 import { assertRunnable, initialWorkflow } from "./workflow/index.js";
@@ -128,7 +128,7 @@ test("工具错误从 content.text 提取多段可读拒绝原因，不输出原
     { type: "text", text: "target_minutes 必须为正数" },
     { type: "text", text: 123 }, null,
   ], details: { internal: "仅在原始结果展开区显示" } };
-  assert.equal(toolErrorText(result), "topic schema 不合规：缺少 title\ntarget_minutes 必须为正数");
+  assert.equal(toolErrorText(result), "产物缺少片名；目标时长必须为正数");
   for (const value of [undefined, null, {}, { content: null }, { content: [{ type: "text", text: " " }] }]) {
     assert.match(toolErrorText(value), /未收到可读原因.*展开查看原始结果/);
   }
@@ -203,8 +203,12 @@ test("禁用原因由服务端真实状态机和模板检查给出：依赖未�
     f.store.writeDraft(f.project.id, "synopsis", sample("synopsis"));
     f.store.adopt(f.project.id, "synopsis", 1);
     project = await read();
-    assert.throws(() => stagePrompt("script"), error => {
-      assert.equal(project.run_blocked_reasons.script, (error as Error).message); return true;
+    assert.equal(project.run_blocked_reasons.script, null);
+    f.store.writeDraft(f.project.id, "script", sample("script"));
+    f.store.adopt(f.project.id, "script", 1);
+    project = await read();
+    assert.throws(() => stagePrompt("bible"), error => {
+      assert.equal(project.run_blocked_reasons.bible, (error as Error).message); return true;
     });
   } finally { await app.close(); f.cleanup(); }
 });
@@ -240,4 +244,14 @@ test("演示预填意见；自定义意见提示预设结果，真实模式不�
   assert.equal(demoRevisionNotice(true, DEMO_CHANGE_NOTE), null);
   assert.equal(demoRevisionNotice(true, "改成太空站"), "离线演示的修改结果为预设内容");
   assert.equal(demoRevisionNotice(false, "改成太空站"), null);
+});
+
+test("剧本演示预填仅改 S02 的意见；汇总结果可读显示原版本与重交、沿用场号", () => {
+  assert.equal(demoChangeNote("topic"), DEMO_CHANGE_NOTE);
+  assert.equal(demoChangeNote("script"), DEMO_SCRIPT_CHANGE_NOTE);
+  assert.match(DEMO_SCRIPT_CHANGE_NOTE, /只修改 S02/);
+  assert.equal(demoRevisionNotice(true, DEMO_SCRIPT_CHANGE_NOTE, "script"), null);
+  assert.equal(demoRevisionNotice(true, DEMO_CHANGE_NOTE, "script"), "离线演示的修改结果为预设内容");
+  assert.equal(demoRevisionNotice(false, "删掉第一场", "script"), null);
+  assert.equal(toolResultText({ content: [{ type: "text", text: "本版相对 v1：重交/新增 S02；沿用 S01、S03；删除 无。" }] }), "本版相对 v1：重交 S02；沿用 S01、S03；删除 无。");
 });

@@ -27,12 +27,35 @@ const LineSchema = Type.Union([
   Type.Object({ kind: Type.Literal("action"), text: text() }, closed),
   Type.Object({ kind: Type.Literal("dialogue"), character: text(), text: text() }, closed),
 ]);
-export const ScriptSchema = Type.Object({
-  scenes: Type.Array(Type.Object({
-    scene_id: sceneId(), heading: text(), summary: text(),
-    lines: Type.Array(LineSchema, { minItems: 1 }),
-  }, closed), { minItems: 1 }),
+export const SceneSchema = Type.Object({
+  scene_id: sceneId(), heading: text(), summary: text(),
+  lines: Type.Array(LineSchema, { minItems: 1 }),
 }, closed);
+export type Scene = Static<typeof SceneSchema>;
+export const ScriptSchema = Type.Object({
+  scenes: Type.Array(SceneSchema, { minItems: 1 }),
+}, closed);
+
+/** 单场 schema 与业务规则同时在可信边界检查，不依赖模型自查。 */
+export function validateScene(value: unknown): asserts value is Scene {
+  const errors = Value.Errors(SceneSchema, value);
+  if (errors.length) throw new Error(`scene schema 不合规：${errors.map(e => `${e.instancePath || "/"} ${e.message}`).join("; ")}`);
+  const scene = value as Scene;
+  for (const line of scene.lines) {
+    if (line.kind === "dialogue" && !("character" in line && typeof line.character === "string" && line.character.trim())) {
+      throw new Error(`${scene.scene_id} dialogue 必须有 character`);
+    }
+    if (line.kind === "action" && "character" in line) throw new Error(`${scene.scene_id} action 不得有 character`);
+  }
+}
+
+export function validateScriptStructure(script: { scenes: Scene[] }): void {
+  script.scenes.forEach((scene, index) => {
+    validateScene(scene);
+    const expected = `S${String(index + 1).padStart(2, "0")}`;
+    if (scene.scene_id !== expected) throw new Error(`script 场号必须从 S01 连续；位置 ${index + 1} 应为 ${expected}，收到 ${scene.scene_id}；请补齐或重排场号，重交后再 finalize`);
+  });
+}
 
 export const BibleSchema = Type.Object({
   characters: Type.Array(Type.Object({
@@ -66,6 +89,19 @@ export const schemas = {
 } as const;
 export type Artifacts = { [S in Stage]: Static<typeof schemas[S]> };
 
+export const SceneChangesSchema = Type.Object({
+  revise_from: Type.Union([Type.Integer({ minimum: 1 }), Type.Null()]),
+  resubmitted: Type.Array(sceneId(), { uniqueItems: true }),
+  reused: Type.Array(sceneId(), { uniqueItems: true }),
+  removed: Type.Array(sceneId(), { uniqueItems: true }),
+}, closed);
+export type SceneChanges = Static<typeof SceneChangesSchema>;
+export interface VersionMetadata { revision: SceneChanges }
+
+export function validateVersionMetadata(value: VersionMetadata): void {
+  if (!Value.Check(Type.Object({ revision: SceneChangesSchema }, closed), value)) throw new Error("版本修改记录不合规");
+}
+
 export function parseStage(value: string): Stage {
   if (!(STAGES as readonly string[]).includes(value)) throw new Error(`未知阶段 ${value}；可用：${STAGES.join(", ")}`);
   return value as Stage;
@@ -77,4 +113,5 @@ export function validateArtifact<S extends Stage>(stage: S, value: unknown): ass
   if (errors.length) {
     throw new Error(`${stage} schema 不合规：${errors.map(e => `${e.instancePath || "/"} ${e.message}`).join("; ")}`);
   }
+  if (stage === "script") validateScriptStructure(value as Artifacts["script"]);
 }

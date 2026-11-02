@@ -186,7 +186,9 @@ test("非法推进返回状态机原文；缺少模板或会话失败不留下�
     await f.post(`${f.path}/stages/topic/adopt`, { version: 1 });
     f.store.writeDraft(f.project.id, "synopsis", sample("synopsis"));
     f.store.adopt(f.project.id, "synopsis", 1);
-    const placeholder = await f.post(`${f.path}/stages/script/run`);
+    f.store.writeDraft(f.project.id, "script", sample("script"));
+    f.store.adopt(f.project.id, "script", 1);
+    const placeholder = await f.post(`${f.path}/stages/bible/run`);
     assert.equal(placeholder.status, 422);
     assert.match((await placeholder.json() as { error: string }).error, /模板尚未实现/);
     assert.equal((await f.detail()).running, null);
@@ -282,7 +284,7 @@ test("HTTP 审阅与修改运行：非法来源 4xx，SSE 带审阅状态，采�
   } finally { await sse.close(); await f.cleanup(); }
 });
 
-test("离线演示完整闭环：选题 v1 要求修改、v2 采用、梗概采用", async () => {
+test("离线演示完整闭环：选题修改采用、梗概采用、逐场修正并汇总待审剧本", async () => {
   const f = await setup({ factory: createDemoSession });
   try {
     const topic = `${f.path}/stages/topic`;
@@ -303,6 +305,45 @@ test("离线演示完整闭环：选题 v1 要求修改、v2 采用、梗概采�
     assert.equal((await f.post(`${synopsis}/adopt`, { version: 1 })).status, 200);
     assert.equal((await f.detail()).stages.script.status, "ready");
     const config = await (await f.get("/api/config")).json() as { runnable_stages: string[] };
-    assert.deepEqual(config.runnable_stages, ["topic", "synopsis"]);
+    assert.deepEqual(config.runnable_stages, ["topic", "synopsis", "script"]);
+    const sse = await subscribe(f.base, f.path);
+    try {
+      assert.equal((await f.post(`${f.path}/stages/script/run`)).status, 202);
+      await eventually(f.detail, p => !p.running && p.stages.script.versions.length === 1);
+      await eventually(async () => sse.frames, frames => frames.some(f => f.event.type === "run_ended" && f.event.run.stage === "script"));
+      const events = sse.frames.map(frame => frame.event);
+      const completed = events.filter(event => event.type === "tool_execution_end");
+      assert.equal(completed.filter(event => event.toolName === "write_scene" && event.isError).length, 1);
+      assert.equal(completed.filter(event => event.toolName === "write_scene" && !event.isError).length, 3);
+      assert.ok(completed.some(event => event.toolName === "finalize_draft" && !event.isError));
+      const artifact = f.store.readVersion(f.project.id, "script", 1);
+      assert.deepEqual(artifact.scenes.map(scene => scene.scene_id), ["S01", "S02", "S03"]);
+      assert.match(JSON.stringify(artifact), /老站长何望/);
+      assert.ok(!JSON.stringify(artifact).includes("麦冬"));
+      const detail = await f.detail();
+      assert.equal(detail.stages.script.reviews?.[1].status, "pending");
+      assert.equal(detail.stages.bible.status, "locked");
+      const scriptPath = `${f.path}/stages/script`;
+      assert.equal((await f.post(`${scriptPath}/request-changes`, { version: 1, note: "只修改 S02：让程禾先询问陆岑是否愿意讲述，其他场保持原样。" })).status, 200);
+      const start = await f.post(`${scriptPath}/run`, { revise_from: 1 });
+      assert.equal(start.status, 202);
+      const run = await start.json() as { id: string };
+      await eventually(f.detail, p => !p.running && p.stages.script.versions.length === 2);
+      await eventually(async () => sse.frames, frames => frames.some(f => f.event.type === "run_ended" && f.event.run.id === run.id));
+      const updated = f.store.readVersion(f.project.id, "script", 2);
+      assert.equal(JSON.stringify(updated.scenes[0]), JSON.stringify(artifact.scenes[0]));
+      assert.equal(JSON.stringify(updated.scenes[2]), JSON.stringify(artifact.scenes[2]));
+      assert.notDeepEqual(updated.scenes[1], artifact.scenes[1]);
+      assert.match(JSON.stringify(updated.scenes[1]), /你愿意讲给我们听吗/);
+      const revisionEvents = sse.frames.map(frame => frame.event).filter(event => event.type === "tool_execution_end").filter(event => event.run_id === run.id);
+      assert.deepEqual(revisionEvents.filter(event => event.toolName === "write_scene").map(event => event.isError), [false]);
+      const finalized = revisionEvents.find(event => event.toolName === "finalize_draft");
+      assert.ok(finalized);
+      assert.match(JSON.stringify(finalized.result), /本版相对 v1：重交\/新增 S02；沿用 S01、S03/);
+      const revisedDetail = await f.detail();
+      assert.deepEqual(revisedDetail.last_run?.scene_changes, { revise_from: 1, resubmitted: ["S02"], reused: ["S01", "S03"], removed: [] });
+      assert.equal(revisedDetail.stages.script.reviews?.[2].status, "pending");
+      assert.equal(revisedDetail.stages.script.reviews?.[1].status, "changes_requested");
+    } finally { await sse.close(); }
   } finally { await f.cleanup(); }
 });

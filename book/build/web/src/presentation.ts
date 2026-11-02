@@ -1,7 +1,8 @@
 import type { ProjectDetail, RunInfo, RunResult } from "../../src/server/protocol.js";
-import type { Stage } from "../../src/contracts/index.js";
+import type { SceneChanges, Stage } from "../../src/contracts/index.js";
 import type { StageStatus, ReviewStatus } from "../../src/workflow/index.js";
 import type { TimelineRow } from "./timeline.js";
+import { translateValidationError, type ValidationContext } from "./validation-errors.js";
 
 export const stageNames: Record<Stage, string> = {
   topic: "选题", synopsis: "梗概", script: "剧本", bible: "设定集", storyboard: "分镜脚本", prompts: "分镜提示词",
@@ -19,16 +20,42 @@ export function stageBadge(status: StageStatus | undefined, stage: Stage, runnin
 
 /** 服务端保留技术原因；页面用读者能理解的说法呈现。 */
 export function readerMessage(text: string): string {
-  return text.replace(/不能运行 (\w+)：当前状态 adopted；已采用阶段的返工留到 P\d+/g,
+  return translateValidationError(text.replace(/不能运行 (\w+)：当前状态 adopted；已采用阶段的返工留到 P\d+/g,
     (_match, stage: Stage) => `${stageNames[stage] ?? stage}已采用，暂不支持再次运行。`)
     .replace(/；(?:已采用阶段的)?返工留到 P\d+/g, "；已采用的版本暂不支持修改")
-    .replace(/待采用|待确认/g, "待审阅");
+    .replace(/待采用|待确认/g, "待审阅").replaceAll("重交/新增", "重交"));
+}
+
+export function revisionDescription(revision?: SceneChanges): string | null {
+  if (!revision || revision.revise_from === null) return null;
+  return `相对 v${revision.revise_from}：重交 ${revision.resubmitted.join("、") || "无"}；沿用 ${revision.reused.join("、") || "无"}；删除 ${revision.removed.join("、") || "无"}`;
+}
+
+export function currentRunDisplay(running: RunInfo | null | undefined, last: RunResult | null | undefined) {
+  if (running) return { stage: running.stage, text: running.abort_requested ? "正在中断" : "运行中", failed: false, stopReason: null, errors: [] as string[] };
+  return last ? { stage: last.stage, ...runSummary(last), stopReason: last.stop_reason, errors: last.errors } : null;
+}
+
+export function scriptProgress(running: RunInfo | null | undefined, rows: TimelineRow[]): string | null {
+  if (running?.stage !== "script") return null;
+  for (const row of [...rows].reverse()) {
+    if (row.kind !== "tool" || !row.id.startsWith(`${running.id}:`) || row.status !== "success" || !["write_scene", "remove_scene"].includes(row.name)) continue;
+    const result = row.result;
+    if (!result || typeof result !== "object" || !("details" in result)) continue;
+    const details = result.details;
+    if (!details || typeof details !== "object" || !("scene_count" in details)) continue;
+    const count = details.scene_count;
+    if (typeof count === "number" && Number.isSafeInteger(count) && count >= 0) return `已暂存 ${count} 场`;
+  }
+  return "等待暂存进度";
 }
 
 export const DEMO_CHANGE_NOTE = "把孩子换成一位老站长，保留空白格的意象。";
+export const DEMO_SCRIPT_CHANGE_NOTE = "只修改 S02：让程禾先询问陆岑是否愿意讲述，其他场保持原样。";
+export const demoChangeNote = (stage: Stage) => stage === "script" ? DEMO_SCRIPT_CHANGE_NOTE : DEMO_CHANGE_NOTE;
 export const DEMO_REVISION_NOTICE = "离线演示的修改结果为预设内容";
-export function demoRevisionNotice(demo: boolean, note: string): string | null {
-  return demo && note !== DEMO_CHANGE_NOTE ? DEMO_REVISION_NOTICE : null;
+export function demoRevisionNotice(demo: boolean, note: string, stage: Stage = "topic"): string | null {
+  return demo && note !== demoChangeNote(stage) ? DEMO_REVISION_NOTICE : null;
 }
 
 export function runRequestText(stage: Stage, instructions: string, revision?: { version: number; note: string }): string {
@@ -48,7 +75,7 @@ export function runSummary(run: RunResult): { text: string; failed: boolean } {
   return { text: labels[run.stop_reason] ?? `运行结束：${run.stop_reason}`, failed: run.stop_reason !== "aborted" };
 }
 
-export function toolErrorText(result: unknown): string {
+function resultText(result: unknown): string | null {
   if (result && typeof result === "object" && "content" in result && Array.isArray(result.content)) {
     const texts = result.content.flatMap((item: unknown) => {
       if (item && typeof item === "object" && "type" in item && item.type === "text" && "text" in item && typeof item.text === "string" && item.text.trim()) {
@@ -56,14 +83,24 @@ export function toolErrorText(result: unknown): string {
       }
       return [];
     });
-    if (texts.length) return readerMessage(texts.join("\n"));
+    if (texts.length) return texts.join("\n");
   }
-  return "工具执行被拒绝；未收到可读原因，请展开查看原始结果。";
+  return null;
+}
+
+export function toolResultText(result: unknown): string | null {
+  const text = resultText(result);
+  return text ? readerMessage(text) : null;
+}
+
+export function toolErrorText(result: unknown, context?: ValidationContext): string {
+  const raw = resultText(result);
+  return raw ? readerMessage(translateValidationError(raw, context)) : "工具执行被拒绝；未收到可读原因，请展开查看原始结果。";
 }
 
 export function missingEventsNotice(project: ProjectDetail | null, rows: TimelineRow[]): string | null {
   if (!project) return null;
-  const run = project.last_run ?? project.running;
+  const run = project.running ?? project.last_run;
   const unseen = run
     ? !rows.some(row => row.id === run.id || row.id.startsWith(`${run.id}:`))
     : !rows.length && Object.values(project.stages).some(stage => stage.versions.length > 0);
