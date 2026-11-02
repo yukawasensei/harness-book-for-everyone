@@ -6,7 +6,7 @@
 
 ## 本小节目标
 
-先用 Pi `0.84.4` 自带的 `hello.ts` 理解自定义工具的三个部分：
+先用 Pi `1.4.0` 自带的 `examples/extensions/hello.ts` 理解自定义工具的三个部分：
 
 1. `parameters: Type.Object(...)`：Tool Schema，规定模型能提交什么参数；
 2. `execute(...)`：Tool Executor，真正运行 TypeScript 并产生结果；

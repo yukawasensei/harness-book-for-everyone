@@ -8,6 +8,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import {
   createMaxTurnsGuard,
+  finishTurnWhen,
   parseMaxTurns,
   type StopReason,
 } from "./max-turns.js";
@@ -171,7 +172,7 @@ function writeTrace(row: Record<string, unknown>): void {
 }
 
 // Official pi-agent-core hook: after each completed turn, decide whether to continue.
-session.agent.shouldStopAfterTurn = async () => {
+session.agent.finishTurn = finishTurnWhen(() => {
   if (runState.toolTimedOut || runState.pathDenied || runState.contextBudgetHit || runState.retryExhausted || runState.humanDenied || runState.awaitingHuman || runState.costBudgetHit || runState.latencyBudgetHit) {
     return true;
   }
@@ -193,7 +194,7 @@ session.agent.shouldStopAfterTurn = async () => {
     });
   }
   return stop;
-};
+});
 
 // After a tool times out, mark isError + ask the loop to terminate this batch.
 session.agent.afterToolCall = async (context) => {
@@ -604,7 +605,13 @@ if (injectReadPath) {
     path: injectReadPath,
   });
   try {
-    await sandboxed.execute(probeId, { path: injectReadPath }, undefined, undefined, undefined);
+    await sandboxed.execute(
+      probeId,
+      { path: injectReadPath },
+      undefined,
+      undefined,
+      session.extensionRunner.createToolContext(probeId, undefined),
+    );
     writeTrace({
       timestamp: new Date().toISOString(),
       eventType: "tool_execution_end",

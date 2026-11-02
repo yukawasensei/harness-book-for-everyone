@@ -9,7 +9,7 @@
 3. Harness 使用内存会话，不产生 Pi 会话历史文件。
 4. Harness 订阅并记录 Agent 事件。
 5. Harness 用 `try/finally` 保证订阅和会话被释放。
-6. **maxTurns**：通过 `session.agent.shouldStopAfterTurn`（pi-agent-core 官方钩子）在完成 N 轮后刹车；trace 写入 `turn_guard` / `harness_stop`（`stop_reason=max_turns`）与 `harness_end`。
+6. **maxTurns**：通过 `session.agent.finishTurn`（经 `finishTurnWhen` 适配；返回 `{ action: "end" }` 停机）在完成 N 轮后刹车；trace 写入 `turn_guard` / `harness_stop`（`stop_reason=max_turns`）与 `harness_end`。
 
 已加入：单工具超时（TOOL_TIMEOUT_MS + demo slow）；路径沙箱（sandboxed read + assertInsideWorkspace → stop_reason=path_denied）。
 
@@ -17,7 +17,7 @@
 
 ```text
 prompt → model → toolCall → Harness 执行（allowlist + 可选超时）
-       → toolResult / tool_timeout → model → … → shouldStopAfterTurn? → final / max_turns / tool_timeout
+       → toolResult / tool_timeout → model → … → finishTurn? → final / max_turns / tool_timeout
 ```
 
 ## 运行

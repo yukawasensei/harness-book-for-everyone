@@ -6,7 +6,7 @@
 
 **Architecture:** Windows 侧只运行 Ollama、Qwen3.8:27b、NVIDIA 驱动（及其他本机宿主服务）；WSL2 Ubuntu 侧统一运行 Pi CLI/SDK、Node.js/TypeScript、Harness 源码、评测、Python 与 QLoRA 微调。Pi 通过 mirrored networking 访问 `http://127.0.0.1:11434/v1`，复用 Windows Ollama 和同一份 17GB 模型，不在 WSL 重复安装 Ollama。
 
-**Tech Stack:** Windows/Linux host、example local GPU ≈24GB VRAM、adequate RAM、WSL2 Ubuntu 24.04、Windows Ollama 0.33.2、Qwen3.8:27b、WSL Node.js 22、Pi 0.84.4、TypeScript、Python 3.12、Transformers、TRL、PEFT、bitsandbytes、pytest。
+**Tech Stack:** Windows/Linux host、example local GPU ≈24GB VRAM、adequate RAM、WSL2 Ubuntu 24.04、Windows Ollama 0.33.2、Qwen3.8:27b、WSL Node.js 22、Pi 1.4.0、TypeScript、Python 3.12、Transformers、TRL、PEFT、bitsandbytes、pytest。
 
 **Workspace:** 活跃项目统一放在 WSL 原生文件系统 `~/ai-learning/`；不要把 `node_modules`、Python venv 或训练缓存放在 `/mnt/c`。需要给 Windows 使用的报告和成品再导出到 `<windows-exports>/`。
 
@@ -26,7 +26,7 @@
 - WSL 根盘可用约 949GB
 - WSL/宿主机可见本机 GPU
 - WSL Python：3.12.3
-- 课程当前固定 Pi npm 包：`@earendil-works/pi-coding-agent@0.84.4`
+- 课程验证基线 Pi npm 包：`@earendil-works/pi-coding-agent@1.4.0`（读者可装最新 CLI，不兼容时再钉回 `@1.4.0`）
 
 ### 为什么仍然分推理与训练两种工件
 
@@ -106,7 +106,8 @@ pi-qwen-harness/
 **安装命令：**
 
 ```bash
-npm install -g --ignore-scripts @earendil-works/pi-coding-agent@0.84.4
+npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+# 不兼容时可退回：npm install -g --ignore-scripts @earendil-works/pi-coding-agent@1.4.0
 pi --version
 ```
 
@@ -275,7 +276,7 @@ labs/05-minimal-harness/
 **依赖：**
 
 ```bash
-npm install --save-exact @earendil-works/pi-coding-agent@0.84.4
+npm install --save-exact @earendil-works/pi-coding-agent@1.4.0
 npm install --save-dev --save-exact typescript tsx @types/node
 ```
 
@@ -656,7 +657,7 @@ Prompt 版本
 
 1. 建立 WSL 原生隔离工作区 `<repo-root>`。
 2. 写入 `README.md`、`AGENTS.md` 和术语笔记模板。
-3. 安装并验证 Pi 0.84.4。
+3. 安装并验证 Pi（验证基线 1.4.0）。
 4. 备份后写入 Pi 的 Ollama provider 配置。
 5. 用 `qwen3.8:27b` 完成一次只读工具调用。
 6. 保存 JSONL trace。

@@ -15,7 +15,7 @@ import type { CaseSpec } from "./check-trace.js";
 import { createIsolatedPi } from "./isolated-pi.js";
 import { CUSTOM_TOOLS } from "./tools/index.js";
 import { createRunState } from "./run-state.js";
-import { createMaxTurnsGuard } from "./gates/max-turns.js";
+import { createMaxTurnsGuard, finishTurnWhen } from "./gates/max-turns.js";
 import { withToolTimeout } from "./gates/tool-timeout.js";
 import { decideToolCall } from "./gates/tool-policy.js";
 import { estimateContextChars, truncateToolContent } from "./gates/context-budget.js";
@@ -109,7 +109,7 @@ writeTrace({
 });
 
 // pi-agent-core 钩子 1：每轮结束后由 harness 决定要不要继续。
-session.agent.shouldStopAfterTurn = ({ context, message }) => {
+session.agent.finishTurn = finishTurnWhen(({ context, message }) => {
   budget.recordUsage(message.usage);
   if (run.stopped) return true;
   const stop = turns.recordTurn();
@@ -124,7 +124,7 @@ session.agent.shouldStopAfterTurn = ({ context, message }) => {
   const over = budget.check();
   if (over) run.stop(over.stopReason, over.details);
   return run.stopped;
-};
+});
 
 // pi-agent-core 钩子 2：工具执行前过策略（白名单复核 + 路径沙箱）；不过就拦下并停机。
 // 策略过了，再看要不要人确认（先挡掉越界的，再去打扰人）。

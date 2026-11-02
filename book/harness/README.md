@@ -50,7 +50,7 @@
 | 能力 | 文件 |
 |---|---|
 | 停机原因只记一处：`run.stop(reason)`，第一次生效，写 `harness_stop` | `src/run-state.ts` |
-| 轮数上限：pi 钩子 `session.agent.shouldStopAfterTurn`，每轮写 `turn_guard`，到 `max_turns` 停 | `src/gates/max-turns.ts` |
+| 轮数上限：pi 钩子 `session.agent.finishTurn`（经 `finishTurnWhen` 适配，返回 `{ action: "end" }` 停机），每轮写 `turn_guard`，到 `max_turns` 停 | `src/gates/max-turns.ts` |
 | 工具超时：harness 给**所有**自定义工具统一套计时器，不靠工具自己守时 | `src/gates/tool-timeout.ts` |
 | 闸门咬住后用 pi 钩子 `afterToolCall` 返回 `terminate: true`，结束本批工具 | `src/index.ts` |
 | 演示工具 `slow`（自己没有任何超时逻辑） | `src/tools/slow.ts` |
@@ -121,7 +121,7 @@ NO_PROXY=127.0.0.1,localhost HITL_MODE=tty CASE_ID=hitl-approve-write npm start
 | 预算罩住**整次运行**（所有轮、所有工具）：每一步都不贵，加起来也可能超 | `src/gates/budget.ts` |
 | 成本：累计 pi 报告的真实 token 用量（`message.usage`）；本地模型不花钱，用 token 当成本代理，接云模型时换成金额 | `src/gates/budget.ts` |
 | 延迟：从运行开始算的墙钟时间；和 Ch4 的“单个工具超时”是两回事 | `src/gates/budget.ts` |
-| 两处检查：每轮结束后（下一次模型调用之前）、每个工具开始之前 | `shouldStopAfterTurn` / `beforeToolCall` in `src/index.ts` |
+| 两处检查：每轮结束后（下一次模型调用之前）、每个工具开始之前 | `finishTurn` / `beforeToolCall` in `src/index.ts` |
 | trace 留证：`turn_guard.tokens` / `turn_guard.elapsedMs`；`harness_end.tokens` | `src/index.ts` |
 
 `stop_reason` 新增：`cost_budget`、`latency_budget`。

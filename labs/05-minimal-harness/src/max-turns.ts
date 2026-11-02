@@ -1,4 +1,15 @@
 /** Pure maxTurns helpers — unit-testable without Ollama. */
+import type { AgentSession } from "@earendil-works/pi-coding-agent";
+
+type FinishTurn = NonNullable<AgentSession["agent"]["finishTurn"]>;
+
+/** Adapt a stop predicate to pi 1.x without forcing extra turns or counting hard exits. */
+export function finishTurnWhen(shouldStop: (turn: Parameters<FinishTurn>[0]) => boolean | Promise<boolean>): FinishTurn {
+  return async (turn) => {
+    if (turn.message.stopReason === "error" || turn.message.stopReason === "aborted") return undefined;
+    return await shouldStop(turn) ? { action: "end" } : undefined;
+  };
+}
 
 export type StopReason =
   | "success"

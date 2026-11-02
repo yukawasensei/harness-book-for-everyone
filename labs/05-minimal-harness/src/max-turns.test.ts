@@ -2,9 +2,42 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   createMaxTurnsGuard,
+  finishTurnWhen,
   parseMaxTurns,
   shouldStopForMaxTurns,
 } from "./max-turns.js";
+
+describe("pi 1.x finishTurn adapter", () => {
+  type Turn = Parameters<ReturnType<typeof finishTurnWhen>>[0];
+  const turn = (stopReason: Turn["message"]["stopReason"]): Turn => ({
+    message: {
+      role: "assistant", api: "openai-completions", provider: "ollama", model: "test",
+      content: [], timestamp: 0, stopReason,
+      usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0,
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
+    },
+    context: { messages: [] }, newMessages: [], toolResults: [],
+  });
+
+  it("ends at the cap and preserves scheduling below it", async () => {
+    const guard = createMaxTurnsGuard(2);
+    const finish = finishTurnWhen(() => guard.recordCompletedTurn());
+    assert.equal(await finish(turn("toolUse")), undefined);
+    assert.deepEqual(await finish(turn("toolUse")), { action: "end" });
+    assert.equal(guard.completedTurnCount, 2);
+  });
+
+  it("supports asynchronous stop decisions", async () => {
+    assert.deepEqual(await finishTurnWhen(async () => true)(turn("stop")), { action: "end" });
+  });
+
+  for (const reason of ["error", "aborted"] as const) {
+    it(`preserves ${reason} hard exits without recording a normal turn`, async () => {
+      const finish = finishTurnWhen(() => assert.fail("hard exits must skip the predicate"));
+      assert.equal(await finish(turn(reason)), undefined);
+    });
+  }
+});
 
 describe("parseMaxTurns", () => {
   it("uses default when unset", () => {
