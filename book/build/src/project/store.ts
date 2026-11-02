@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { appendFileSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseStage, validateArtifact, validateBibleCoverage, validateVersionMetadata, type Artifacts, type Stage, type VersionMetadata } from "../contracts/index.js";
+import { parseStage, validateArtifact, validateBibleCoverage, validateStoryboardReferences, validateVersionMetadata, type Artifacts, type Stage, type VersionMetadata } from "../contracts/index.js";
 import { adoptDraft, assertRunnable, initialWorkflow, recordDraft, reviewDraft, reviewOf, type Workflow } from "../workflow/index.js";
 
 export interface Project {
@@ -169,6 +169,7 @@ export class ProjectStore {
 
   private validate<S extends Stage>(id: string, stage: S, artifact: unknown): asserts artifact is Artifacts[S] {
     validateArtifact(stage, artifact);
+    if (stage === "storyboard") validateStoryboardReferences(artifact as Artifacts["storyboard"], this.readAdopted(id, "script"), this.readAdopted(id, "bible"));
     if (stage === "bible") validateBibleCoverage(artifact as Artifacts["bible"], this.readAdopted(id, "script"));
   }
 

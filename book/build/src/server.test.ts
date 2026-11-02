@@ -46,8 +46,8 @@ async function setup(options: { script?: Turn[]; waitForAbort?: boolean; beforeS
   } catch (error) { f.cleanup(); throw error; }
 }
 
-async function eventually<T>(read: () => Promise<T>, accept: (value: T) => boolean): Promise<T> {
-  const deadline = Date.now() + 6000;
+async function eventually<T>(read: () => Promise<T>, accept: (value: T) => boolean, timeoutMs = 6000): Promise<T> {
+  const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const value = await read();
     if (accept(value)) return value;
@@ -190,7 +190,9 @@ test("非法推进返回状态机原文；缺少模板或会话失败不留下�
     f.store.adopt(f.project.id, "script", 1);
     f.store.writeDraft(f.project.id, "bible", sample("bible"));
     f.store.adopt(f.project.id, "bible", 1);
-    const placeholder = await f.post(`${f.path}/stages/storyboard/run`);
+    f.store.writeDraft(f.project.id, "storyboard", sample("storyboard"));
+    f.store.adopt(f.project.id, "storyboard", 1);
+    const placeholder = await f.post(`${f.path}/stages/prompts/run`);
     assert.equal(placeholder.status, 422);
     assert.match((await placeholder.json() as { error: string }).error, /模板尚未实现/);
     assert.equal((await f.detail()).running, null);
@@ -307,7 +309,7 @@ test("离线演示完整闭环：选题修改采用、梗概采用、逐场修�
     assert.equal((await f.post(`${synopsis}/adopt`, { version: 1 })).status, 200);
     assert.equal((await f.detail()).stages.script.status, "ready");
     const config = await (await f.get("/api/config")).json() as { runnable_stages: string[] };
-    assert.deepEqual(config.runnable_stages, ["topic", "synopsis", "script", "bible"]);
+    assert.deepEqual(config.runnable_stages, ["topic", "synopsis", "script", "bible", "storyboard"]);
     const sse = await subscribe(f.base, f.path);
     try {
       assert.equal((await f.post(`${f.path}/stages/script/run`)).status, 202);
@@ -390,4 +392,41 @@ test("设定集离线 HTTP/SSE：漏角色被拒、补全待审、采用后分�
       await eventually(async () => sse.frames, frames => frames.some(f => f.event.type === "project_state" && f.event.project.stages.storyboard.status === "ready"));
     } finally { await sse.close(); await f.cleanup(); }
   }
+});
+
+test("分镜离线 HTTP/SSE：两次引用拒绝、待审预览、单场修改记录与提示词依赖解锁", async () => {
+  const f = await setup({ factory: createDemoSession });
+  for (const stage of ["topic", "synopsis", "script", "bible"] as const) {
+    f.store.writeDraft(f.project.id, stage, sample(stage)); f.store.adopt(f.project.id, stage, 1);
+  }
+  const sse = await subscribe(f.base, f.path);
+  const route = `${f.path}/stages/storyboard`;
+  try {
+    assert.equal((await f.post(`${route}/run`)).status, 202);
+    const detail = await eventually(f.detail, p => !p.running && p.stages.storyboard.versions.length === 1, 10000);
+    assert.equal(detail.last_run?.stop_reason, "draft_written");
+    assert.equal(detail.last_run?.errors.length, 2);
+    assert.match(detail.last_run!.errors[0], /S01-01.*P99/);
+    assert.match(detail.last_run!.errors[1], /C03.*出场场次/);
+    assert.equal(detail.stages.storyboard.reviews?.[1].status, "pending");
+    assert.equal(detail.stages.prompts.status, "locked");
+    assert.deepEqual(await (await f.get(`${route}/versions/1`)).json(), sample("storyboard"));
+    await eventually(async () => sse.frames, frames => frames.some(f => f.event.type === "run_ended"));
+    const writes = sse.frames.map(f => f.event).filter(e => e.type === "tool_execution_end" && e.toolName === "write_scene_shots");
+    assert.deepEqual(writes.map(e => e.type === "tool_execution_end" && e.isError), [true, true, false, false, false]);
+    assert.equal((await f.post(`${route}/request-changes`, { version: 1, note: "只改 S02" })).status, 200);
+    const marker = sse.frames.length;
+    assert.equal((await f.post(`${route}/run`, { revise_from: 1 })).status, 202);
+    const revised = await eventually(f.detail, p => !p.running && p.stages.storyboard.versions.length === 2);
+    const changes = { revise_from: 1, resubmitted: ["S02"], reused: ["S01", "S03"], removed: [] };
+    assert.deepEqual(revised.last_run?.scene_changes, changes);
+    assert.deepEqual(revised.version_metadata?.storyboard?.[2].revision, changes);
+    await eventually(async () => sse.frames.slice(marker), frames => frames.some(f => f.event.type === "run_ended"));
+    const resubmits = sse.frames.slice(marker).map(f => f.event).filter(e => e.type === "tool_execution_start" && e.toolName === "write_scene_shots");
+    assert.equal(resubmits.length, 1);
+    assert.match(JSON.stringify(resubmits[0]), /S02/);
+    const adopted = await (await f.post(`${route}/adopt`, { version: 2 })).json() as ProjectDetail;
+    assert.equal(adopted.stages.prompts.status, "ready");
+    assert.match(adopted.run_blocked_reasons.prompts!, /模板尚未实现/);
+  } finally { await sse.close(); await f.cleanup(); }
 });

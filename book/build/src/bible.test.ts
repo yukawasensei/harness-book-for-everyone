@@ -27,7 +27,7 @@ function rejected(change: (bible: Artifacts["bible"]) => void, reason: RegExp) {
     assert.equal(existsSync(join(f.store.projectDir(f.project.id), "artifacts/bible")), false);
   } finally { f.cleanup(); }
 }
-test("设定集缺台词角色时拒绝，指出名称与来源场，不形成版本", () => {
+test("设定集缺台词角色时拒绝，指出名称与出场场次，不形成版本", () => {
   rejected(b => { b.characters = b.characters.filter(c => c.name !== "麦冬"); }, /覆盖检查.*麦冬.*S01/s);
 });
 test("aliases 匹配称呼变体，只检查采用剧本而非最新候选；采用前后分镜锁定与解锁", () => {
@@ -52,20 +52,20 @@ test("aliases 匹配称呼变体，只检查采用剧本而非最新候选；采
   } finally { f.cleanup(); }
 });
 for (const group of ["characters", "props", "locations"] as const) {
-  test(`${group} 来源场不存在、空列表、重复场号、缺字段都拒绝`, () => {
-    rejected(b => { b[group][0].appears_in = ["S99"]; }, /来源场.*S99.*不存在/);
+  test(`${group} 出场场次不存在、空列表、重复场号、缺字段都拒绝`, () => {
+    rejected(b => { b[group][0].appears_in = ["S99"]; }, /出场场次.*S99.*不存在/);
     rejected(b => { b[group][0].appears_in = []; }, /schema 不合规/);
     rejected(b => { b[group][0].appears_in = ["S01", "S01"]; }, /schema 不合规/);
-    rejected(b => { Reflect.deleteProperty(b[group][0], "appears_in"); }, /来源场.*appears_in.*重新抽取/);
+    rejected(b => { Reflect.deleteProperty(b[group][0], "appears_in"); }, /出场场次.*appears_in.*重新抽取/);
   });
   test(`${group} ID 唯一且为正的两位分类编号`, () => {
     rejected(b => { b[group].push(structuredClone(b[group][0]) as never); }, /编号重复/);
     for (const id of ["C1", "../outside", "L00", "P001"]) rejected(b => { b[group][0].id = id; }, /schema 不合规/);
   });
 }
-test("每场至少关联一个地点；角色来源场必须覆盖其台词", () => {
+test("每场至少关联一个地点；角色出场场次必须覆盖其台词", () => {
   rejected(b => { b.locations[0].appears_in = ["S01"]; }, /S03.*缺少关联地点/);
-  rejected(b => { b.characters[0].appears_in = ["S01"]; }, /程禾.*来源场.*S02/);
+  rejected(b => { b.characters[0].appears_in = ["S01"]; }, /程禾.*出场场次.*S02/);
 });
 test("同名或别名跨角色歧义、空别名与重复别名拒绝", () => {
   rejected(b => { b.characters[1].name = b.characters[0].name; }, /称呼.*重复/);
@@ -92,8 +92,8 @@ test("旧设定集缺来源明确拒绝读取与采用，不猜测迁移，原�
     const path = f.store.artifactPath(f.project.id, "bible", 1);
     const raw = JSON.stringify(legacy); writeFileSync(path, raw);
     const before = readFileSync(join(f.store.projectDir(f.project.id), "project.json"), "utf8");
-    assert.throws(() => f.store.readVersion(f.project.id, "bible", 1), /来源场.*appears_in.*重新抽取/);
-    assert.throws(() => f.store.adopt(f.project.id, "bible", 1), /来源场.*appears_in.*重新抽取/);
+    assert.throws(() => f.store.readVersion(f.project.id, "bible", 1), /出场场次.*appears_in.*重新抽取/);
+    assert.throws(() => f.store.adopt(f.project.id, "bible", 1), /出场场次.*appears_in.*重新抽取/);
     assert.equal(readFileSync(path, "utf8"), raw);
     assert.equal(readFileSync(join(f.store.projectDir(f.project.id), "project.json"), "utf8"), before);
     assert.equal(f.store.load(f.project.id).stages.storyboard.status, "locked");

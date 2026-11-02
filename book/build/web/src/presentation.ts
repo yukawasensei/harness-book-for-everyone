@@ -19,6 +19,19 @@ export function stageBadge(status: StageStatus | undefined, stage: Stage, runnin
     : { text: status ? stageLabels[status] : "加载中", className: status ?? "" };
 }
 
+/** 当前阶段的引导必须与可运行状态、人工采用状态一致。 */
+export function artifactGuidance(stage: Stage, implemented: boolean, adoptedVersion: number | null = null) {
+  if (!implemented) return {
+    empty: `${stageNames[stage]}暂未开放，当前没有可查看的草稿。`,
+    footer: `${stageNames[stage]}暂未开放运行。`,
+  };
+  if (adoptedVersion !== null) return {
+    empty: `本阶段已采用 v${adoptedVersion}，请选择版本查看内容。`,
+    footer: `本阶段已采用 v${adoptedVersion}；下游以此版本为准，暂不支持更换采用版本。`,
+  };
+  return { empty: "运行后可在这里查看和审阅草稿。", footer: "先查看草稿，再决定采用、丢弃或要求修改。" };
+}
+
 /** 服务端保留技术原因；页面用读者能理解的说法呈现。 */
 export function readerMessage(text: string): string {
   const unavailable = text.match(/^(\w+) 系统提示模板尚未实现/);
@@ -45,9 +58,9 @@ export function currentRunDisplay(running: RunInfo | null | undefined, last: Run
 }
 
 export function scriptProgress(running: RunInfo | null | undefined, rows: TimelineRow[]): string | null {
-  if (running?.stage !== "script") return null;
+  if (running?.stage !== "script" && running?.stage !== "storyboard") return null;
   for (const row of [...rows].reverse()) {
-    if (row.kind !== "tool" || !row.id.startsWith(`${running.id}:`) || row.status !== "success" || !["write_scene", "remove_scene"].includes(row.name)) continue;
+    if (row.kind !== "tool" || !row.id.startsWith(`${running.id}:`) || row.status !== "success" || !["write_scene", "remove_scene", "write_scene_shots", "remove_scene_shots"].includes(row.name)) continue;
     const result = row.result;
     if (!result || typeof result !== "object" || !("details" in result)) continue;
     const details = result.details;
@@ -60,8 +73,9 @@ export function scriptProgress(running: RunInfo | null | undefined, rows: Timeli
 
 export const DEMO_CHANGE_NOTE = "把孩子换成一位老站长，保留空白格的意象。";
 export const DEMO_SCRIPT_CHANGE_NOTE = "只修改 S02：让程禾先询问陆岑是否愿意讲述，其他场保持原样。";
-export const DEMO_BIBLE_CHANGE_NOTE = "保留角色与来源场，只把程禾外套改为深灰色。";
-export const demoChangeNote = (stage: Stage) => stage === "script" ? DEMO_SCRIPT_CHANGE_NOTE : stage === "bible" ? DEMO_BIBLE_CHANGE_NOTE : DEMO_CHANGE_NOTE;
+export const DEMO_BIBLE_CHANGE_NOTE = "保留角色与出场场次，只把程禾外套改为深灰色。";
+export const DEMO_STORYBOARD_CHANGE_NOTE = "只修改 S02：首镜缓慢推近程禾，先征求陆岑讲述意愿，其余场保持原样。";
+export const demoChangeNote = (stage: Stage) => stage === "storyboard" ? DEMO_STORYBOARD_CHANGE_NOTE : stage === "script" ? DEMO_SCRIPT_CHANGE_NOTE : stage === "bible" ? DEMO_BIBLE_CHANGE_NOTE : DEMO_CHANGE_NOTE;
 export const DEMO_REVISION_NOTICE = "离线演示的修改结果为预设内容";
 export function demoRevisionNotice(demo: boolean, note: string, stage: Stage = "topic"): string | null {
   return demo && note !== demoChangeNote(stage) ? DEMO_REVISION_NOTICE : null;

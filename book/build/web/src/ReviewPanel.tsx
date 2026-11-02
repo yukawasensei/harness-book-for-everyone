@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState, type FormEvent } from "react";
 import type { StageState } from "../../src/workflow/index.js";
 import type { SceneChanges, Stage } from "../../src/contracts/index.js";
-import { demoChangeNote, DEMO_REVISION_NOTICE, demoRevisionNotice, reviewLabels, revisionDescription } from "./presentation";
+import { demoChangeNote, DEMO_REVISION_NOTICE, demoRevisionNotice, reviewLabels, revisionDescription, stageNames } from "./presentation";
 
-export function ReviewPanel({ stage, state, revision, version, loaded, busy, runReason, error, demo, onReview, onRevise }: {
-  stage: Stage;
+export function ReviewPanel({ stage, state, revision, version, loaded, busy, implemented = true, runReason, error, demo, onReview, onRevise }: {
+  stage: Stage; implemented?: boolean;
   revision?: SceneChanges;
   state?: StageState; version: number | null; loaded: boolean; busy: boolean; demo: boolean;
   runReason: string | null; error: string;
@@ -18,7 +18,7 @@ export function ReviewPanel({ stage, state, revision, version, loaded, busy, run
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
   const review = version === null ? null : state?.reviews?.[version];
   const status = review?.status ?? (state?.adopted_version === version && version !== null ? "adopted" : "pending");
-  const reason = version === null ? "尚无版本，请先运行阶段。"
+  const reason = !implemented ? `${stageNames[stage]}暂未开放，当前没有可审阅版本。` : version === null ? "尚无版本，请先运行阶段。"
     : busy ? "项目正在运行或提交操作，请稍候。"
       : !loaded ? "请等版本内容加载完成后再审阅。"
         : status !== "pending" ? `此版本${reviewLabels[status]}，不能重复审阅。` : null;

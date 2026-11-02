@@ -4,10 +4,10 @@ import { ProjectStore } from "../project/store.js";
 import { scrubSecrets } from "./model.js";
 import { stagePrompt } from "./prompts.js";
 import { assertRunnable } from "../workflow/index.js";
-import { sessionScriptDraft } from "./session.js";
+import { sessionSceneDraft } from "./session.js";
 
 export const STAGE_TURN_LIMITS: Readonly<Record<Stage, number>> = {
-  topic: 8, synopsis: 8, script: 20, bible: 8, storyboard: 8, prompts: 8,
+  topic: 8, synopsis: 8, script: 20, bible: 8, storyboard: 24, prompts: 8,
 };
 
 /** 单次阶段运行；会话保留原始 SDK 事件，自定义条目记录签收所需的运行摘要。 */
@@ -19,13 +19,16 @@ export async function runStage(
   assertRunnable(project.stages, stage);
   const revision = reviseFrom === undefined ? null : store.revisionContext(projectId, stage, reviseFrom);
   const before = project.stages[stage].versions.length;
-  const draft = sessionScriptDraft(session);
+  const draft = sessionSceneDraft(session);
   draft?.reset(revision ? reviseFrom : undefined);
   const maxTurns = STAGE_TURN_LIMITS[stage];
   const submission = stage === "script"
     ? revision ? "只重交需要修改的场（write_scene），删场用 remove_scene，然后 finalize_draft；原稿全部场已预装，未重交的场由程序原样沿用"
       : "逐场用 write_scene 提交，最后用 finalize_draft 汇总为待审阅版本"
-    : "用 write_draft 提交草稿";
+    : stage === "storyboard"
+      ? revision ? "只重交需要修改的场（write_scene_shots），删整场镜头用 remove_scene_shots，然后 finalize_draft；原稿全部场已预装，未重交的场由程序原样沿用"
+        : "逐场用 write_scene_shots 的 scene 参数提交该场全部镜头，最后 finalize_draft"
+      : "用 write_draft 提交草稿";
   const prompt = `项目标题：${project.title}\n请完成本阶段，并${submission}。本阶段最多 ${maxTurns} 轮模型响应，请预留修正与结束的轮数。`
     + (additionalInstructions.trim() ? `\n\n补充要求：\n${additionalInstructions.trim()}` : "")
     + (revision ? `\n\n按意见修改 v${reviseFrom}。以下是待修改的原稿数据与审阅意见，请提交完整新版本，不覆盖原稿。\n原版本 JSON：\n${revision.original_json}\n修改意见：\n${revision.note}` : "");

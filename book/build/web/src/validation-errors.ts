@@ -6,7 +6,7 @@ const fields: Record<string, string> = {
   beats: "叙事拍", tone: "基调", scenes: "剧本场次", scene_id: "场次编号", heading: "地点与时间", summary: "摘要",
   lines: "内容行", kind: "行类型", text: "内容", character: "角色", characters: "角色列表", props: "道具列表",
   locations: "地点列表", id: "编号", name: "名称", role: "角色定位", appearance: "外观", personality: "性格",
-  description: "描述", appears_in: "来源场", aliases: "别名", shots: "镜头列表", shot_id: "镜头编号", location_id: "地点编号", character_ids: "角色编号",
+  description: "描述", appears_in: "出场场次", aliases: "别名", shots: "镜头列表", shot_id: "镜头编号", location_id: "地点编号", character_ids: "角色编号",
   prop_ids: "道具编号", shot_size: "景别", camera: "镜头运动", action: "动作", dialogue: "台词",
   duration_s: "时长", items: "条目", shot_part: "镜头描述", injected_ids: "引用编号", final_prompt: "完整提示词",
 };
@@ -25,6 +25,8 @@ function location(path: string, scene: Record<string, unknown>): string {
   const sceneNumber = sceneIndex >= 0 && /^\d+$/.test(segments[sceneIndex + 1] ?? "")
     ? Number(segments[sceneIndex + 1]) + 1 : typeof scene.scene_id === "string" ? Number(scene.scene_id.slice(1)) : null;
   if (sceneNumber && Number.isInteger(sceneNumber)) label += `第 ${sceneNumber} 场`;
+  const shotIndex = segments.indexOf("shots");
+  if (shotIndex >= 0 && /^\d+$/.test(segments[shotIndex + 1] ?? "")) label += `第 ${Number(segments[shotIndex + 1]) + 1} 镜`;
   const lineIndex = segments.indexOf("lines");
   if (lineIndex >= 0 && /^\d+$/.test(segments[lineIndex + 1] ?? "")) label += `第 ${Number(segments[lineIndex + 1]) + 1} 行`;
   const last = segments.at(-1);
@@ -37,7 +39,10 @@ function location(path: string, scene: Record<string, unknown>): string {
 }
 
 export function translateValidationError(raw: string, context: ValidationContext = {}): string {
-  if (raw.startsWith("设定集缺少来源场 appears_in")) return "设定集缺少来源场，请从采用剧本重新抽取；旧文件不会自动迁移或覆盖。";
+  raw = raw.replaceAll("来源场", "出场场次");
+  if (raw.startsWith("分镜引用检查未通过：")) return raw
+    .replaceAll("location_id", "地点编号").replaceAll("character_ids", "角色编号").replaceAll("prop_ids", "道具编号");
+  if (raw.startsWith("设定集缺少出场场次 appears_in")) return "设定集缺少出场场次，请从采用剧本重新抽取；旧文件不会自动迁移或覆盖。";
   if (raw.startsWith("Invalid arguments for tool")) return "工具参数不是完整的 JSON，请修正后重新提交。";
   if (raw.startsWith("Validation failed for tool")) {
     const reasons = raw.split("Received arguments:")[0].split("\n").filter(line => /^\s*- /.test(line));
@@ -51,8 +56,8 @@ export function translateValidationError(raw: string, context: ValidationContext
   if (/scene_id 不合规/.test(raw)) return "场次编号格式不正确，请使用 S01 这样的两位连续编号。";
   const removed = raw.match(/进行中草稿不存在 (S\d+)/);
   if (removed) return `暂存草稿中不存在 ${removed[1]}，无法删除。`;
-  const finalized = raw.match(/本次剧本已生成 v(\d+)/);
-  if (finalized) return `本次剧本已经汇总为 v${finalized[1]}，不能继续写场或重复汇总。`;
+  const finalized = raw.match(/本次(剧本|分镜)已生成 v(\d+)/);
+  if (finalized) return `本次${finalized[1]}已经汇总为 v${finalized[2]}，不能继续写场或重复汇总。`;
   const lineRule = raw.match(/(S\d+) (dialogue 必须有 character|action 不得有 character)/);
   if (lineRule) return `${lineRule[1]}${lineRule[2].startsWith("dialogue") ? "的台词必须填写角色。" : "的动作行不能填写角色。"}`;
   if (!/schema 不合规/.test(raw)) return raw;

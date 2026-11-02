@@ -122,13 +122,13 @@ test("暂存进度取当前运行成功 write_scene 的 scene_count，覆盖不�
   assert.equal(current?.stopReason, null);
 });
 
-test("设定集按三组显示可读卡片、别名与来源场，JSON 默认折叠", async () => {
+test("设定集按三组显示可读卡片、别名与出场场次，JSON 默认折叠", async () => {
   const { ArtifactPreview } = await import(new URL("../web/src/ArtifactPreview.tsx", import.meta.url).href);
   const bible = sample("bible"); bible.characters[2].aliases = ["修表师"];
   const html = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "bible", value: bible }));
   assert.equal((html.match(/class="setting-card"/g) ?? []).length, 7);
   for (const label of ["角色", "道具", "场景"]) assert.ok(html.includes(`aria-label="${label}"`));
-  for (const text of ["C01", "P01", "L01", "固定描述", "来源场：S01、S02、S03", "别名：修表师", "粗筛", bible.characters[0].appearance]) assert.ok(html.includes(text), text);
+  for (const text of ["C01", "P01", "L01", "固定描述", "出场场次：S01、S02、S03", "别名：修表师", "粗筛", bible.characters[0].appearance]) assert.ok(html.includes(text), text);
   assert.match(html, /<details><summary>查看原始 JSON<\/summary><pre>/);
   assert.ok(!html.includes("<details open"));
   bible.props = [];
@@ -139,17 +139,61 @@ test("设定集真实错误显示覆盖缺漏、来源、固定描述与中文�
   const show = (message: string) => toolErrorText({ content: [{ type: "text", text: message }] });
   const bible = sample("bible");
   bible.characters[0].appears_in = [];
-  assert.match(show(errorOf(() => validateArtifact("bible", bible))), /角色列表第 1 项的来源场.*至少/);
+  assert.match(show(errorOf(() => validateArtifact("bible", bible))), /角色列表第 1 项的出场场次.*至少/);
   bible.characters[0].appears_in = ["S1"];
-  assert.match(show(errorOf(() => validateArtifact("bible", bible))), /来源场.*S01/);
+  assert.match(show(errorOf(() => validateArtifact("bible", bible))), /出场场次.*S01/);
   bible.characters[0].appears_in = ["S01"];
   bible.characters[0].id = "C1";
   assert.match(show(errorOf(() => validateArtifact("bible", bible))), /C01 至 C99/);
   const old = sample("bible"); Reflect.deleteProperty(old.characters[0], "appears_in");
-  assert.match(show(errorOf(() => validateArtifact("bible", old))), /缺少来源场.*重新抽取/);
+  assert.match(show(errorOf(() => validateArtifact("bible", old))), /缺少出场场次.*重新抽取/);
   assert.ok(!show(errorOf(() => validateArtifact("bible", old))).includes("appears_in"));
   for (const raw of ["设定集覆盖检查未通过：缺少台词角色“陆岑”（S02），请补充角色或别名", "C01 固定描述含剧情词：拿起；请移入剧本或镜头动作（粗筛仍需人工审阅）"]) {
     const result = { content: [{ type: "text", text: raw }] };
     assert.equal(toolErrorText(result), raw); assert.equal(result.content[0].text, raw);
   }
+});
+
+test("未开放与已采用阶段的页面引导不再要求运行或审阅", async () => {
+  const { artifactGuidance } = await import("../web/src/presentation.js");
+  const { ReviewPanel } = await import(new URL("../web/src/ReviewPanel.tsx", import.meta.url).href);
+  const guidance = artifactGuidance("prompts", false);
+  assert.match(guidance.empty, /分镜提示词暂未开放/);
+  assert.ok(!/运行后|请先运行|先查看草稿/.test(Object.values(guidance).join("")));
+  const html = renderToStaticMarkup(createElement(ReviewPanel, {
+    stage: "prompts", implemented: false, version: null, loaded: false, busy: false,
+    demo: true, runReason: "暂未开放", error: "", onReview: async () => true, onRevise: () => {},
+  }));
+  assert.match(html, /分镜提示词暂未开放/);
+  assert.ok(!html.includes("请先运行阶段"));
+  const adopted = artifactGuidance("storyboard", true, 2);
+  assert.match(adopted.footer, /已采用 v2/);
+  assert.ok(!/待审阅|先查看草稿|运行后/.test(Object.values(adopted).join("")));
+});
+
+test("剧本和分镜场次标题含地点时间，仅重交场高亮且有文字图例", async () => {
+  const { ArtifactPreview } = await import(new URL("../web/src/ArtifactPreview.tsx", import.meta.url).href);
+  const revision = { revise_from: 1, resubmitted: ["S02"], reused: ["S01", "S03"], removed: [] };
+  for (const stage of ["script", "storyboard"] as const) {
+    const props = { stage, value: sample(stage), script: sample("script"), bible: sample("bible"), revision };
+    const html = renderToStaticMarkup(createElement(ArtifactPreview, props));
+    for (const scene of sample("script").scenes) assert.ok(html.includes(`${scene.scene_id} · ${scene.heading}`));
+    assert.equal((html.match(/class="[^"]*scene-revised[^"]*"/g) ?? []).length, 1);
+    assert.match(html, /高亮：本版重交的场次；其余场沿用原稿/);
+    if (stage === "storyboard") assert.match(html, /aria-label="S02 分镜" class="scene-revised"/);
+    else assert.match(html, /class="scene-card scene-revised"><header><h3>S02/);
+    const original = renderToStaticMarkup(createElement(ArtifactPreview, { ...props, revision: undefined }));
+    assert.ok(!original.includes("scene-revised"));
+    assert.ok(!original.includes("revision-legend"));
+  }
+});
+
+test("旧错误术语也翻译为出场场次；采用设定引用错误显示名称和编号", async () => {
+  const { validateStoryboardReferences } = await import("./contracts/index.js");
+  const board = sample("storyboard"); board.shots[0].character_ids = ["C03"];
+  const raw = errorOf(() => validateStoryboardReferences(board, sample("script"), sample("bible")));
+  const result = { content: [{ type: "text", text: raw }] };
+  assert.match(toolErrorText(result), /陆岑（C03）.*出场场次/);
+  assert.equal(result.content[0].text, raw);
+  assert.match(toolErrorText({ content: [{ type: "text", text: "C03 来源场不包含 S01" }] }), /出场场次/);
 });

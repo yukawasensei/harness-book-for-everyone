@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { createStageSession, type StageSessionOptions } from "../agent/session.js";
 import { fakeStream, type Turn } from "../testing/fake-model.js";
 import { DEPENDENCIES } from "../workflow/index.js";
-import type { Scene } from "../contracts/index.js";
+import type { Scene, Shot } from "../contracts/index.js";
 
 /** 显式离线演示；真实 SDK、业务工具与存储照常工作，不调用模型供应商。 */
 export async function createDemoSession(options: StageSessionOptions) {
@@ -61,6 +61,39 @@ export async function createDemoSession(options: StageSessionOptions) {
       { call: "finalize_draft", args: {}, text: "各场已交齐，交给程序排序并校验完整剧本。" },
       { text: "剧本已保存为待审阅版本。场数与四个叙事拍不同是提醒，请人工检查故事转折后再决定是否采用。" },
     ];
+  } else if (options.stage === "storyboard") {
+    const bible = options.store.readAdopted(options.projectId, "bible");
+    const second = bible.characters.find(c => c.id === "C02")!;
+    artifact.shots = artifact.shots.map((shot: Shot) => ({ ...shot,
+      action: shot.action.replaceAll("麦冬", second.name),
+      ...(shot.dialogue ? { dialogue: shot.dialogue.replaceAll("麦冬", second.name) } : {}),
+    }));
+    const read: Turn[] = [
+      { call: "read_upstream", args: { stage: "script" }, text: "先读取人工采用剧本，按已有场次设计镜头。" },
+      { call: "read_upstream", args: { stage: "bible" }, text: "再读取采用设定集，只引用已有编号与来源场。" },
+    ];
+    if (options.reviseFrom !== undefined) {
+      const original = options.store.readVersion(options.projectId, "storyboard", options.reviseFrom);
+      const shots = original.shots.filter(shot => shot.scene_id === "S02");
+      if (!shots.length) throw new Error("分镜修改演示需要 S02");
+      shots[0].camera = "缓慢推近程禾，停在平视近景";
+      shots[0].action = "程禾收回伸向计时器的手，静静等待陆岑抬头。";
+      shots[0].dialogue = "程禾：那次告别，你愿意讲给我们听吗？";
+      turns = [...read,
+        { call: "write_scene_shots", args: { scene: { scene_id: "S02", shots } }, text: "只重交 S02 的镜头，其他场由程序原样沿用。" },
+        { call: "finalize_draft", args: {}, text: "汇总并记录相对原稿的场次改动。" },
+        { text: "分镜第二场已按预设意见修改，请重新审阅。" },
+      ];
+    } else {
+      const first = artifact.shots[0];
+      turns = [...read,
+        { call: "write_scene_shots", args: { scene: { scene_id: "S01", shots: [{ ...first, prop_ids: ["P99"] }] } }, text: "先试交不存在的道具 P99，引用闸门会拒绝。" },
+        { call: "write_scene_shots", args: { scene: { scene_id: "S01", shots: [{ ...first, character_ids: [...first.character_ids, "C03"] }] } }, text: "道具修正后，陆岑 C03 不在第一场，来源闸门仍会拒绝。" },
+        ...["S01", "S02", "S03"].map(scene_id => ({ call: "write_scene_shots", args: { scene: { scene_id, shots: artifact.shots.filter((shot: Shot) => shot.scene_id === scene_id) } }, text: `修正引用并提交 ${scene_id} 的全部镜头。` })),
+        { call: "finalize_draft", args: {}, text: "各场镜头已齐，程序复核引用与覆盖，汇总待审阅版本。" },
+        { text: "分镜已保存，请核对镜头动作、角色与节奏，采用后提示词依赖满足。" },
+      ];
+    }
   } else if (options.stage === "bible") {
     const script = options.store.readAdopted(options.projectId, "script");
     if (JSON.stringify(script).includes("老站长何望")) {

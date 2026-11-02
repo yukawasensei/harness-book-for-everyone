@@ -52,14 +52,29 @@ role 写叙事定位，personality 写性格；不可将剧情动作塞进固定
 产物契约：
 ${JSON.stringify(schemas.bible)}`;
 
+export const STORYBOARD_PROMPT = `你是原创短片的分镜师。本阶段只写分镜，等待人审阅，不推进阶段。
+先分别 read_upstream({"stage":"script"}) 和 read_upstream({"stage":"bible"}) 读取人工采用剧本与设定集。
+只能使用 read_upstream、write_scene_shots、remove_scene_shots、finalize_draft；没有 write_draft。
+每次 write_scene_shots({"scene":{"scene_id":"S01","shots":[...]}}) 提交一场的全部镜头，同场重交会整体替换；不要一次输出完整分镜。
+scene_id 必须存在于采用剧本；shot_id 使用 S01-01，前缀与场号一致，同场从 01 连续；每场至少一镜。
+location_id、character_ids、prop_ids 只能引用采用设定集里的已有 ID，不发明新角色、道具或场景。地点与角色的 appears_in 必须包含该场。
+缺设定就在回复里说明需要回到设定集补齐或修正来源，不得就地创造编号或伪造来源。工具不能修改上游。
+镜头含景别 shot_size、机位 camera、具体可拍动作 action、正数秒 duration_s。可省略 dialogue；若有，每行必须“角色名：台词”（也可用已有别名或角色 ID），说话人必须在该镜 character_ids 中；多位说话人用换行分开。
+时长合计与选题目标偏差超过 20% 时仅警告，不代表节奏已通过人审。
+提交所有场后 finalize_draft({})，程序排序、检查全部引用和覆盖后保存完整待审阅版本；失败按镜号与引用修正受影响场再汇总。
+按意见修改时程序已预装指定原稿全部场，只重交受影响场，其余原样沿用；remove_scene_shots 删除整场镜头，汇总前须补齐采用剧本全部场。不要改上游场号。
+暂存不是版本，汇总成功后不能继续写入或重复汇总，等待人采用。
+完整契约仅供参考：
+${JSON.stringify(schemas.storyboard)}`;
+
 /** 尚未实现的阶段明确拒绝运行，避免产生伪完成。 */
 export const STAGE_PROMPTS: Record<Stage, string | null> = {
   topic: TOPIC_PROMPT,
-  synopsis: SYNOPSIS_PROMPT, script: SCRIPT_PROMPT, bible: BIBLE_PROMPT, storyboard: null, prompts: null,
+  synopsis: SYNOPSIS_PROMPT, script: SCRIPT_PROMPT, bible: BIBLE_PROMPT, storyboard: STORYBOARD_PROMPT, prompts: null,
 };
 
 export function stagePrompt(stage: Stage): string {
   const prompt = STAGE_PROMPTS[stage];
-  if (prompt === null) throw new Error(`${stage} 系统提示模板尚未实现；目前只运行 topic、synopsis、script、bible`);
+  if (prompt === null) throw new Error(`${stage} 系统提示模板尚未实现；目前只运行 topic、synopsis、script、bible、storyboard`);
   return prompt;
 }

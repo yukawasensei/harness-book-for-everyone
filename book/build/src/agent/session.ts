@@ -4,17 +4,18 @@ import {
   createAgentSession, defineTool, DefaultResourceLoader, ModelRuntime,
   SessionManager, SettingsManager, type ExtensionFactory, type AgentSession,
 } from "@earendil-works/pi-coding-agent";
-import { parseStage, schemas, SceneSchema, type Stage } from "../contracts/index.js";
+import { parseStage, schemas, SceneSchema, SceneShotsSchema, type Stage } from "../contracts/index.js";
 import { ProjectStore } from "../project/store.js";
 import { assertRunnable, DEPENDENCIES } from "../workflow/index.js";
 import { configuredModel } from "./model.js";
 import { stagePrompt } from "./prompts.js";
 import { ScriptDraft } from "./script-draft.js";
+import { StoryboardDraft } from "./storyboard-draft.js";
 
-const scriptDrafts = new WeakMap<AgentSession, ScriptDraft>();
-export const sessionScriptDraft = (session: AgentSession) => scriptDrafts.get(session);
+const sceneDrafts = new WeakMap<AgentSession, ScriptDraft | StoryboardDraft>();
+export const sessionSceneDraft = (session: AgentSession) => sceneDrafts.get(session);
 
-export function createStageTools(store: ProjectStore, projectId: string, stage: Stage, draft = new ScriptDraft(store, projectId)) {
+export function createStageTools(store: ProjectStore, projectId: string, stage: Stage, draft: ScriptDraft | StoryboardDraft = stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId)) {
   parseStage(stage);
   const dependencies = DEPENDENCIES[stage];
   const readParameters = dependencies.length === 0
@@ -40,10 +41,10 @@ export function createStageTools(store: ProjectStore, projectId: string, stage: 
         return { content: [{ type: "text", text: JSON.stringify(artifact) }], details: { stage: dependency } };
       },
     });
-  if (stage === "script") return [readTool,
+  if (stage === "script" || stage === "storyboard") return [readTool,
     defineTool({
-      name: "write_scene", label: "提交单场 / Write scene",
-      description: `提交一场到本次运行的进行中草稿；同 scene_id 可覆盖。不会生成版本。单场契约：${JSON.stringify(SceneSchema)}`,
+      name: stage === "script" ? "write_scene" : "write_scene_shots", label: stage === "script" ? "提交单场 / Write scene" : "提交单场镜头 / Write scene shots",
+      description: `提交一场到本次运行的进行中草稿；同 scene_id 可覆盖。不会生成版本。单场契约：${JSON.stringify(stage === "script" ? SceneSchema : SceneShotsSchema)}`,
       parameters: Type.Object({ scene: Type.Unknown() }, { additionalProperties: false }),
       async execute(_callId, params) {
         const details = draft.write(params.scene);
@@ -51,24 +52,24 @@ export function createStageTools(store: ProjectStore, projectId: string, stage: 
       },
     }),
     defineTool({
-      name: "remove_scene", label: "删除单场 / Remove scene",
-      description: "按 scene_id 删除本次进行中草稿的一场；删除后请重排后续场号，从 S01 连续，finalize 会复核。不会改动原版本。",
+      name: stage === "script" ? "remove_scene" : "remove_scene_shots", label: stage === "script" ? "删除单场 / Remove scene" : "删除单场镜头 / Remove scene shots",
+      description: stage === "script" ? "按 scene_id 删除本次进行中草稿的一场；删除后请重排后续场号，从 S01 连续，finalize 会复核。不会改动原版本。" : "按 scene_id 删除暂存的整场镜头；汇总前必须重新补齐采用剧本的每一场。不修改原版本。",
       parameters: Type.Object({ scene_id: Type.String({ pattern: "^S[0-9]{2}$" }) }, { additionalProperties: false }),
       async execute(_callId, params) {
         const details = draft.remove(params.scene_id);
-        return { content: [{ type: "text" as const, text: `已从暂存区删除 ${details.scene_id}；请检查并重排后续场号，再 finalize。` }], details };
+        return { content: [{ type: "text" as const, text: `已从暂存区删除 ${details.scene_id}；${stage === "script" ? "请检查并重排后续场号" : "汇总前请补齐采用剧本的全部场镜头"}，再 finalize。` }], details };
       },
     }),
     defineTool({
-      name: "finalize_draft", label: "汇总剧本 / Finalize draft",
-      description: "将本次进行中各场按 scene_id 排序，校验完整剧本后保存为待审阅新版本；不自动采用。无参数。",
+      name: "finalize_draft", label: stage === "script" ? "汇总剧本 / Finalize draft" : "汇总分镜 / Finalize draft",
+      description: "将本次进行中各场按 scene_id 排序，校验完整产物后保存为待审阅新版本；不自动采用。无参数。",
       parameters: Type.Object({}, { additionalProperties: false }),
       async execute() {
         const details = draft.finalize();
         const changes = details.scene_changes;
         const parts = [["重交/新增", changes.resubmitted], ["沿用", changes.reused], ["删除", changes.removed]] as const;
         const comparison = changes.revise_from === null ? "" : `本版相对 v${changes.revise_from}：${parts.filter(([, ids]) => ids.length).map(([label, ids]) => `${label} ${ids.join("、")}`).join("；") || "没有场次变动"}。`;
-        return { content: [{ type: "text" as const, text: `已保存 script v${details.version}；待审阅。${comparison}${details.warnings.join("\n")}` }], details };
+        return { content: [{ type: "text" as const, text: `已保存 ${stage} v${details.version}；待审阅。${comparison}${details.warnings.join("\n")}` }], details };
       },
     }),
   ];
@@ -125,7 +126,7 @@ export async function createStageSession(options: StageSessionOptions) {
     extensionFactories: [{ name: "stage-system-prompt", factory: replacePrompt }],
   });
   await resourceLoader.reload();
-  const draft = new ScriptDraft(store, projectId);
+  const draft: ScriptDraft | StoryboardDraft = stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId);
   const tools = createStageTools(store, projectId, stage, draft);
   const { session } = await createAgentSession({
     cwd: root, agentDir, model, modelRuntime, settingsManager, resourceLoader,
@@ -133,6 +134,6 @@ export async function createStageSession(options: StageSessionOptions) {
     tools: tools.map(t => t.name), customTools: tools,
     sessionManager: SessionManager.create(root, store.sessionDir(projectId)),
   });
-  if (stage === "script") scriptDrafts.set(session, draft);
+  if (stage === "script" || stage === "storyboard") sceneDrafts.set(session, draft);
   return session;
 }

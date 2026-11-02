@@ -31,7 +31,7 @@ test("项目列表跳过文件、无项目文件的目录、不合规 ID 和坏�
 
 test("未开放模板使用独立导航状态，不管依赖是否解锁", () => {
   for (const status of ["locked", "ready", "pending_review"] as const) {
-    assert.deepEqual(stageBadge(status, "storyboard", null, false), { text: "暂未开放", className: "unavailable" });
+    assert.deepEqual(stageBadge(status, "prompts", null, false), { text: "暂未开放", className: "unavailable" });
   }
   assert.equal(stageBadge("ready", "bible", null, true).text, "可运行");
 });
@@ -42,7 +42,7 @@ test("各阶段提示与工具结果只显示中文阶段、审阅状态", () =>
     assert.ok(!/\b(topic|synopsis|script|bible|storyboard|prompts)\b/.test(visible));
     assert.match(visible, /剧本 尚未采用版本/);
   }
-  for (const stage of ["storyboard", "prompts"] as const) {
+  for (const stage of ["prompts"] as const) {
     try { stagePrompt(stage); } catch (error) {
       const visible = readerMessage((error as Error).message);
       assert.match(visible, /暂未开放/);

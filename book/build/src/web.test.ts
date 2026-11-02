@@ -211,8 +211,12 @@ test("禁用原因由服务端真实状态机和模板检查给出：依赖未�
     f.store.writeDraft(f.project.id, "bible", sample("bible"));
     f.store.adopt(f.project.id, "bible", 1);
     project = await read();
-    assert.throws(() => stagePrompt("storyboard"), error => {
-      assert.equal(project.run_blocked_reasons.storyboard, (error as Error).message); return true;
+    assert.equal(project.run_blocked_reasons.storyboard, null);
+    f.store.writeDraft(f.project.id, "storyboard", sample("storyboard"));
+    f.store.adopt(f.project.id, "storyboard", 1);
+    project = await read();
+    assert.throws(() => stagePrompt("prompts"), error => {
+      assert.equal(project.run_blocked_reasons.prompts, (error as Error).message); return true;
     });
   } finally { await app.close(); f.cleanup(); }
 });
