@@ -5,7 +5,7 @@
 ## 已处理（本轮）
 
 - [x] 根 README 改为公开课入口（中英）
-- [x] 文档中的 `/home/<user>/...`、`C:\\Users\\...` 换成 `<repo-root>` / `~/ai-learning/harness-book-for-everyone`（本地目录名可仍为历史 `pi-qwen-harness`） / `workspaceRoot`
+- [x] 文档中的 `/home/<user>/...`、`C:\\Users\\...` 换成 `<repo-root>` / `~/ai-learning/harness-book-for-everyone` / `workspaceRoot`
 - [x] 去掉助教/内部代号口吻中的私有称呼（改为 generic facilitator）
 - [x] 本机 GPU 型号与用户名从公开课表中泛化
 - [x] 课 11–13 图解改为 **中英文配套**
