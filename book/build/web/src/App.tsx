@@ -4,16 +4,16 @@ import type { ProjectDetail, ServerConfig } from "../../src/server/protocol.js";
 import { api } from "./api";
 import { connectProject, type Connection } from "./live";
 import { appendEvent, type TimelineRow } from "./timeline";
-import { missingEventsNotice, runSummary, toolErrorText } from "./presentation";
+import { demoRevisionNotice, missingEventsNotice, readerMessage, reviewLabels, runRequestText, runSummary, stageBadge, stageNames, toolErrorText } from "./presentation";
 import { rememberSelectedProject, restoreSelectedProject } from "./project-selection";
+import { ReviewPanel } from "./ReviewPanel";
 
 const stages: [Stage, string][] = [
   ["topic", "选题"], ["synopsis", "梗概"], ["script", "剧本"],
   ["bible", "设定集"], ["storyboard", "分镜脚本"], ["prompts", "分镜提示词"],
 ];
-const statusLabel = { locked: "锁定", ready: "可运行", pending_review: "待采用", adopted: "已采用" };
 const connectionLabel: Record<Connection, string> = { connecting: "正在连接", live: "实时事件已连接", polling: "连接中断 · 每 2 秒轮询" };
-const errorMessage = (error: unknown) => error instanceof Error ? error.message : "操作失败";
+const errorMessage = (error: unknown) => error instanceof Error ? readerMessage(error.message) : "操作失败";
 
 export function App() {
   const [projects, setProjects] = useState<ProjectDetail[]>([]);
@@ -80,7 +80,7 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
   useEffect(() => {
     const live = connectProject(id, {
       state: setProject, event: event => setRows(rows => appendEvent(rows, event)),
-      connection: setConnection, error: setError,
+      connection: setConnection, error: message => setError(readerMessage(message)),
     });
     feed.current = live;
     return () => { live.close(); feed.current = null; };
@@ -89,7 +89,7 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
   const versions = project?.stages[stage].versions ?? [];
   const versionsKey = versions.join(",");
   useEffect(() => {
-    setVersion(current => current !== null && versions.includes(current) ? current : versions.at(-1) ?? null);
+    setVersion(versions.at(-1) ?? null);
   }, [stage, versionsKey]);
   useEffect(() => {
     if (version === null) { setPreview(null); setPreviewError(""); return; }
@@ -103,26 +103,32 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
 
   async function action(operation: () => Promise<void>) {
     setError(""); setSubmitting(true);
-    try { await operation(); }
-    catch (error) { setError(errorMessage(error)); }
+    try { await operation(); return true; }
+    catch (error) { setError(errorMessage(error)); return false; }
     finally { await feed.current?.refresh(); setSubmitting(false); }
   }
   function run(event: FormEvent) {
     event.preventDefault();
+    startRun();
+  }
+  function startRun(reviseFrom?: number) {
     void action(async () => {
-      setRows(rows => [...rows, { kind: "user", id: `user:${Date.now()}`, text: instructions.trim() || `运行 ${stage}` }]);
-      await api(`${path}/stages/${stage}/run`, { instructions });
+      const note = reviseFrom === undefined ? "" : project?.stages[stage].reviews?.[reviseFrom]?.note ?? "";
+      const text = runRequestText(stage, instructions, reviseFrom === undefined ? undefined : { version: reviseFrom, note });
+      const notice = reviseFrom === undefined ? null : demoRevisionNotice(config.mode === "demo", note);
+      setRows(rows => [...rows, { kind: "user", id: `user:${Date.now()}`, text: text + (notice ? `\n\n${notice}` : "") }]);
+      await api(`${path}/stages/${stage}/run`, { instructions, ...(reviseFrom === undefined ? {} : { revise_from: reviseFrom }) });
     });
   }
   const state = project?.stages[stage];
   const running = project?.running;
   const implemented = config.runnable_stages.includes(stage);
-  const blockedReason = project?.run_blocked_reasons[stage] ?? null;
+  const rawReason = project?.run_blocked_reasons[stage];
+  const blockedReason = rawReason ? readerMessage(rawReason) : null;
   const runnable = !!project && !blockedReason && implemented && (state?.status === "ready" || state?.status === "pending_review");
   const historyNotice = missingEventsNotice(project, rows);
   const summary = project?.last_run ? runSummary(project.last_run) : null;
   const visiblePreview = preview?.stage === stage && preview.version === version ? preview : null;
-  const adoptable = state?.status === "pending_review" && visiblePreview !== null && !previewError;
   return <main className="workspace">
     <section className="conversation" aria-label="对话和工具调用">
       <div className="panel-heading"><h2>对话与工具</h2><span className={`connection ${connection}`}>{connectionLabel[connection]}</span></div>
@@ -135,10 +141,10 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
       </div>
       <form className="composer" onSubmit={run}>
         {error && <p className="error-banner" role="alert">{error}</p>}
-        <label htmlFor="instructions">补充要求 · {stage}</label>
+        <label htmlFor="instructions">补充要求 · {stageNames[stage]}</label>
         <textarea id="instructions" placeholder="例如：两位角色，雨天，三分钟原创短片" value={instructions} onChange={e => setInstructions(e.target.value)} maxLength={8000} disabled={!!running || submitting} />
         <div className="composer-actions">
-          <span id="run-reason" className="muted">{running ? `正在运行 ${running.stage}${running.abort_requested ? " · 正在中断…" : ""}` : blockedReason ?? "只有人工采用后才解锁下游"}</span>
+          <span id="run-reason" className="muted">{running ? `正在运行${stageNames[running.stage]}${running.abort_requested ? " · 正在中断…" : ""}` : blockedReason ?? "采用后才能继续下一步"}</span>
           {running ? <button type="button" className="danger" disabled={submitting || running.abort_requested} onClick={() => void action(async () => { await api(`${path}/abort`, {}); })}>中断</button>
             : <button className="primary" aria-describedby="run-reason" disabled={!runnable || submitting}>{submitting ? "正在提交…" : "运行阶段"}</button>}
         </div>
@@ -149,31 +155,39 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
       <nav className="stages" aria-label="六阶段导航">
         {stages.map(([key, label], index) => {
           const status = project?.stages[key].status;
-          return <button key={key} className={stage === key ? "selected" : ""} aria-current={stage === key ? "step" : undefined} onClick={() => { setStage(key); setVersion(null); }}>
+          const badge = stageBadge(status, key, running ?? null);
+          return <button key={key} className={stage === key ? "selected" : ""} aria-current={stage === key ? "step" : undefined} onClick={() => setStage(key)}>
             <span>{index + 1}. {label}</span>
-            <span className={`badge ${status ?? ""}`}>{status ? `${statusLabel[status]} / ${status}` : "加载中"}</span>
+            <span className={`badge ${badge.className}`}>{badge.text}</span>
           </button>;
         })}
       </nav>
-      {!implemented && <p className="notice">此阶段的提示模板尚未实现。</p>}
+      {!implemented && <p className="notice">此阶段暂未开放运行。</p>}
       <div className="version-heading">
         <label>版本 <select aria-label="选择产物版本" value={version ?? ""} disabled={!versions.length} onChange={e => setVersion(Number(e.target.value))}>
           {!versions.length && <option value="">暂无草稿</option>}
-          {versions.map(v => <option key={v} value={v}>v{v}{state?.adopted_version === v ? " · 已采用" : " · 草稿"}</option>)}
+          {versions.map(v => <option key={v} value={v}>v{v} · {reviewLabels[state?.reviews?.[v]?.status ?? "pending"]}</option>)}
         </select></label>
-        <button disabled={!adoptable || !!running || submitting} onClick={() => void action(async () => { await api(`${path}/stages/${stage}/adopt`, { version }); })}>采用此版本</button>
       </div>
+      <div className="version-list" aria-label="版本列表">{versions.map(v => {
+        const status = state?.reviews?.[v]?.status ?? "pending";
+        return <button key={v} aria-pressed={version === v} onClick={() => setVersion(v)}>v{v} <span className={`review-badge ${status}`}>{reviewLabels[status]}</span></button>;
+      })}</div>
       <div className="preview" aria-label="产物预览">
         {previewError ? <p className="error-banner" role="alert">{previewError}</p>
           : visiblePreview ? <pre>{JSON.stringify(visiblePreview.value, null, 2)}</pre>
-            : <p className="muted">{version === null ? "运行成功写入草稿后，在这里审阅 JSON。" : "正在读取版本…"}</p>}
+            : <p className="muted">{version === null ? "运行后可在这里查看和审阅草稿。" : "正在读取版本…"}</p>}
       </div>
+      <ReviewPanel key={`${stage}:${version}`} state={state} version={version} loaded={!!visiblePreview && !previewError}
+        busy={!!running || submitting} runReason={blockedReason} error={error} demo={config.mode === "demo"}
+        onReview={(operation, note) => action(async () => { await api(`${path}/stages/${stage}/${operation}`, { version, ...(note === undefined ? {} : { note }) }); })}
+        onRevise={() => { if (version !== null) startRun(version); }} />
       {project?.last_run && summary && <div className={`run-summary${summary.failed ? " failed" : ""}`}>
-        <p>最近运行：{project.last_run.stage} · {summary.text}</p>
+        <p>最近运行：{stageNames[project.last_run.stage]} · {summary.text}</p>
         <code className="muted">stop_reason={project.last_run.stop_reason}</code>
         <ErrorDetails errors={project.last_run.errors} />
       </div>}
-      <p className="muted artifact-note">采用已落盘草稿。</p>
+      <p className="muted artifact-note">先查看草稿，再决定采用、丢弃或要求修改。</p>
     </aside>
   </main>;
 }

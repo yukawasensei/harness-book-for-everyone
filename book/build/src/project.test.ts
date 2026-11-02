@@ -46,7 +46,11 @@ test("草稿生成 v1/v2 且旧文件不变；可以采用 v1，下游只读 v1"
     assert.equal(readFileSync(f.store.artifactPath(f.project.id, "topic", 1), "utf8"), original);
     assert.equal(f.store.load(f.project.id).stages.topic.status, "pending_review");
     const project = f.store.adopt(f.project.id, "topic", 1);
-    assert.deepEqual(project.stages.topic, { status: "adopted", versions: [1, 2], adopted_version: 1 });
+    const { reviews, ...stageState } = project.stages.topic;
+    assert.deepEqual(stageState, { status: "adopted", versions: [1, 2], adopted_version: 1 });
+    assert.equal(reviews?.[1].status, "adopted");
+    assert.ok(Number.isFinite(Date.parse(reviews![1].at!)));
+    assert.deepEqual(reviews?.[2], { status: "pending" });
     assert.equal(project.stages.synopsis.status, "ready");
     assert.equal(project.stages.script.status, "locked");
     assert.deepEqual(f.store.readAdopted(f.project.id, "topic"), v1);
@@ -144,4 +148,66 @@ test("采用后扫描所有 locked 阶段，全部依赖已采用才解锁", () 
   assert.equal(incomplete.synopsis.status, "ready");
   assert.equal(incomplete.storyboard.status, "locked");
   assert.equal(incomplete.prompts.status, "locked");
+});
+
+test("丢弃保留版本文件、禁止采用；全部审完回到 ready，审计记录本地决定", () => {
+  const f = fixture(); try {
+    f.store.writeDraft(f.project.id, "topic", sample("topic"));
+    const file = f.store.artifactPath(f.project.id, "topic", 1);
+    const original = readFileSync(file, "utf8");
+    const project = f.store.discard(f.project.id, "topic", 1, "换个方向");
+    assert.equal(project.stages.topic.reviews?.[1].status, "discarded");
+    assert.equal(project.stages.topic.status, "ready");
+    assert.equal(readFileSync(file, "utf8"), original);
+    assert.throws(() => f.store.adopt(f.project.id, "topic", 1), /discarded/);
+    const audit = JSON.parse(readFileSync(join(f.store.projectDir(f.project.id), "audit.jsonl"), "utf8").trim());
+    assert.equal(audit.actor, "local");
+    assert.equal(audit.action, "discarded");
+    assert.equal(audit.stage, "topic");
+    assert.equal(audit.version, 1);
+    assert.equal(audit.note, "换个方向");
+    assert.ok(Number.isFinite(Date.parse(audit.at)));
+    assert.equal(f.store.writeDraft(f.project.id, "topic", sample("topic")), 2);
+    assert.equal(f.store.load(f.project.id).stages.topic.status, "pending_review");
+  } finally { f.cleanup(); }
+});
+
+test("旧 project.json 缺少审阅字段仍可读取、审阅；旧采用关系保持", () => {
+  const f = fixture(); try {
+    f.store.writeDraft(f.project.id, "topic", sample("topic"));
+    const file = join(f.store.projectDir(f.project.id), "project.json");
+    const legacy = f.store.load(f.project.id);
+    for (const state of Object.values(legacy.stages)) delete state.reviews;
+    writeFileSync(file, JSON.stringify(legacy));
+    assert.equal(f.store.load(f.project.id).stages.topic.reviews?.[1].status, "pending");
+    f.store.adopt(f.project.id, "topic", 1);
+    const adopted = f.store.load(f.project.id);
+    for (const state of Object.values(adopted.stages)) delete state.reviews;
+    writeFileSync(file, JSON.stringify(adopted));
+    assert.deepEqual(f.store.readAdopted(f.project.id, "topic"), sample("topic"));
+    assert.equal(f.store.load(f.project.id).stages.topic.reviews?.[1].status, "adopted");
+    assert.throws(() => f.store.requestChanges(f.project.id, "topic", 1, "改"), /已采用/);
+    assert.throws(() => f.store.discard(f.project.id, "topic", 1), /已采用/);
+  } finally { f.cleanup(); }
+});
+
+test("要求修改必须有意见；只允许待审版本决定；无效决定不写审计不改状态", () => {
+  const f = fixture(); try {
+    for (let i = 0; i < 3; i++) f.store.writeDraft(f.project.id, "topic", sample("topic"));
+    assert.throws(() => f.store.requestChanges(f.project.id, "topic", 1, "  "), /不能为空/);
+    assert.equal(existsSync(join(f.store.projectDir(f.project.id), "audit.jsonl")), false);
+    f.store.requestChanges(f.project.id, "topic", 1, "保留核心，改变结尾");
+    assert.equal(f.store.load(f.project.id).stages.topic.status, "pending_review");
+    for (const version of [2, 3, 99]) assert.throws(() => f.store.revisionContext(f.project.id, "topic", version), /changes_requested|不存在/);
+    f.store.discard(f.project.id, "topic", 2);
+    assert.throws(() => f.store.revisionContext(f.project.id, "topic", 2), /changes_requested/);
+    const file = join(f.store.projectDir(f.project.id), "audit.jsonl");
+    const before = readFileSync(file, "utf8");
+    for (const operation of [() => f.store.discard(f.project.id, "topic", 99), () => f.store.requestChanges(f.project.id, "topic", 1, "再改"), () => f.store.adopt(f.project.id, "topic", 2)]) assert.throws(operation);
+    assert.equal(readFileSync(file, "utf8"), before);
+    f.store.adopt(f.project.id, "topic", 3);
+    f.store.adopt(f.project.id, "topic", 3);
+    assert.equal(readFileSync(file, "utf8").trim().split("\n").length, 3, "重复采用保持幂等，不重复审计");
+    assert.throws(() => f.store.revisionContext(f.project.id, "topic", 1), /返工留到 P8/);
+  } finally { f.cleanup(); }
 });

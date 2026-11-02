@@ -69,15 +69,27 @@ export function createLocalServer(options: ServerOptions) {
           const input = await body(request);
           const instructions = input.instructions ?? "";
           if (typeof instructions !== "string" || instructions.length > 8000) throw new HttpError(400, "补充要求需为最多 8000 字文本");
-          return json(response, 202, await runs.start(id, stage, instructions));
+          const reviseFrom = input.revise_from;
+          if (reviseFrom !== undefined && (typeof reviseFrom !== "number" || !Number.isSafeInteger(reviseFrom) || reviseFrom < 1)) {
+            throw new HttpError(400, "revise_from 必须为正整数版本号");
+          }
+          return json(response, 202, await runs.start(id, stage, instructions, reviseFrom as number | undefined));
         }
-        if (parts.length === 6 && parts[5] === "adopt" && method === "POST") {
+        if (parts.length === 6 && ["adopt", "discard", "request-changes"].includes(parts[5]) && method === "POST") {
           const input = await body(request);
           runs.assertIdle(id);
           if (typeof input.version !== "number" || !Number.isSafeInteger(input.version) || input.version < 1) {
             throw new HttpError(400, "版本号必须为正整数");
           }
-          validation(() => store.adopt(id, stage, input.version as number));
+          const note = input.note;
+          if (note !== undefined && (typeof note !== "string" || note.length > 8000)) throw new HttpError(400, "审阅意见需为最多 8000 字文本");
+          if (parts[5] === "request-changes" && (typeof note !== "string" || !note.trim())) throw new HttpError(400, "修改意见不能为空");
+          validation(() => {
+            const version = input.version as number;
+            if (parts[5] === "adopt") store.adopt(id, stage, version);
+            else if (parts[5] === "discard") store.discard(id, stage, version, note as string | undefined);
+            else store.requestChanges(id, stage, version, note as string);
+          });
           runs.notify(id);
           return json(response, 200, runs.detail(id));
         }

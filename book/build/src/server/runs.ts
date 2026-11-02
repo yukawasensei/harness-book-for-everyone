@@ -45,10 +45,13 @@ export class StageRuns {
     if (this.active.has(id)) throw new HttpError(409, "项目已有运行中的阶段；请等待结束或中断后再操作");
   }
 
-  async start(id: string, stage: Stage, instructions: string): Promise<RunInfo> {
+  async start(id: string, stage: Stage, instructions: string, reviseFrom?: number): Promise<RunInfo> {
     if (this.closing) throw new HttpError(503, "服务正在关闭");
     this.assertIdle(id);
-    validation(() => { assertRunnable(this.store.load(id).stages, stage); stagePrompt(stage); });
+    validation(() => {
+      assertRunnable(this.store.load(id).stages, stage); stagePrompt(stage);
+      if (reviseFrom !== undefined) this.store.revisionContext(id, stage, reviseFrom);
+    });
     let finish!: () => void;
     const run: ActiveRun = {
       info: { id: randomUUID(), stage, started_at: new Date().toISOString(), abort_requested: false },
@@ -91,13 +94,13 @@ export class StageRuns {
     });
     this.events.publish(id, { type: "run_started", run: run.info });
     this.notify(id);
-    void this.execute(id, session, run, instructions, unsubscribe);
+    void this.execute(id, session, run, instructions, unsubscribe, reviseFrom);
     return run.info;
   }
 
-  private async execute(id: string, session: AgentSession, run: ActiveRun, instructions: string, unsubscribe: () => void) {
+  private async execute(id: string, session: AgentSession, run: ActiveRun, instructions: string, unsubscribe: () => void, reviseFrom?: number) {
     let result: Awaited<ReturnType<typeof runStage>>;
-    try { result = await runStage(session, this.store, id, run.info.stage, instructions, run.controller.signal); }
+    try { result = await runStage(session, this.store, id, run.info.stage, instructions, run.controller.signal, reviseFrom); }
     catch { result = { stop_reason: "runtime_error", errors: ["运行异常，请检查本地会话记录"] }; }
     finally { unsubscribe(); session.dispose(); }
     const summary: RunResult = { ...run.info, ...result };

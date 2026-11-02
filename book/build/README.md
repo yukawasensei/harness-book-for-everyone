@@ -1,8 +1,8 @@
 # 第二篇 · 分镜工坊 / Part II · Storyboard Studio
 
-第一篇用小实验讲 harness 的闸门；第二篇把闸门接成一个文本内容生产工具。本包与 `book/harness/` 独立安装：P00 定义产物契约，P01 搭建状态机、版本存储与受限会话骨架，P02 接上本地 Web 的事件与指令。
+第一篇用小实验讲 harness 的闸门；第二篇把闸门接成一个文本内容生产工具。本包与 `book/harness/` 独立安装：P00 定义产物契约，P01 搭建状态机、版本存储与受限会话骨架，P02 接上本地 Web 的事件与指令，P03 加上选题与梗概的版本审阅和修改运行。
 
-入口：[P00 · 拆流水线](./chapters/p00.md) → [P01 · 搭骨架](./chapters/p01.md) → [P02 · 接上 Web](./chapters/p02.md)。
+入口：[P00 · 拆流水线](./chapters/p00.md) → [P01 · 搭骨架](./chapters/p01.md) → [P02 · 接上 Web](./chapters/p02.md) → [P03 · 选题与梗概](./chapters/p03.md)。
 
 ## 安装与离线验证
 
@@ -15,7 +15,7 @@ npm test
 npm run typecheck
 ```
 
-`npm test` 是离线测试：假模型替换 `session.agent.streamFunction`，覆盖六阶段样例和坏数据、非法推进、工具与系统提示隔离、草稿写入、人工采用、会话落盘、CLI、临时 HTTP/SSE、并发保护、中断与页面的断线轮询逻辑。它不证明模型创作质量，也不请求 Ollama 或 DeepSeek。`npm run typecheck` 同时检查服务端与网页；`npm run build` 输出 `web/dist/`，该目录不提交。
+`npm test` 是离线测试：假模型替换 `session.agent.streamFunction`，覆盖六阶段样例和坏数据、非法推进、工具与系统提示隔离、草稿写入、人工采用、会话落盘、CLI、临时 HTTP/SSE、并发保护、中断、三种审阅决定、修改提示原文、审计、旧项目兼容与页面的断线轮询逻辑。它不证明模型创作质量，也不请求 Ollama 或 DeepSeek。`npm run typecheck` 同时检查服务端与网页；`npm run build` 输出 `web/dist/`，该目录不提交。
 
 ## 打开 Web 工作区
 
@@ -27,9 +27,9 @@ HARNESS_DEMO=1 npm run dev
 
 浏览器访问 **http://127.0.0.1:5173**。命令同时启动 Vite（5173）和 API（3001），都只监听 `127.0.0.1`；Vite 把 `/api` 代理到 **http://127.0.0.1:3001**，网页使用相对地址。端口占用会报错并停止这两个子进程，不自动换端口。按 Ctrl+C 结束自己的两个服务及未完成运行，不影响其他进程。
 
-填新项目标题 → 点“新建项目” → 保持“选题” → 可填补充要求 → 点“运行阶段”。几秒内左侧出现文本与 `read_upstream`、`write_draft` 卡片；假模型先交一份不合规草稿，再修正，故可同时看到错误和成功。右侧选 v1 查看 JSON → “采用此版本” → 梗概变 `ready`。运行中可点“中断”；想截运行中的界面，在卡片出现时截取。想再跑一次，采用前可生成新版本，或另建项目。
+填新项目标题 → 点“新建项目” → 保持“选题” → 可填补充要求 → 点“运行阶段”。几秒内左侧出现文本与 `read_upstream`、`write_draft` 卡片；假模型先交一份不合规草稿，再修正，故可同时看到错误和成功。右侧选 v1 查看 JSON → “要求修改”填意见 → “按意见修改 v1” → v2 出现后选中并采用 → 梗概变 `ready` → 切到梗概运行并采用。另建项目运行选题后可点“丢弃”，版本保留且不能再采用。运行中可点“中断”；想截运行中的界面，在卡片出现时截取。想再跑一次，采用前可生成新版本，或另建项目。
 
-顶部明确标出**离线演示 / 假模型**。它用原创静态样例替代模型回答，真实 SDK、工具、schema、版本保存与采用仍照常执行；补充要求进入用户提示，但演示回答不随要求改变。只有 topic 模板可用，其他阶段即使 ready 也显示“模板尚未实现”，不开放运行。
+顶部明确标出**离线演示 / 假模型**。它用原创静态样例替代模型回答，真实 SDK、工具、schema、版本保存与采用仍照常执行；补充要求进入用户提示，但演示回答不随要求改变。topic 与 synopsis 模板可用；演示的第二份答案也是固定原创文本，不会理解任意修改意见。其他阶段即使 ready 也显示“模板尚未实现”，不开放运行。
 
 使用真实模型时，先结束演示命令，再按下文准备本包模型配置，运行：
 
@@ -67,7 +67,7 @@ npm start -- adopt "$PROJECT_ID" topic 1
 npm start -- status "$PROJECT_ID"
 ```
 
-跑出合规草稿后为 `pending_review`；人工 `adopt` 后才是 `adopted`，同时 `synopsis` 变为 `ready`。到 P01 为止，只有 topic 的系统提示模板可用，运行其他阶段会明确报“模板尚未实现”。状态机、版本存储与 schema 已覆盖全部六阶段。
+跑出合规草稿后为 `pending_review`；人工 `adopt` 后才是 `adopted`，同时 `synopsis` 变为 `ready`。P01 先实现 topic，P03 已加入 synopsis 模板；其他阶段运行会明确报“模板尚未实现”。状态机、版本存储与 schema 已覆盖全部六阶段。
 
 可选 DeepSeek：复制 `.env.example` 为本包 `.env`，仅在本机填入 `DEEPSEEK_API_KEY`（勿提交、勿打印），再执行：
 
@@ -91,7 +91,8 @@ book/build/
   scripts/dev.mjs            同时启动 API 与网页
   examples/sample-project/   原创静态样例（六份 JSON）
   projects/<id>/             本机产物，git 忽略
-    project.json
+    project.json              阶段及各版本审阅状态
+    audit.jsonl               本地采用 / 丢弃 / 要求修改记录
     artifacts/<stage>/v1.json
     sessions/*.jsonl
 ```
@@ -100,5 +101,11 @@ book/build/
 
 SessionManager 保存会话；自定义 `stage_run_start` / `stage_run_end` 条目记录模型、用户与系统提示、工具表、上下文说明、耗时、错误、`stop_reason`。SDK 会话元数据可能保留本地 cwd，尽管发给模型的系统提示已去掉 cwd；`projects/` 不提交，也不要直接当作公开 trace 发布。
 
-当前是单进程本地文件骨架。Web 对同一项目的运行与采用做 409 互斥，尚无跨进程锁、崩溃事务恢复、多用户隔离或写入前挂起的 Web 确认门。ID 正则检查格式；跨产物 ID 存在性、从剧本抽取完整设定、运行时固定描述原样注入留给 P5–P7；返工与下游失效留给 P8。静态样例的引用与拼装文本有单独测试，不能据此声称这些运行闸门已实现。
+当前是单进程本地文件骨架。Web 对同一项目的运行与三种审阅操作做 409 互斥，尚无跨进程锁、崩溃事务恢复或多用户隔离。草稿只追加，不挂起写入；网页确认门在采用之前，对外发布等副作用的执行前确认尚未接入。ID 正则检查格式；跨产物 ID 存在性、从剧本抽取完整设定、运行时固定描述原样注入留给 P5–P7；返工与下游失效留给 P8。静态样例的引用与拼装文本有单独测试，不能据此声称这些运行闸门已实现。
 
+
+## 版本审阅与修改
+
+新版本为 `pending`，人可采用、丢弃或填写必填意见要求修改。丢弃与要求修改都保留原文件，不能重复审阅；要求修改的版本旁可点“按意见修改”，程序把该版本 JSON 原文与意见送入新运行，新版本重新待审。所有依赖采用后才解锁下游，已采用阶段禁止重跑。旧项目不需手动迁移。
+
+API 在既有 adopt 路由之外增加 `POST /api/projects/:id/stages/:stage/discard`（`version`、可选 `note`）和 `request-changes`（`version`、必填 `note`）；运行请求可带 `revise_from`。每个有效决定追加 `audit.jsonl`，actor 固定为 `local`，不代表已鉴权的身份。状态与审计无跨文件事务保证。详细原理与离线操作见 [P03](./chapters/p03.md)。

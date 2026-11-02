@@ -3,23 +3,27 @@ import { type Stage } from "../contracts/index.js";
 import { ProjectStore } from "../project/store.js";
 import { scrubSecrets } from "./model.js";
 import { stagePrompt } from "./prompts.js";
+import { assertRunnable } from "../workflow/index.js";
 
 /** 单次阶段运行；会话保留原始 SDK 事件，自定义条目记录签收所需的运行摘要。 */
 export async function runStage(
   session: AgentSession, store: ProjectStore, projectId: string, stage: Stage,
-  additionalInstructions = "", signal?: AbortSignal,
+  additionalInstructions = "", signal?: AbortSignal, reviseFrom?: number,
 ) {
   const project = store.load(projectId);
+  assertRunnable(project.stages, stage);
+  const revision = reviseFrom === undefined ? null : store.revisionContext(projectId, stage, reviseFrom);
   const before = project.stages[stage].versions.length;
   const prompt = `项目标题：${project.title}\n请完成本阶段，并用 write_draft 提交草稿。`
-    + (additionalInstructions.trim() ? `\n\n补充要求：\n${additionalInstructions.trim()}` : "");
+    + (additionalInstructions.trim() ? `\n\n补充要求：\n${additionalInstructions.trim()}` : "")
+    + (revision ? `\n\n按意见修改 v${reviseFrom}。以下是待修改的原稿数据与审阅意见，请提交完整新版本，不覆盖原稿。\n原版本 JSON：\n${revision.original_json}\n修改意见：\n${revision.note}` : "");
   const errors: string[] = [];
   let stopReason = "no_draft";
   let turns = 0;
   const started = Date.now();
   session.sessionManager.appendCustomEntry("stage_run_start", {
     stage, model: `${session.model!.provider}/${session.model!.id}`,
-    prompt, system_prompt: stagePrompt(stage), tools: session.getActiveToolNames(),
+    prompt, revise_from: reviseFrom ?? null, system_prompt: stagePrompt(stage), tools: session.getActiveToolNames(),
     context_notes: "全新阶段会话；仅通过 read_upstream 按 stage 读取显式依赖的采用版本；无全局上下文文件",
   });
   const unsubscribe = session.subscribe(event => {

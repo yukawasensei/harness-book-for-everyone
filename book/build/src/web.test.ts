@@ -3,7 +3,7 @@ import { setTimeout } from "node:timers/promises";
 import { test } from "node:test";
 import { connectProject, type EventConnection, type Connection } from "../web/src/live.js";
 import { appendEvent } from "../web/src/timeline.js";
-import { missingEventsNotice, runSummary, toolErrorText } from "../web/src/presentation.js";
+import { missingEventsNotice, runSummary, toolErrorText, stageBadge, readerMessage, runRequestText, DEMO_CHANGE_NOTE, demoRevisionNotice, reviewLabels } from "../web/src/presentation.js";
 import { rememberSelectedProject, restoreSelectedProject } from "../web/src/project-selection.js";
 import type { ProjectDetail, ProjectEvent, RunResult } from "./server/protocol.js";
 import { assertRunnable, initialWorkflow } from "./workflow/index.js";
@@ -103,7 +103,7 @@ test("成功写草稿的运行记录显示拒绝次数摘要，原始错误只�
   } });
   const row = rows[0];
   assert.ok(row.kind === "note");
-  assert.match(row.text, /已写入草稿；过程中被校验拒绝 1 次/);
+  assert.match(row.text, /草稿已保存，待审阅；过程中被校验拒绝 1 次/);
   assert.ok(!row.text.includes(raw));
   assert.deepEqual(row.details, [raw]);
 });
@@ -115,8 +115,8 @@ const completed = (errors: string[] = []): RunResult => ({
 
 test("最近运行成功后保持正常色摘要；失败仍有失败状态，原始错误不混进摘要", () => {
   const run = completed(["原始错误一", "原始错误二"]);
-  assert.deepEqual(runSummary(run), { text: "已写入草稿；过程中被校验拒绝 2 次", failed: false });
-  assert.deepEqual(runSummary(completed()), { text: "已写入草稿", failed: false });
+  assert.deepEqual(runSummary(run), { text: "草稿已保存，待审阅；过程中被校验拒绝 2 次", failed: false });
+  assert.deepEqual(runSummary(completed()), { text: "草稿已保存，待审阅", failed: false });
   assert.deepEqual(runSummary({ ...run, stop_reason: "model_error" }), { text: "模型请求失败", failed: true });
   assert.deepEqual(runSummary({ ...run, stop_reason: "aborted" }), { text: "运行已中断", failed: false });
 });
@@ -199,8 +199,45 @@ test("禁用原因由服务端真实状态机和模板检查给出：依赖未�
     assert.throws(() => assertRunnable(project.stages, "topic"), error => {
       assert.equal(project.run_blocked_reasons.topic, (error as Error).message); return true;
     });
-    assert.throws(() => stagePrompt("synopsis"), error => {
-      assert.equal(project.run_blocked_reasons.synopsis, (error as Error).message); return true;
+    assert.equal(project.run_blocked_reasons.synopsis, null);
+    f.store.writeDraft(f.project.id, "synopsis", sample("synopsis"));
+    f.store.adopt(f.project.id, "synopsis", 1);
+    project = await read();
+    assert.throws(() => stagePrompt("script"), error => {
+      assert.equal(project.run_blocked_reasons.script, (error as Error).message); return true;
     });
   } finally { await app.close(); f.cleanup(); }
+});
+
+
+test("阶段与版本统一待审阅，运行徽标跟随实际运行阶段", () => {
+  assert.equal(stageBadge("pending_review", "topic", null).text, "待审阅");
+  assert.equal(stageBadge("pending_review", "topic", null).text, reviewLabels.pending);
+  assert.deepEqual(stageBadge("pending_review", "topic", { ...completed(), stage: "topic" }), { text: "运行中", className: "running" });
+  assert.equal(stageBadge("locked", "synopsis", { ...completed(), stage: "topic" }).text, "锁定");
+});
+
+test("读者看到采用限制的原因，不暴露章节排期；修改消息逐字显示已保存意见", () => {
+  const states = initialWorkflow();
+  states.topic.status = "adopted";
+  let reason = "";
+  try { assertRunnable(states, "topic"); } catch (error) { reason = (error as Error).message; }
+  const visible = readerMessage(reason);
+  assert.ok(!/P[0-9]|留到/.test(visible));
+  assert.match(visible, /暂不支持.*运行/);
+  assert.equal(visible, "选题已采用，暂不支持再次运行。");
+  assert.ok(!readerMessage("已采用版本不可丢弃或要求修改；返工留到 P8").includes("P8"));
+  const note = "  把孩子换成一位老站长。\n保留空白格。  ";
+  const message = runRequestText("topic", "额外要求", { version: 1, note });
+  assert.ok(message.includes(note));
+  assert.ok(message.includes("额外要求"));
+  assert.match(message, /选题 v1/);
+});
+
+
+test("演示预填意见；自定义意见提示预设结果，真实模式不误提示", () => {
+  assert.match(DEMO_CHANGE_NOTE, /把孩子换成一位老站长/);
+  assert.equal(demoRevisionNotice(true, DEMO_CHANGE_NOTE), null);
+  assert.equal(demoRevisionNotice(true, "改成太空站"), "离线演示的修改结果为预设内容");
+  assert.equal(demoRevisionNotice(false, "改成太空站"), null);
 });

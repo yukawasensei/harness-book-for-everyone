@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseStage, validateArtifact, type Artifacts, type Stage } from "../contracts/index.js";
-import { adoptDraft, assertRunnable, initialWorkflow, recordDraft, type Workflow } from "../workflow/index.js";
+import { adoptDraft, assertRunnable, initialWorkflow, recordDraft, reviewDraft, reviewOf, type Workflow } from "../workflow/index.js";
 
 export interface Project {
   id: string;
@@ -41,7 +41,13 @@ export class ProjectStore {
 
   load(id: string): Project {
     const file = join(this.projectDir(id), "project.json");
-    try { return JSON.parse(readFileSync(file, "utf8")) as Project; }
+    try {
+      const project = JSON.parse(readFileSync(file, "utf8")) as Project;
+      for (const state of Object.values(project.stages)) {
+        for (const version of state.versions) (state.reviews ??= {})[version] ??= reviewOf(state, version);
+      }
+      return project;
+    }
     catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") throw new Error(`项目不存在：${id}`);
       throw error;
@@ -79,10 +85,47 @@ export class ProjectStore {
     parseStage(stage);
     const project = this.load(id);
     // 先检查状态和版本，拒绝时不改磁盘；再检查版本文件没有损坏。
+    const alreadyAdopted = project.stages[stage].adopted_version === version;
     adoptDraft(project.stages, stage, version);
     validateArtifact(stage, JSON.parse(readFileSync(this.artifactPath(id, stage, version), "utf8")));
     this.save(project);
+    if (!alreadyAdopted) this.audit(project, stage, version);
     return project;
+  }
+
+  discard(id: string, stage: Stage, version: number, note?: string): Project {
+    return this.review(id, stage, version, "discarded", note);
+  }
+
+  requestChanges(id: string, stage: Stage, version: number, note: string): Project {
+    return this.review(id, stage, version, "changes_requested", note);
+  }
+
+  private review(id: string, stage: Stage, version: number, status: "discarded" | "changes_requested", note?: string): Project {
+    parseStage(stage);
+    const project = this.load(id);
+    reviewDraft(project.stages, stage, version, status, note);
+    this.save(project);
+    this.audit(project, stage, version);
+    return project;
+  }
+
+  private audit(project: Project, stage: Stage, version: number): void {
+    const { status, at, note } = reviewOf(project.stages[stage], version);
+    appendFileSync(join(this.projectDir(project.id), "audit.jsonl"),
+      `${JSON.stringify({ actor: "local", action: status, at, stage, version, ...(note === undefined ? {} : { note }) })}\n`, { mode: 0o600 });
+  }
+
+  revisionContext(id: string, stage: Stage, version: number): { original_json: string; note: string } {
+    const project = this.load(id);
+    assertRunnable(project.stages, stage);
+    const review = reviewOf(project.stages[stage], version);
+    if (review.status !== "changes_requested" || !review.note?.trim()) {
+      throw new Error(`不能按意见修改 ${stage} v${version}：必须是有修改意见的 changes_requested 版本`);
+    }
+    const original_json = readFileSync(this.artifactPath(id, stage, version), "utf8");
+    validateArtifact(stage, JSON.parse(original_json));
+    return { original_json, note: review.note };
   }
 
   readAdopted<S extends Stage>(id: string, stage: S): Artifacts[S] {

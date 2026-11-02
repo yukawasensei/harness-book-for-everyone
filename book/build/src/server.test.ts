@@ -146,6 +146,9 @@ test("运行锁覆盖创建会话的 await；重复运行、采用均 409，启�
     assert.equal((await f.post(`${f.path}/stages/topic/run`)).status, 409);
     assert.equal((await f.post(`${f.path}/stages/synopsis/run`)).status, 409);
     assert.equal((await f.post(`${f.path}/stages/topic/adopt`, { version: 1 })).status, 409);
+    for (const operation of ["discard", "request-changes"]) {
+      assert.equal((await f.post(`${f.path}/stages/topic/${operation}`, { version: 1, note: "改" })).status, 409);
+    }
     assert.equal((await f.post(`${f.path}/abort`)).status, 202);
     release();
     assert.equal((await first).status, 202);
@@ -181,7 +184,9 @@ test("非法推进返回状态机原文；缺少模板或会话失败不留下�
     assert.equal(invalidAdopt.status, 422);
     f.store.writeDraft(f.project.id, "topic", sample("topic"));
     await f.post(`${f.path}/stages/topic/adopt`, { version: 1 });
-    const placeholder = await f.post(`${f.path}/stages/synopsis/run`);
+    f.store.writeDraft(f.project.id, "synopsis", sample("synopsis"));
+    f.store.adopt(f.project.id, "synopsis", 1);
+    const placeholder = await f.post(`${f.path}/stages/script/run`);
     assert.equal(placeholder.status, 422);
     assert.match((await placeholder.json() as { error: string }).error, /模板尚未实现/);
     assert.equal((await f.detail()).running, null);
@@ -235,4 +240,69 @@ test("离线演示使用真实业务工具：错误卡片、修正草稿、完�
     assert.ok(sse.frames.some(f => f.event.type === "tool_execution_end" && f.event.isError));
     assert.deepEqual(f.store.readVersion(f.project.id, "topic", 1), sample("topic"));
   } finally { await sse.close(); await f.cleanup(); }
+});
+
+test("HTTP 审阅与修改运行：非法来源 4xx，SSE 带审阅状态，采用后禁止返工", async () => {
+  const f = await setup();
+  const sse = await subscribe(f.base, f.path);
+  try {
+    f.store.writeDraft(f.project.id, "topic", sample("topic"));
+    const route = `${f.path}/stages/topic`;
+    for (const revise_from of [1, 99, 0, "1", null]) {
+      const response = await f.post(`${route}/run`, { revise_from });
+      assert.ok(response.status >= 400 && response.status < 500);
+      assert.ok((await response.json() as { error: string }).error);
+    }
+    assert.equal((await f.post(`${route}/request-changes`, { version: 1, note: " " })).status, 400);
+    const note = "把结尾改为主动告别";
+    assert.equal((await f.post(`${route}/request-changes`, { version: 1, note })).status, 200);
+    await eventually(async () => sse.frames, frames => frames.some(f => f.event.type === "project_state"
+      && f.event.project.stages.topic.reviews?.[1].status === "changes_requested"));
+    assert.equal((await f.post(`${route}/run`, { revise_from: 1 })).status, 202);
+    await eventually(f.detail, p => !p.running && p.stages.topic.versions.length === 2);
+    const user = f.contexts[0].messages.find(m => m.role === "user");
+    assert.ok(user?.role === "user" && Array.isArray(user.content));
+    const prompt = user.content.filter(c => c.type === "text").map(c => c.text).join("");
+    assert.ok(prompt.includes(readFileSync(f.store.artifactPath(f.project.id, "topic", 1), "utf8")));
+    assert.ok(prompt.includes(note));
+    assert.equal((await f.post(`${route}/discard`, { version: 2 })).status, 200);
+    assert.equal((await f.post(`${route}/adopt`, { version: 2 })).status, 422);
+    assert.equal((await f.post(`${route}/run`, { revise_from: 2 })).status, 422);
+    assert.equal((await f.get(`${route}/versions/2`)).status, 200);
+    f.store.writeDraft(f.project.id, "topic", sample("topic"));
+    assert.equal((await f.post(`${route}/adopt`, { version: 3 })).status, 200);
+    for (const operation of ["discard", "request-changes"]) {
+      assert.equal((await f.post(`${route}/${operation}`, { version: 3, note: "改" })).status, 422);
+    }
+    assert.equal((await f.post(`${route}/run`, { revise_from: 1 })).status, 422);
+    assert.equal((await f.detail()).stages.synopsis.status, "ready");
+    const rows = readFileSync(join(f.store.projectDir(f.project.id), "audit.jsonl"), "utf8").trim().split("\n").map(row => JSON.parse(row));
+    assert.deepEqual(rows.map(row => row.action), ["changes_requested", "discarded", "adopted"]);
+    assert.ok(rows.every(row => row.actor === "local"));
+  } finally { await sse.close(); await f.cleanup(); }
+});
+
+test("离线演示完整闭环：选题 v1 要求修改、v2 采用、梗概采用", async () => {
+  const f = await setup({ factory: createDemoSession });
+  try {
+    const topic = `${f.path}/stages/topic`;
+    await f.post(`${topic}/run`);
+    await eventually(f.detail, p => !p.running && p.stages.topic.versions.length === 1);
+    const original = f.store.readVersion(f.project.id, "topic", 1);
+    assert.equal((await f.post(`${topic}/request-changes`, { version: 1, note: "突出主角的主动选择" })).status, 200);
+    assert.equal((await f.post(`${topic}/run`, { revise_from: 1 })).status, 202);
+    await eventually(f.detail, p => !p.running && p.stages.topic.versions.length === 2);
+    const revised = f.store.readVersion(f.project.id, "topic", 2);
+    assert.notDeepEqual(revised, original);
+    assert.match(revised.logline, /老站长/);
+    assert.ok(!revised.logline.includes("孩子"));
+    assert.equal((await f.post(`${topic}/adopt`, { version: 2 })).status, 200);
+    const synopsis = `${f.path}/stages/synopsis`;
+    assert.equal((await f.post(`${synopsis}/run`)).status, 202);
+    await eventually(f.detail, p => !p.running && p.stages.synopsis.versions.length === 1);
+    assert.equal((await f.post(`${synopsis}/adopt`, { version: 1 })).status, 200);
+    assert.equal((await f.detail()).stages.script.status, "ready");
+    const config = await (await f.get("/api/config")).json() as { runnable_stages: string[] };
+    assert.deepEqual(config.runnable_stages, ["topic", "synopsis"]);
+  } finally { await f.cleanup(); }
 });
