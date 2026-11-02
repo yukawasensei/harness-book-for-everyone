@@ -1,0 +1,33 @@
+{"eventType":"eval_context","timestamp":"2026-11-02T06:45:56.160Z","model":"deepseek/deepseek-flash","attempt":4,"repeat":5,"prompt":"必须调用 flaky 工具查询“横店”的天气，然后用一句话告诉我结果。","tools":["flaky"],"contextNotes":{"case":{"id":"retry-exhausted-brake","chapter":"ch07","note":"天气服务一直失败；重试 2 次用完后按产品决定停机，不让模型瞎编天气。","prompt":"必须调用 flaky 工具查询“横店”的天气，然后用一句话告诉我结果。","allowed_tools":["flaky"],"max_retries":2,"retry_backoff_ms":50,"on_exhausted":"stop","expect":{"tool_called":"flaky","stop_reason":"retry_exhausted","events":{"tool_retry":2,"retry_exhausted":1}}},"timeoutMs":300000,"config":"pi-agent/models.json","isolation":"createIsolatedPi; in-memory session; thinking off"}}
+{"timestamp":"2026-11-02T06:45:57.615Z","eventType":"harness_start","case_id":"retry-exhausted-brake","model":"deepseek/deepseek-flash","extensions":0,"activeTools":["flaky"],"maxTurns":8,"toolTimeoutMs":0,"contextBudgetChars":0,"toolResultMaxChars":0,"retry":{"maxRetries":2,"backoffMs":50,"onExhausted":"stop"},"writableDirs":[],"confirmTools":[],"tokenBudget":0,"latencyBudgetMs":0}
+{"timestamp":"2026-11-02T06:45:57.618Z","eventType":"agent_start"}
+{"timestamp":"2026-11-02T06:45:57.618Z","eventType":"turn_start"}
+{"timestamp":"2026-11-02T06:45:57.619Z","eventType":"message_start","role":"system"}
+{"timestamp":"2026-11-02T06:45:57.619Z","eventType":"message_end","role":"system"}
+{"timestamp":"2026-11-02T06:45:57.619Z","eventType":"message_start","role":"user"}
+{"timestamp":"2026-11-02T06:45:57.619Z","eventType":"message_end","role":"user"}
+{"timestamp":"2026-11-02T06:45:57.935Z","eventType":"message_start","role":"assistant"}
+{"timestamp":"2026-11-02T06:45:59.049Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.050Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.067Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.068Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.068Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.088Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.089Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.089Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.101Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.102Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.157Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:59.157Z","eventType":"message_end","role":"assistant","usage":{"input":148,"output":38,"cacheRead":640,"cacheWrite":0,"reasoning":0,"totalTokens":826,"cost":{"input":0.000044399999999999995,"output":0.0000456,"cacheRead":0.00000384,"cacheWrite":0,"total":0.00009384}}}
+{"timestamp":"2026-11-02T06:45:59.158Z","eventType":"tool_execution_start","toolName":"flaky","toolCallId":"call_00_DTkV7tiy9eGQmnX8yDTD5719","args":{"location":"横店"}}
+{"timestamp":"2026-11-02T06:45:59.160Z","eventType":"tool_retry","toolName":"flaky","attempt":1,"error":"weather service unavailable (call 1)"}
+{"timestamp":"2026-11-02T06:45:59.210Z","eventType":"tool_retry","toolName":"flaky","attempt":2,"error":"weather service unavailable (call 2)"}
+{"timestamp":"2026-11-02T06:45:59.307Z","eventType":"retry_exhausted","toolName":"flaky","attempts":3,"error":"weather service unavailable (call 3)","action":"stop"}
+{"timestamp":"2026-11-02T06:45:59.307Z","eventType":"harness_stop","stop_reason":"retry_exhausted","toolName":"flaky","attempts":3,"error":"weather service unavailable (call 3)","action":"stop"}
+{"timestamp":"2026-11-02T06:45:59.307Z","eventType":"tool_execution_end","toolName":"flaky","toolCallId":"call_00_DTkV7tiy9eGQmnX8yDTD5719","isError":true}
+{"timestamp":"2026-11-02T06:45:59.307Z","eventType":"message_start","role":"toolResult"}
+{"timestamp":"2026-11-02T06:45:59.307Z","eventType":"message_end","role":"toolResult"}
+{"timestamp":"2026-11-02T06:45:59.308Z","eventType":"turn_end"}
+{"timestamp":"2026-11-02T06:45:59.308Z","eventType":"agent_end"}
+{"timestamp":"2026-11-02T06:45:59.309Z","eventType":"agent_settled"}
+{"timestamp":"2026-11-02T06:45:59.309Z","eventType":"harness_end","stop_reason":"retry_exhausted","turns":0,"tokens":826,"usage":{"input":148,"output":38,"cacheRead":640,"cacheWrite":0,"totalTokens":826,"cost":{"input":0.000044399999999999995,"output":0.0000456,"cacheRead":0.00000384,"cacheWrite":0,"total":0.00009384}},"case_id":"retry-exhausted-brake","model":"deepseek/deepseek-flash","tools":["flaky"],"durationMs":1694}

@@ -1,0 +1,68 @@
+{
+  "model": "deepseek/deepseek-flash",
+  "startedAt": "2026-11-02T06:42:55.035Z",
+  "finishedAt": "2026-11-02T06:42:58.169Z",
+  "passCount": 1,
+  "total": 1,
+  "cases": [
+    {
+      "id": "read-happy",
+      "chapter": "ch02",
+      "passCount": 1,
+      "total": 1,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 1
+      },
+      "medianDurationMs": 3132,
+      "attempts": [
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-42-55-035Z-1ee0e556/traces/read-happy-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3132,
+          "exitCode": 0,
+          "usage": {
+            "input": 1149,
+            "output": 74,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 1991,
+            "cost": {
+              "input": 0.0003447,
+              "output": 0.00008879999999999999,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00043810799999999993
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input": 1149,
+    "output": 74,
+    "cacheRead": 768,
+    "cacheWrite": 0,
+    "totalTokens": 1991,
+    "cost": {
+      "input": 0.0003447,
+      "output": 0.00008879999999999999,
+      "cacheRead": 0.000004608,
+      "cacheWrite": 0,
+      "total": 0.00043810799999999993
+    }
+  },
+  "repeat": 1,
+  "timeoutMs": 300000,
+  "partial": true
+}

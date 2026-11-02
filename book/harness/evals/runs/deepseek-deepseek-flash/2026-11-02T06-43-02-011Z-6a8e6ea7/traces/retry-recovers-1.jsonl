@@ -1,0 +1,56 @@
+{"eventType":"eval_context","timestamp":"2026-11-02T06:45:30.098Z","model":"deepseek/deepseek-flash","attempt":1,"repeat":5,"prompt":"必须调用 flaky 工具查询“横店”的天气，然后用一句话告诉我结果。","tools":["flaky"],"contextNotes":{"case":{"id":"retry-recovers","chapter":"ch07","note":"天气服务前 2 次失败；harness 重试 2 次后拿到结果，模型根本不知道失败过。","prompt":"必须调用 flaky 工具查询“横店”的天气，然后用一句话告诉我结果。","allowed_tools":["flaky"],"max_retries":2,"retry_backoff_ms":50,"flaky_fail_times":2,"expect":{"tool_called":"flaky","stop_reason":"success","events":{"tool_retry":2}}},"timeoutMs":300000,"config":"pi-agent/models.json","isolation":"createIsolatedPi; in-memory session; thinking off"}}
+{"timestamp":"2026-11-02T06:45:31.526Z","eventType":"harness_start","case_id":"retry-recovers","model":"deepseek/deepseek-flash","extensions":0,"activeTools":["flaky"],"maxTurns":8,"toolTimeoutMs":0,"contextBudgetChars":0,"toolResultMaxChars":0,"retry":{"maxRetries":2,"backoffMs":50,"onExhausted":"stop"},"writableDirs":[],"confirmTools":[],"tokenBudget":0,"latencyBudgetMs":0}
+{"timestamp":"2026-11-02T06:45:31.529Z","eventType":"agent_start"}
+{"timestamp":"2026-11-02T06:45:31.529Z","eventType":"turn_start"}
+{"timestamp":"2026-11-02T06:45:31.530Z","eventType":"message_start","role":"system"}
+{"timestamp":"2026-11-02T06:45:31.530Z","eventType":"message_end","role":"system"}
+{"timestamp":"2026-11-02T06:45:31.530Z","eventType":"message_start","role":"user"}
+{"timestamp":"2026-11-02T06:45:31.530Z","eventType":"message_end","role":"user"}
+{"timestamp":"2026-11-02T06:45:31.877Z","eventType":"message_start","role":"assistant"}
+{"timestamp":"2026-11-02T06:45:32.637Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.637Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.638Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.638Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.638Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.639Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.639Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.639Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.646Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.646Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.679Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:32.679Z","eventType":"message_end","role":"assistant","usage":{"input":276,"output":38,"cacheRead":512,"cacheWrite":0,"reasoning":0,"totalTokens":826,"cost":{"input":0.0000828,"output":0.0000456,"cacheRead":0.000003072,"cacheWrite":0,"total":0.00013147199999999996}}}
+{"timestamp":"2026-11-02T06:45:32.680Z","eventType":"tool_execution_start","toolName":"flaky","toolCallId":"call_00_Uid4r0UtraTbXDM2IGHJ9933","args":{"location":"横店"}}
+{"timestamp":"2026-11-02T06:45:32.682Z","eventType":"tool_retry","toolName":"flaky","attempt":1,"error":"weather service unavailable (call 1)"}
+{"timestamp":"2026-11-02T06:45:32.732Z","eventType":"tool_retry","toolName":"flaky","attempt":2,"error":"weather service unavailable (call 2)"}
+{"timestamp":"2026-11-02T06:45:32.833Z","eventType":"tool_execution_end","toolName":"flaky","toolCallId":"call_00_Uid4r0UtraTbXDM2IGHJ9933","isError":false,"details":{"calls":3}}
+{"timestamp":"2026-11-02T06:45:32.833Z","eventType":"message_start","role":"toolResult"}
+{"timestamp":"2026-11-02T06:45:32.833Z","eventType":"message_end","role":"toolResult"}
+{"timestamp":"2026-11-02T06:45:32.833Z","eventType":"turn_guard","turn":1,"maxTurns":8,"contextChars":52,"tokens":826,"elapsedMs":1313}
+{"timestamp":"2026-11-02T06:45:32.834Z","eventType":"turn_end"}
+{"timestamp":"2026-11-02T06:45:32.835Z","eventType":"turn_start"}
+{"timestamp":"2026-11-02T06:45:32.967Z","eventType":"message_start","role":"assistant"}
+{"timestamp":"2026-11-02T06:45:33.744Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.744Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.801Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.818Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.819Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.819Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.834Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.834Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.834Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.834Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.835Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.835Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.851Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.851Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.851Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.852Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.852Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.852Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.879Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T06:45:33.879Z","eventType":"message_end","role":"assistant","text":"横店当前晴天，气温 18°C，风力 2 级。","usage":{"input":213,"output":17,"cacheRead":640,"cacheWrite":0,"reasoning":0,"totalTokens":870,"cost":{"input":0.0000639,"output":0.000020399999999999998,"cacheRead":0.00000384,"cacheWrite":0,"total":0.00008813999999999999}}}
+{"timestamp":"2026-11-02T06:45:33.880Z","eventType":"turn_guard","turn":2,"maxTurns":8,"contextChars":74,"tokens":1696,"elapsedMs":2359}
+{"timestamp":"2026-11-02T06:45:33.880Z","eventType":"turn_end"}
+{"timestamp":"2026-11-02T06:45:33.880Z","eventType":"agent_end"}
+{"timestamp":"2026-11-02T06:45:33.881Z","eventType":"agent_settled"}
+{"timestamp":"2026-11-02T06:45:33.881Z","eventType":"harness_end","stop_reason":"success","turns":2,"tokens":1696,"usage":{"input":489,"output":55,"cacheRead":1152,"cacheWrite":0,"totalTokens":1696,"cost":{"input":0.0001467,"output":0.00006599999999999999,"cacheRead":0.000006911999999999999,"cacheWrite":0,"total":0.00021961199999999994}},"case_id":"retry-recovers","model":"deepseek/deepseek-flash","tools":["flaky"],"durationMs":2355}

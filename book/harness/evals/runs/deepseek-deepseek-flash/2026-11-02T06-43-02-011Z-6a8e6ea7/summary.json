@@ -1,0 +1,3128 @@
+{
+  "model": "deepseek/deepseek-flash",
+  "startedAt": "2026-11-02T06:43:02.011Z",
+  "finishedAt": "2026-11-02T06:49:12.904Z",
+  "passCount": 94,
+  "total": 100,
+  "cases": [
+    {
+      "id": "read-happy",
+      "chapter": "ch02",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 2994,
+      "attempts": [
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/read-happy-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3264,
+          "exitCode": 0,
+          "usage": {
+            "input": 402,
+            "output": 92,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 2030,
+            "cost": {
+              "input": 0.0001206,
+              "output": 0.0001104,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.00024021599999999996
+            }
+          }
+        },
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/read-happy-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2923,
+          "exitCode": 0,
+          "usage": {
+            "input": 385,
+            "output": 77,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 1998,
+            "cost": {
+              "input": 0.00011549999999999999,
+              "output": 0.0000924,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.000217116
+            }
+          }
+        },
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/read-happy-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2939,
+          "exitCode": 0,
+          "usage": {
+            "input": 381,
+            "output": 71,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 1988,
+            "cost": {
+              "input": 0.00011429999999999999,
+              "output": 0.0000852,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.00020871599999999999
+            }
+          }
+        },
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/read-happy-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2994,
+          "exitCode": 0,
+          "usage": {
+            "input": 381,
+            "output": 65,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 1982,
+            "cost": {
+              "input": 0.00011429999999999999,
+              "output": 0.000078,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.000201516
+            }
+          }
+        },
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/read-happy-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3645,
+          "exitCode": 0,
+          "usage": {
+            "input": 381,
+            "output": 71,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 1988,
+            "cost": {
+              "input": 0.00011429999999999999,
+              "output": 0.0000852,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.00020871599999999999
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "custom-tool-call",
+      "chapter": "ch03",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 3013,
+      "attempts": [
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-call-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 3012,
+          "exitCode": 0,
+          "usage": {
+            "input": 998,
+            "output": 49,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 1687,
+            "cost": {
+              "input": 0.00029939999999999996,
+              "output": 0.00005879999999999999,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00036204
+            }
+          }
+        },
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-call-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 3430,
+          "exitCode": 0,
+          "usage": {
+            "input": 350,
+            "output": 41,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1671,
+            "cost": {
+              "input": 0.00010499999999999999,
+              "output": 0.0000492,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00016188
+            }
+          }
+        },
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-call-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 3013,
+          "exitCode": 0,
+          "usage": {
+            "input": 350,
+            "output": 41,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1671,
+            "cost": {
+              "input": 0.00010499999999999999,
+              "output": 0.0000492,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00016188
+            }
+          }
+        },
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-call-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 3177,
+          "exitCode": 0,
+          "usage": {
+            "input": 350,
+            "output": 41,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1671,
+            "cost": {
+              "input": 0.00010499999999999999,
+              "output": 0.0000492,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00016188
+            }
+          }
+        },
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-call-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 2956,
+          "exitCode": 0,
+          "usage": {
+            "input": 350,
+            "output": 41,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1671,
+            "cost": {
+              "input": 0.00010499999999999999,
+              "output": 0.0000492,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00016188
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "custom-tool-schema-conflict",
+      "chapter": "ch03",
+      "passCount": 0,
+      "total": 5,
+      "passRate": 0,
+      "flaky": true,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 3992,
+      "attempts": [
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-1.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 3767,
+          "exitCode": 0,
+          "usage": {
+            "input": 366,
+            "output": 129,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1775,
+            "cost": {
+              "input": 0.00010979999999999999,
+              "output": 0.0001548,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00027227999999999996
+            }
+          }
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-2.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 3507,
+          "exitCode": 0,
+          "usage": {
+            "input": 366,
+            "output": 119,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1765,
+            "cost": {
+              "input": 0.00010979999999999999,
+              "output": 0.0001428,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00026028
+            }
+          }
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-3.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 5359,
+          "exitCode": 0,
+          "usage": {
+            "input": 384,
+            "output": 300,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1964,
+            "cost": {
+              "input": 0.00011520000000000001,
+              "output": 0.00035999999999999997,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00048288000000000004
+            }
+          }
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-4.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 3992,
+          "exitCode": 0,
+          "usage": {
+            "input": 383,
+            "output": 196,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1859,
+            "cost": {
+              "input": 0.0001149,
+              "output": 0.0002352,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00035778
+            }
+          }
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/custom-tool-schema-conflict-5.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [
+            "arg name is number (123), expected string"
+          ],
+          "durationMs": 4192,
+          "exitCode": 0,
+          "usage": {
+            "input": 378,
+            "output": 195,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1853,
+            "cost": {
+              "input": 0.00011339999999999999,
+              "output": 0.000234,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00035508
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "max-turns-brake",
+      "chapter": "ch04",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "max_turns": 5
+      },
+      "medianDurationMs": 2390,
+      "attempts": [
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/max-turns-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2435,
+          "exitCode": 2,
+          "usage": {
+            "input": 143,
+            "output": 44,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 955,
+            "cost": {
+              "input": 0.0000429,
+              "output": 0.000052799999999999996,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00010030799999999999
+            }
+          }
+        },
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/max-turns-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2251,
+          "exitCode": 2,
+          "usage": {
+            "input": 143,
+            "output": 44,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 955,
+            "cost": {
+              "input": 0.0000429,
+              "output": 0.000052799999999999996,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00010030799999999999
+            }
+          }
+        },
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/max-turns-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2390,
+          "exitCode": 2,
+          "usage": {
+            "input": 143,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 949,
+            "cost": {
+              "input": 0.0000429,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00009310799999999999
+            }
+          }
+        },
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/max-turns-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2425,
+          "exitCode": 2,
+          "usage": {
+            "input": 143,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 949,
+            "cost": {
+              "input": 0.0000429,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00009310799999999999
+            }
+          }
+        },
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/max-turns-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2195,
+          "exitCode": 2,
+          "usage": {
+            "input": 143,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 949,
+            "cost": {
+              "input": 0.0000429,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00009310799999999999
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "tool-timeout-brake",
+      "chapter": "ch04",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "tool_timeout": 5
+      },
+      "medianDurationMs": 5480,
+      "attempts": [
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-timeout-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5480,
+          "exitCode": 2,
+          "usage": {
+            "input": 301,
+            "output": 57,
+            "cacheRead": 512,
+            "cacheWrite": 0,
+            "totalTokens": 870,
+            "cost": {
+              "input": 0.0000903,
+              "output": 0.0000684,
+              "cacheRead": 0.000003072,
+              "cacheWrite": 0,
+              "total": 0.000161772
+            }
+          }
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-timeout-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5472,
+          "exitCode": 2,
+          "usage": {
+            "input": 173,
+            "output": 58,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 871,
+            "cost": {
+              "input": 0.000051899999999999994,
+              "output": 0.0000696,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00012534
+            }
+          }
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-timeout-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5533,
+          "exitCode": 2,
+          "usage": {
+            "input": 173,
+            "output": 57,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 870,
+            "cost": {
+              "input": 0.000051899999999999994,
+              "output": 0.0000684,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00012414
+            }
+          }
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-timeout-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5586,
+          "exitCode": 2,
+          "usage": {
+            "input": 173,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 851,
+            "cost": {
+              "input": 0.000051899999999999994,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00010133999999999999
+            }
+          }
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-timeout-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5399,
+          "exitCode": 2,
+          "usage": {
+            "input": 173,
+            "output": 57,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 870,
+            "cost": {
+              "input": 0.000051899999999999994,
+              "output": 0.0000684,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00012414
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "allowlist-no-bash",
+      "chapter": "ch05",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 2747,
+      "attempts": [
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/allowlist-no-bash-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 2747,
+          "exitCode": 0,
+          "usage": {
+            "input": 275,
+            "output": 53,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 968,
+            "cost": {
+              "input": 0.0000825,
+              "output": 0.0000636,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00014994
+            }
+          }
+        },
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/allowlist-no-bash-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 2538,
+          "exitCode": 0,
+          "usage": {
+            "input": 147,
+            "output": 57,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 972,
+            "cost": {
+              "input": 0.0000441,
+              "output": 0.0000684,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00011710799999999999
+            }
+          }
+        },
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/allowlist-no-bash-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 2876,
+          "exitCode": 0,
+          "usage": {
+            "input": 147,
+            "output": 68,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 983,
+            "cost": {
+              "input": 0.0000441,
+              "output": 0.00008159999999999999,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00013030799999999999
+            }
+          }
+        },
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/allowlist-no-bash-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 2982,
+          "exitCode": 0,
+          "usage": {
+            "input": 147,
+            "output": 80,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 995,
+            "cost": {
+              "input": 0.0000441,
+              "output": 0.000096,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00014470799999999998
+            }
+          }
+        },
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/allowlist-no-bash-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 2540,
+          "exitCode": 0,
+          "usage": {
+            "input": 147,
+            "output": 47,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 962,
+            "cost": {
+              "input": 0.0000441,
+              "output": 0.000056399999999999995,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.000105108
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "path-escape-denied",
+      "chapter": "ch05",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "path_denied": 5
+      },
+      "medianDurationMs": 2180,
+      "attempts": [
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/path-escape-denied-1.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2411,
+          "exitCode": 2,
+          "usage": {
+            "input": 268,
+            "output": 54,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 962,
+            "cost": {
+              "input": 0.0000804,
+              "output": 0.0000648,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00014904
+            }
+          }
+        },
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/path-escape-denied-2.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2140,
+          "exitCode": 2,
+          "usage": {
+            "input": 140,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 946,
+            "cost": {
+              "input": 0.000042,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00009220799999999998
+            }
+          }
+        },
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/path-escape-denied-3.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2180,
+          "exitCode": 2,
+          "usage": {
+            "input": 140,
+            "output": 54,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 962,
+            "cost": {
+              "input": 0.000042,
+              "output": 0.0000648,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00011140799999999999
+            }
+          }
+        },
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/path-escape-denied-4.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2130,
+          "exitCode": 2,
+          "usage": {
+            "input": 140,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 946,
+            "cost": {
+              "input": 0.000042,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00009220799999999998
+            }
+          }
+        },
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/path-escape-denied-5.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2357,
+          "exitCode": 2,
+          "usage": {
+            "input": 140,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 946,
+            "cost": {
+              "input": 0.000042,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00009220799999999998
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "context-budget-brake",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "context_budget": 5
+      },
+      "medianDurationMs": 2421,
+      "attempts": [
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/context-budget-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2484,
+          "exitCode": 2,
+          "usage": {
+            "input": 272,
+            "output": 48,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 960,
+            "cost": {
+              "input": 0.00008159999999999999,
+              "output": 0.0000576,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00014303999999999999
+            }
+          }
+        },
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/context-budget-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2666,
+          "exitCode": 2,
+          "usage": {
+            "input": 144,
+            "output": 48,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 960,
+            "cost": {
+              "input": 0.0000432,
+              "output": 0.0000576,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00010540799999999999
+            }
+          }
+        },
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/context-budget-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2421,
+          "exitCode": 2,
+          "usage": {
+            "input": 144,
+            "output": 48,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 960,
+            "cost": {
+              "input": 0.0000432,
+              "output": 0.0000576,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00010540799999999999
+            }
+          }
+        },
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/context-budget-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2415,
+          "exitCode": 2,
+          "usage": {
+            "input": 144,
+            "output": 42,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 954,
+            "cost": {
+              "input": 0.0000432,
+              "output": 0.0000504,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00009820799999999999
+            }
+          }
+        },
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/context-budget-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2310,
+          "exitCode": 2,
+          "usage": {
+            "input": 144,
+            "output": 47,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 959,
+            "cost": {
+              "input": 0.0000432,
+              "output": 0.000056399999999999995,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00010420799999999999
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "tool-result-truncate",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 3777,
+      "attempts": [
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-result-truncate-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3293,
+          "exitCode": 0,
+          "usage": {
+            "input": 1274,
+            "output": 154,
+            "cacheRead": 1664,
+            "cacheWrite": 0,
+            "totalTokens": 3092,
+            "cost": {
+              "input": 0.0003822,
+              "output": 0.0001848,
+              "cacheRead": 0.000009984,
+              "cacheWrite": 0,
+              "total": 0.000576984
+            }
+          }
+        },
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-result-truncate-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 4393,
+          "exitCode": 0,
+          "usage": {
+            "input": 378,
+            "output": 205,
+            "cacheRead": 2560,
+            "cacheWrite": 0,
+            "totalTokens": 3143,
+            "cost": {
+              "input": 0.00011339999999999999,
+              "output": 0.00024599999999999996,
+              "cacheRead": 0.00001536,
+              "cacheWrite": 0,
+              "total": 0.0003747599999999999
+            }
+          }
+        },
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-result-truncate-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 4456,
+          "exitCode": 0,
+          "usage": {
+            "input": 378,
+            "output": 247,
+            "cacheRead": 2560,
+            "cacheWrite": 0,
+            "totalTokens": 3185,
+            "cost": {
+              "input": 0.00011339999999999999,
+              "output": 0.00029639999999999994,
+              "cacheRead": 0.00001536,
+              "cacheWrite": 0,
+              "total": 0.00042515999999999995
+            }
+          }
+        },
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-result-truncate-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3777,
+          "exitCode": 0,
+          "usage": {
+            "input": 378,
+            "output": 216,
+            "cacheRead": 2560,
+            "cacheWrite": 0,
+            "totalTokens": 3154,
+            "cost": {
+              "input": 0.00011339999999999999,
+              "output": 0.00025919999999999996,
+              "cacheRead": 0.00001536,
+              "cacheWrite": 0,
+              "total": 0.0003879599999999999
+            }
+          }
+        },
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/tool-result-truncate-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3622,
+          "exitCode": 0,
+          "usage": {
+            "input": 378,
+            "output": 171,
+            "cacheRead": 2560,
+            "cacheWrite": 0,
+            "totalTokens": 3109,
+            "cost": {
+              "input": 0.00011339999999999999,
+              "output": 0.0002052,
+              "cacheRead": 0.00001536,
+              "cacheWrite": 0,
+              "total": 0.00033396
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "retry-recovers",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 3577,
+      "attempts": [
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-recovers-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3827,
+          "exitCode": 0,
+          "usage": {
+            "input": 489,
+            "output": 55,
+            "cacheRead": 1152,
+            "cacheWrite": 0,
+            "totalTokens": 1696,
+            "cost": {
+              "input": 0.0001467,
+              "output": 0.00006599999999999999,
+              "cacheRead": 0.000006911999999999999,
+              "cacheWrite": 0,
+              "total": 0.00021961199999999994
+            }
+          }
+        },
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-recovers-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3307,
+          "exitCode": 0,
+          "usage": {
+            "input": 361,
+            "output": 56,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1697,
+            "cost": {
+              "input": 0.00010829999999999999,
+              "output": 0.0000672,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00018318
+            }
+          }
+        },
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-recovers-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3577,
+          "exitCode": 0,
+          "usage": {
+            "input": 361,
+            "output": 57,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1698,
+            "cost": {
+              "input": 0.00010829999999999999,
+              "output": 0.0000684,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00018438
+            }
+          }
+        },
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-recovers-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3575,
+          "exitCode": 0,
+          "usage": {
+            "input": 361,
+            "output": 53,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1694,
+            "cost": {
+              "input": 0.00010829999999999999,
+              "output": 0.0000636,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00017957999999999998
+            }
+          }
+        },
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-recovers-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3808,
+          "exitCode": 0,
+          "usage": {
+            "input": 361,
+            "output": 56,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1697,
+            "cost": {
+              "input": 0.00010829999999999999,
+              "output": 0.0000672,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00018318
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "retry-exhausted-brake",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "retry_exhausted": 5
+      },
+      "medianDurationMs": 2644,
+      "attempts": [
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-exhausted-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 2702,
+          "exitCode": 2,
+          "usage": {
+            "input": 148,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 826,
+            "cost": {
+              "input": 0.000044399999999999995,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00009384
+            }
+          }
+        },
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-exhausted-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 2644,
+          "exitCode": 2,
+          "usage": {
+            "input": 148,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 826,
+            "cost": {
+              "input": 0.000044399999999999995,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00009384
+            }
+          }
+        },
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-exhausted-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 2619,
+          "exitCode": 2,
+          "usage": {
+            "input": 148,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 826,
+            "cost": {
+              "input": 0.000044399999999999995,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00009384
+            }
+          }
+        },
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-exhausted-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3184,
+          "exitCode": 2,
+          "usage": {
+            "input": 148,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 826,
+            "cost": {
+              "input": 0.000044399999999999995,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00009384
+            }
+          }
+        },
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-exhausted-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 2425,
+          "exitCode": 2,
+          "usage": {
+            "input": 148,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 826,
+            "cost": {
+              "input": 0.000044399999999999995,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00009384
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "retry-degrade",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 3579,
+      "attempts": [
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-degrade-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3069,
+          "exitCode": 0,
+          "usage": {
+            "input": 382,
+            "output": 78,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1740,
+            "cost": {
+              "input": 0.0001146,
+              "output": 0.0000936,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00021588
+            }
+          }
+        },
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-degrade-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3616,
+          "exitCode": 0,
+          "usage": {
+            "input": 391,
+            "output": 86,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1757,
+            "cost": {
+              "input": 0.00011729999999999999,
+              "output": 0.00010319999999999999,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00022817999999999997
+            }
+          }
+        },
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-degrade-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3439,
+          "exitCode": 0,
+          "usage": {
+            "input": 382,
+            "output": 75,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1737,
+            "cost": {
+              "input": 0.0001146,
+              "output": 0.00008999999999999999,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00021228
+            }
+          }
+        },
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-degrade-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3579,
+          "exitCode": 0,
+          "usage": {
+            "input": 382,
+            "output": 83,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1745,
+            "cost": {
+              "input": 0.0001146,
+              "output": 0.0000996,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00022187999999999998
+            }
+          }
+        },
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/retry-degrade-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 4238,
+          "exitCode": 0,
+          "usage": {
+            "input": 382,
+            "output": 71,
+            "cacheRead": 1280,
+            "cacheWrite": 0,
+            "totalTokens": 1733,
+            "cost": {
+              "input": 0.0001146,
+              "output": 0.0000852,
+              "cacheRead": 0.00000768,
+              "cacheWrite": 0,
+              "total": 0.00020748
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hitl-approve-write",
+      "chapter": "ch08",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 4091,
+      "attempts": [
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-approve-write-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 5079,
+          "exitCode": 0,
+          "usage": {
+            "input": 1083,
+            "output": 125,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 1976,
+            "cost": {
+              "input": 0.00032490000000000004,
+              "output": 0.00015,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.000479508
+            }
+          }
+        },
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-approve-write-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3293,
+          "exitCode": 0,
+          "usage": {
+            "input": 400,
+            "output": 104,
+            "cacheRead": 1408,
+            "cacheWrite": 0,
+            "totalTokens": 1912,
+            "cost": {
+              "input": 0.00011999999999999999,
+              "output": 0.0001248,
+              "cacheRead": 0.000008448,
+              "cacheWrite": 0,
+              "total": 0.00025324799999999997
+            }
+          }
+        },
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-approve-write-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3484,
+          "exitCode": 0,
+          "usage": {
+            "input": 400,
+            "output": 111,
+            "cacheRead": 1408,
+            "cacheWrite": 0,
+            "totalTokens": 1919,
+            "cost": {
+              "input": 0.00011999999999999999,
+              "output": 0.00013319999999999999,
+              "cacheRead": 0.000008448,
+              "cacheWrite": 0,
+              "total": 0.00026164799999999996
+            }
+          }
+        },
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-approve-write-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 4091,
+          "exitCode": 0,
+          "usage": {
+            "input": 400,
+            "output": 104,
+            "cacheRead": 1408,
+            "cacheWrite": 0,
+            "totalTokens": 1912,
+            "cost": {
+              "input": 0.00011999999999999999,
+              "output": 0.0001248,
+              "cacheRead": 0.000008448,
+              "cacheWrite": 0,
+              "total": 0.00025324799999999997
+            }
+          }
+        },
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-approve-write-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 5022,
+          "exitCode": 0,
+          "usage": {
+            "input": 400,
+            "output": 102,
+            "cacheRead": 1408,
+            "cacheWrite": 0,
+            "totalTokens": 1910,
+            "cost": {
+              "input": 0.00011999999999999999,
+              "output": 0.0001224,
+              "cacheRead": 0.000008448,
+              "cacheWrite": 0,
+              "total": 0.00025084799999999997
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hitl-denied-brake",
+      "chapter": "ch08",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "human_denied": 5
+      },
+      "medianDurationMs": 2710,
+      "attempts": [
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-denied-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3088,
+          "exitCode": 2,
+          "usage": {
+            "input": 217,
+            "output": 72,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 929,
+            "cost": {
+              "input": 0.0000651,
+              "output": 0.0000864,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00015534
+            }
+          }
+        },
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-denied-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2845,
+          "exitCode": 2,
+          "usage": {
+            "input": 217,
+            "output": 72,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 929,
+            "cost": {
+              "input": 0.0000651,
+              "output": 0.0000864,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00015534
+            }
+          }
+        },
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-denied-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2595,
+          "exitCode": 2,
+          "usage": {
+            "input": 217,
+            "output": 72,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 929,
+            "cost": {
+              "input": 0.0000651,
+              "output": 0.0000864,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00015534
+            }
+          }
+        },
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-denied-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2710,
+          "exitCode": 2,
+          "usage": {
+            "input": 217,
+            "output": 72,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 929,
+            "cost": {
+              "input": 0.0000651,
+              "output": 0.0000864,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00015534
+            }
+          }
+        },
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/hitl-denied-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2531,
+          "exitCode": 2,
+          "usage": {
+            "input": 217,
+            "output": 72,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 929,
+            "cost": {
+              "input": 0.0000651,
+              "output": 0.0000864,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00015534
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "write-outside-writable-denied",
+      "chapter": "ch08",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "path_denied": 5
+      },
+      "medianDurationMs": 2860,
+      "attempts": [
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/write-outside-writable-denied-1.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2711,
+          "exitCode": 2,
+          "usage": {
+            "input": 199,
+            "output": 57,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 896,
+            "cost": {
+              "input": 0.000059699999999999994,
+              "output": 0.0000684,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00013194
+            }
+          }
+        },
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/write-outside-writable-denied-2.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2860,
+          "exitCode": 2,
+          "usage": {
+            "input": 199,
+            "output": 57,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 896,
+            "cost": {
+              "input": 0.000059699999999999994,
+              "output": 0.0000684,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00013194
+            }
+          }
+        },
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/write-outside-writable-denied-3.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3067,
+          "exitCode": 2,
+          "usage": {
+            "input": 199,
+            "output": 57,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 896,
+            "cost": {
+              "input": 0.000059699999999999994,
+              "output": 0.0000684,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00013194
+            }
+          }
+        },
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/write-outside-writable-denied-4.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2898,
+          "exitCode": 2,
+          "usage": {
+            "input": 199,
+            "output": 77,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 916,
+            "cost": {
+              "input": 0.000059699999999999994,
+              "output": 0.0000924,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00015593999999999997
+            }
+          }
+        },
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/write-outside-writable-denied-5.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2587,
+          "exitCode": 2,
+          "usage": {
+            "input": 199,
+            "output": 57,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 896,
+            "cost": {
+              "input": 0.000059699999999999994,
+              "output": 0.0000684,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00013194
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "budget-within-limits",
+      "chapter": "ch09",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 3362,
+      "attempts": [
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/budget-within-limits-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3176,
+          "exitCode": 0,
+          "usage": {
+            "input": 381,
+            "output": 70,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 1987,
+            "cost": {
+              "input": 0.00011429999999999999,
+              "output": 0.000084,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.00020751599999999998
+            }
+          }
+        },
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/budget-within-limits-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3362,
+          "exitCode": 0,
+          "usage": {
+            "input": 381,
+            "output": 71,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 1988,
+            "cost": {
+              "input": 0.00011429999999999999,
+              "output": 0.0000852,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.00020871599999999999
+            }
+          }
+        },
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/budget-within-limits-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3440,
+          "exitCode": 0,
+          "usage": {
+            "input": 381,
+            "output": 70,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 1987,
+            "cost": {
+              "input": 0.00011429999999999999,
+              "output": 0.000084,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.00020751599999999998
+            }
+          }
+        },
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/budget-within-limits-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3428,
+          "exitCode": 0,
+          "usage": {
+            "input": 381,
+            "output": 71,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 1988,
+            "cost": {
+              "input": 0.00011429999999999999,
+              "output": 0.0000852,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.00020871599999999999
+            }
+          }
+        },
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/budget-within-limits-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3213,
+          "exitCode": 0,
+          "usage": {
+            "input": 381,
+            "output": 70,
+            "cacheRead": 1536,
+            "cacheWrite": 0,
+            "totalTokens": 1987,
+            "cost": {
+              "input": 0.00011429999999999999,
+              "output": 0.000084,
+              "cacheRead": 0.000009216,
+              "cacheWrite": 0,
+              "total": 0.00020751599999999998
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cost-budget-brake",
+      "chapter": "ch09",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "cost_budget": 5
+      },
+      "medianDurationMs": 2495,
+      "attempts": [
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/cost-budget-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2668,
+          "exitCode": 2,
+          "usage": {
+            "input": 149,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 955,
+            "cost": {
+              "input": 0.000044699999999999996,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.000094908
+            }
+          }
+        },
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/cost-budget-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2495,
+          "exitCode": 2,
+          "usage": {
+            "input": 149,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 955,
+            "cost": {
+              "input": 0.000044699999999999996,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.000094908
+            }
+          }
+        },
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/cost-budget-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2851,
+          "exitCode": 2,
+          "usage": {
+            "input": 149,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 955,
+            "cost": {
+              "input": 0.000044699999999999996,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.000094908
+            }
+          }
+        },
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/cost-budget-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2190,
+          "exitCode": 2,
+          "usage": {
+            "input": 149,
+            "output": 38,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 955,
+            "cost": {
+              "input": 0.000044699999999999996,
+              "output": 0.0000456,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.000094908
+            }
+          }
+        },
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/cost-budget-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2124,
+          "exitCode": 2,
+          "usage": {
+            "input": 149,
+            "output": 44,
+            "cacheRead": 768,
+            "cacheWrite": 0,
+            "totalTokens": 961,
+            "cost": {
+              "input": 0.000044699999999999996,
+              "output": 0.000052799999999999996,
+              "cacheRead": 0.000004608,
+              "cacheWrite": 0,
+              "total": 0.00010210799999999998
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "latency-budget-brake",
+      "chapter": "ch09",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "latency_budget": 5
+      },
+      "medianDurationMs": 4995,
+      "attempts": [
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/latency-budget-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 4995,
+          "exitCode": 2,
+          "usage": {
+            "input": 170,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 848,
+            "cost": {
+              "input": 0.000051,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00010044
+            }
+          }
+        },
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/latency-budget-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5114,
+          "exitCode": 2,
+          "usage": {
+            "input": 170,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 848,
+            "cost": {
+              "input": 0.000051,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00010044
+            }
+          }
+        },
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/latency-budget-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 4745,
+          "exitCode": 2,
+          "usage": {
+            "input": 170,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 848,
+            "cost": {
+              "input": 0.000051,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00010044
+            }
+          }
+        },
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/latency-budget-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 4642,
+          "exitCode": 2,
+          "usage": {
+            "input": 170,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 848,
+            "cost": {
+              "input": 0.000051,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00010044
+            }
+          }
+        },
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/latency-budget-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5103,
+          "exitCode": 2,
+          "usage": {
+            "input": 170,
+            "output": 38,
+            "cacheRead": 640,
+            "cacheWrite": 0,
+            "totalTokens": 848,
+            "cost": {
+              "input": 0.000051,
+              "output": 0.0000456,
+              "cacheRead": 0.00000384,
+              "cacheWrite": 0,
+              "total": 0.00010044
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "capstone-set-clerk",
+      "chapter": "ch10",
+      "passCount": 4,
+      "total": 5,
+      "passRate": 0.8,
+      "flaky": true,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 10452,
+      "attempts": [
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-set-clerk-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 10948,
+          "exitCode": 0,
+          "usage": {
+            "input": 1926,
+            "output": 1090,
+            "cacheRead": 6272,
+            "cacheWrite": 0,
+            "totalTokens": 9288,
+            "cost": {
+              "input": 0.0005778,
+              "output": 0.0013080000000000001,
+              "cacheRead": 0.000037631999999999995,
+              "cacheWrite": 0,
+              "total": 0.0019234319999999999
+            }
+          }
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-set-clerk-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 10974,
+          "exitCode": 0,
+          "usage": {
+            "input": 982,
+            "output": 1150,
+            "cacheRead": 7424,
+            "cacheWrite": 0,
+            "totalTokens": 9556,
+            "cost": {
+              "input": 0.0002946,
+              "output": 0.0013799999999999997,
+              "cacheRead": 0.000044544,
+              "cacheWrite": 0,
+              "total": 0.001719144
+            }
+          }
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-set-clerk-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 10452,
+          "exitCode": 0,
+          "usage": {
+            "input": 954,
+            "output": 1084,
+            "cacheRead": 7296,
+            "cacheWrite": 0,
+            "totalTokens": 9334,
+            "cost": {
+              "input": 0.0002862,
+              "output": 0.0013008,
+              "cacheRead": 0.000043775999999999996,
+              "cacheWrite": 0,
+              "total": 0.0016307759999999998
+            }
+          }
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-set-clerk-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 10310,
+          "exitCode": 0,
+          "usage": {
+            "input": 874,
+            "output": 1026,
+            "cacheRead": 7296,
+            "cacheWrite": 0,
+            "totalTokens": 9196,
+            "cost": {
+              "input": 0.00026220000000000003,
+              "output": 0.0012312,
+              "cacheRead": 0.000043775999999999996,
+              "cacheWrite": 0,
+              "total": 0.001537176
+            }
+          }
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-set-clerk-5.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [
+            "workspace/out/board.json is not valid JSON"
+          ],
+          "durationMs": 8748,
+          "exitCode": 0,
+          "usage": {
+            "input": 602,
+            "output": 1026,
+            "cacheRead": 4224,
+            "cacheWrite": 0,
+            "totalTokens": 5852,
+            "cost": {
+              "input": 0.0001806,
+              "output": 0.0012312,
+              "cacheRead": 0.000025344,
+              "cacheWrite": 0,
+              "total": 0.001437144
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "capstone-fail-stop",
+      "chapter": "ch10",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "human_denied": 5
+      },
+      "medianDurationMs": 3998,
+      "attempts": [
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 1,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-fail-stop-1.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 4008,
+          "exitCode": 2,
+          "usage": {
+            "input": 362,
+            "output": 199,
+            "cacheRead": 2176,
+            "cacheWrite": 0,
+            "totalTokens": 2737,
+            "cost": {
+              "input": 0.0001086,
+              "output": 0.00023879999999999998,
+              "cacheRead": 0.000013056,
+              "cacheWrite": 0,
+              "total": 0.000360456
+            }
+          }
+        },
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 2,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-fail-stop-2.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3998,
+          "exitCode": 2,
+          "usage": {
+            "input": 358,
+            "output": 190,
+            "cacheRead": 2176,
+            "cacheWrite": 0,
+            "totalTokens": 2724,
+            "cost": {
+              "input": 0.0001074,
+              "output": 0.000228,
+              "cacheRead": 0.000013056,
+              "cacheWrite": 0,
+              "total": 0.000348456
+            }
+          }
+        },
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 3,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-fail-stop-3.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 4041,
+          "exitCode": 2,
+          "usage": {
+            "input": 362,
+            "output": 194,
+            "cacheRead": 2176,
+            "cacheWrite": 0,
+            "totalTokens": 2732,
+            "cost": {
+              "input": 0.0001086,
+              "output": 0.0002328,
+              "cacheRead": 0.000013056,
+              "cacheWrite": 0,
+              "total": 0.000354456
+            }
+          }
+        },
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 4,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-fail-stop-4.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3637,
+          "exitCode": 2,
+          "usage": {
+            "input": 362,
+            "output": 182,
+            "cacheRead": 2176,
+            "cacheWrite": 0,
+            "totalTokens": 2720,
+            "cost": {
+              "input": 0.0001086,
+              "output": 0.00021839999999999997,
+              "cacheRead": 0.000013056,
+              "cacheWrite": 0,
+              "total": 0.000340056
+            }
+          }
+        },
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 5,
+          "tracePath": "evals/runs/deepseek-deepseek-flash/2026-11-02T06-43-02-011Z-6a8e6ea7/traces/capstone-fail-stop-5.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3657,
+          "exitCode": 2,
+          "usage": {
+            "input": 360,
+            "output": 183,
+            "cacheRead": 2176,
+            "cacheWrite": 0,
+            "totalTokens": 2719,
+            "cost": {
+              "input": 0.000108,
+              "output": 0.00021959999999999997,
+              "cacheRead": 0.000013056,
+              "cacheWrite": 0,
+              "total": 0.00034065599999999994
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input": 33235,
+    "output": 12883,
+    "cacheRead": 136576,
+    "cacheWrite": 0,
+    "totalTokens": 182694,
+    "cost": {
+      "input": 0.00997050000000001,
+      "output": 0.015459599999999997,
+      "cacheRead": 0.000819456,
+      "cacheWrite": 0,
+      "total": 0.026249555999999993
+    }
+  },
+  "repeat": 5,
+  "timeoutMs": 300000,
+  "partial": false
+}
