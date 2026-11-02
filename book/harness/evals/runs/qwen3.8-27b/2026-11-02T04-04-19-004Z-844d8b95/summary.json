@@ -1,0 +1,1714 @@
+{
+  "model": "ollama/qwen3.8:27b",
+  "startedAt": "2026-11-02T04:04:19.004Z",
+  "finishedAt": "2026-11-02T04:15:30.642Z",
+  "passCount": 99,
+  "total": 100,
+  "cases": [
+    {
+      "id": "read-happy",
+      "chapter": "ch02",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 4347,
+      "attempts": [
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/read-happy-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 27791,
+          "exitCode": 0
+        },
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/read-happy-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 4098,
+          "exitCode": 0
+        },
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/read-happy-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 4347,
+          "exitCode": 0
+        },
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/read-happy-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 4279,
+          "exitCode": 0
+        },
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/read-happy-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 4449,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "custom-tool-call",
+      "chapter": "ch03",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 4111,
+      "attempts": [
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-call-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 4297,
+          "exitCode": 0
+        },
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-call-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 4330,
+          "exitCode": 0
+        },
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-call-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 3610,
+          "exitCode": 0
+        },
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-call-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 4111,
+          "exitCode": 0
+        },
+        {
+          "id": "custom-tool-call",
+          "chapter": "ch03",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-call-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 4111,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "custom-tool-schema-conflict",
+      "chapter": "ch03",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 20854,
+      "attempts": [
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 15595,
+          "exitCode": 0
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 22375,
+          "exitCode": 0
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 20854,
+          "exitCode": 0
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 22174,
+          "exitCode": 0
+        },
+        {
+          "id": "custom-tool-schema-conflict",
+          "chapter": "ch03",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/custom-tool-schema-conflict-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "hello"
+          ],
+          "reasons": [],
+          "durationMs": 16471,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "max-turns-brake",
+      "chapter": "ch04",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "max_turns": 5
+      },
+      "medianDurationMs": 2699,
+      "attempts": [
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/max-turns-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3803,
+          "exitCode": 2
+        },
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/max-turns-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3068,
+          "exitCode": 2
+        },
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/max-turns-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2699,
+          "exitCode": 2
+        },
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/max-turns-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2438,
+          "exitCode": 2
+        },
+        {
+          "id": "max-turns-brake",
+          "chapter": "ch04",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/max-turns-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "max_turns",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2216,
+          "exitCode": 2
+        }
+      ]
+    },
+    {
+      "id": "tool-timeout-brake",
+      "chapter": "ch04",
+      "passCount": 4,
+      "total": 5,
+      "passRate": 0.8,
+      "flaky": true,
+      "stopReasons": {
+        "success": 1,
+        "tool_timeout": 4
+      },
+      "medianDurationMs": 5968,
+      "attempts": [
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-timeout-brake-1.jsonl",
+          "pass": false,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [
+            "stop_reason=success, expected tool_timeout",
+            "tool slow not called (saw: none)"
+          ],
+          "durationMs": 8602,
+          "exitCode": 0
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-timeout-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5670,
+          "exitCode": 2
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-timeout-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5968,
+          "exitCode": 2
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-timeout-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5836,
+          "exitCode": 2
+        },
+        {
+          "id": "tool-timeout-brake",
+          "chapter": "ch04",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-timeout-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "tool_timeout",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 6031,
+          "exitCode": 2
+        }
+      ]
+    },
+    {
+      "id": "allowlist-no-bash",
+      "chapter": "ch05",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 5497,
+      "attempts": [
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/allowlist-no-bash-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 13794,
+          "exitCode": 0
+        },
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/allowlist-no-bash-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 9692,
+          "exitCode": 0
+        },
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/allowlist-no-bash-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 5497,
+          "exitCode": 0
+        },
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/allowlist-no-bash-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 4353,
+          "exitCode": 0
+        },
+        {
+          "id": "allowlist-no-bash",
+          "chapter": "ch05",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/allowlist-no-bash-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [],
+          "reasons": [],
+          "durationMs": 4352,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "path-escape-denied",
+      "chapter": "ch05",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "path_denied": 5
+      },
+      "medianDurationMs": 3537,
+      "attempts": [
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/path-escape-denied-1.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3537,
+          "exitCode": 2
+        },
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/path-escape-denied-2.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 4290,
+          "exitCode": 2
+        },
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/path-escape-denied-3.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3149,
+          "exitCode": 2
+        },
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/path-escape-denied-4.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 5639,
+          "exitCode": 2
+        },
+        {
+          "id": "path-escape-denied",
+          "chapter": "ch05",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/path-escape-denied-5.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3287,
+          "exitCode": 2
+        }
+      ]
+    },
+    {
+      "id": "context-budget-brake",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "context_budget": 5
+      },
+      "medianDurationMs": 2463,
+      "attempts": [
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/context-budget-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2953,
+          "exitCode": 2
+        },
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/context-budget-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2638,
+          "exitCode": 2
+        },
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/context-budget-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2463,
+          "exitCode": 2
+        },
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/context-budget-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2388,
+          "exitCode": 2
+        },
+        {
+          "id": "context-budget-brake",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/context-budget-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "context_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2350,
+          "exitCode": 2
+        }
+      ]
+    },
+    {
+      "id": "tool-result-truncate",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 8077,
+      "attempts": [
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-result-truncate-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "read",
+            "read",
+            "read",
+            "read",
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 22879,
+          "exitCode": 0
+        },
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-result-truncate-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 7864,
+          "exitCode": 0
+        },
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-result-truncate-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 9214,
+          "exitCode": 0
+        },
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-result-truncate-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 8077,
+          "exitCode": 0
+        },
+        {
+          "id": "tool-result-truncate",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/tool-result-truncate-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 7822,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "retry-recovers",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 4547,
+      "attempts": [
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-recovers-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 4768,
+          "exitCode": 0
+        },
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-recovers-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 4467,
+          "exitCode": 0
+        },
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-recovers-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3965,
+          "exitCode": 0
+        },
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-recovers-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 4568,
+          "exitCode": 0
+        },
+        {
+          "id": "retry-recovers",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-recovers-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 4547,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "retry-exhausted-brake",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "retry_exhausted": 5
+      },
+      "medianDurationMs": 2944,
+      "attempts": [
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-exhausted-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3654,
+          "exitCode": 2
+        },
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-exhausted-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 2863,
+          "exitCode": 2
+        },
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-exhausted-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 2922,
+          "exitCode": 2
+        },
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-exhausted-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 2944,
+          "exitCode": 2
+        },
+        {
+          "id": "retry-exhausted-brake",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-exhausted-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "retry_exhausted",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 3048,
+          "exitCode": 2
+        }
+      ]
+    },
+    {
+      "id": "retry-degrade",
+      "chapter": "ch07",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 5016,
+      "attempts": [
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-degrade-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 5157,
+          "exitCode": 0
+        },
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-degrade-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 4803,
+          "exitCode": 0
+        },
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-degrade-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 5777,
+          "exitCode": 0
+        },
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-degrade-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 5016,
+          "exitCode": 0
+        },
+        {
+          "id": "retry-degrade",
+          "chapter": "ch07",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/retry-degrade-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "flaky"
+          ],
+          "reasons": [],
+          "durationMs": 4392,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "hitl-approve-write",
+      "chapter": "ch08",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 5047,
+      "attempts": [
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-approve-write-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 5047,
+          "exitCode": 0
+        },
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-approve-write-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 4055,
+          "exitCode": 0
+        },
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-approve-write-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 4404,
+          "exitCode": 0
+        },
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-approve-write-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 5333,
+          "exitCode": 0
+        },
+        {
+          "id": "hitl-approve-write",
+          "chapter": "ch08",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-approve-write-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 5091,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "hitl-denied-brake",
+      "chapter": "ch08",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "human_denied": 5
+      },
+      "medianDurationMs": 2868,
+      "attempts": [
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-denied-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3876,
+          "exitCode": 2
+        },
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-denied-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2868,
+          "exitCode": 2
+        },
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-denied-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3079,
+          "exitCode": 2
+        },
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-denied-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2675,
+          "exitCode": 2
+        },
+        {
+          "id": "hitl-denied-brake",
+          "chapter": "ch08",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/hitl-denied-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2780,
+          "exitCode": 2
+        }
+      ]
+    },
+    {
+      "id": "write-outside-writable-denied",
+      "chapter": "ch08",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "path_denied": 5
+      },
+      "medianDurationMs": 3067,
+      "attempts": [
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/write-outside-writable-denied-1.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 4502,
+          "exitCode": 2
+        },
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/write-outside-writable-denied-2.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2452,
+          "exitCode": 2
+        },
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/write-outside-writable-denied-3.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 2890,
+          "exitCode": 2
+        },
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/write-outside-writable-denied-4.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3431,
+          "exitCode": 2
+        },
+        {
+          "id": "write-outside-writable-denied",
+          "chapter": "ch08",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/write-outside-writable-denied-5.jsonl",
+          "pass": true,
+          "stop_reason": "path_denied",
+          "tools": [
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 3067,
+          "exitCode": 2
+        }
+      ]
+    },
+    {
+      "id": "budget-within-limits",
+      "chapter": "ch09",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 4112,
+      "attempts": [
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/budget-within-limits-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 4284,
+          "exitCode": 0
+        },
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/budget-within-limits-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3839,
+          "exitCode": 0
+        },
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/budget-within-limits-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3861,
+          "exitCode": 0
+        },
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/budget-within-limits-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 4112,
+          "exitCode": 0
+        },
+        {
+          "id": "budget-within-limits",
+          "chapter": "ch09",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/budget-within-limits-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 5405,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "cost-budget-brake",
+      "chapter": "ch09",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "cost_budget": 5
+      },
+      "medianDurationMs": 2576,
+      "attempts": [
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/cost-budget-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 3282,
+          "exitCode": 2
+        },
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/cost-budget-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2211,
+          "exitCode": 2
+        },
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/cost-budget-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2725,
+          "exitCode": 2
+        },
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/cost-budget-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2576,
+          "exitCode": 2
+        },
+        {
+          "id": "cost-budget-brake",
+          "chapter": "ch09",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/cost-budget-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "cost_budget",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 2191,
+          "exitCode": 2
+        }
+      ]
+    },
+    {
+      "id": "latency-budget-brake",
+      "chapter": "ch09",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "latency_budget": 5
+      },
+      "medianDurationMs": 5051,
+      "attempts": [
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/latency-budget-brake-1.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 3114,
+          "exitCode": 2
+        },
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/latency-budget-brake-2.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 4932,
+          "exitCode": 2
+        },
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/latency-budget-brake-3.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5051,
+          "exitCode": 2
+        },
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/latency-budget-brake-4.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5313,
+          "exitCode": 2
+        },
+        {
+          "id": "latency-budget-brake",
+          "chapter": "ch09",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/latency-budget-brake-5.jsonl",
+          "pass": true,
+          "stop_reason": "latency_budget",
+          "tools": [
+            "slow"
+          ],
+          "reasons": [],
+          "durationMs": 5154,
+          "exitCode": 2
+        }
+      ]
+    },
+    {
+      "id": "capstone-set-clerk",
+      "chapter": "ch10",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 5
+      },
+      "medianDurationMs": 21196,
+      "attempts": [
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-set-clerk-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 28559,
+          "exitCode": 0
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-set-clerk-2.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 26024,
+          "exitCode": 0
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-set-clerk-3.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 21196,
+          "exitCode": 0
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-set-clerk-4.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 18002,
+          "exitCode": 0
+        },
+        {
+          "id": "capstone-set-clerk",
+          "chapter": "ch10",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-set-clerk-5.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 17930,
+          "exitCode": 0
+        }
+      ]
+    },
+    {
+      "id": "capstone-fail-stop",
+      "chapter": "ch10",
+      "passCount": 5,
+      "total": 5,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "human_denied": 5
+      },
+      "medianDurationMs": 6403,
+      "attempts": [
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-fail-stop-1.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 6403,
+          "exitCode": 2
+        },
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 2,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-fail-stop-2.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 5286,
+          "exitCode": 2
+        },
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 3,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-fail-stop-3.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 4895,
+          "exitCode": 2
+        },
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 4,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-fail-stop-4.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 15147,
+          "exitCode": 2
+        },
+        {
+          "id": "capstone-fail-stop",
+          "chapter": "ch10",
+          "attempt": 5,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T04-04-19-004Z-844d8b95/traces/capstone-fail-stop-5.jsonl",
+          "pass": true,
+          "stop_reason": "human_denied",
+          "tools": [
+            "read",
+            "write",
+            "write",
+            "write"
+          ],
+          "reasons": [],
+          "durationMs": 16200,
+          "exitCode": 2
+        }
+      ]
+    }
+  ],
+  "repeat": 5,
+  "timeoutMs": 300000,
+  "partial": false
+}

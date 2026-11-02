@@ -1,0 +1,63 @@
+{"eventType":"eval_context","timestamp":"2026-11-02T04:10:26.236Z","model":"ollama/qwen3.8:27b","attempt":4,"repeat":5,"prompt":"必须调用 flaky 工具查询“横店”的天气，然后用一句话告诉我结果。","tools":["flaky"],"contextNotes":{"case":{"id":"retry-exhausted-brake","chapter":"ch07","note":"天气服务一直失败；重试 2 次用完后按产品决定停机，不让模型瞎编天气。","prompt":"必须调用 flaky 工具查询“横店”的天气，然后用一句话告诉我结果。","allowed_tools":["flaky"],"max_retries":2,"retry_backoff_ms":50,"on_exhausted":"stop","expect":{"tool_called":"flaky","stop_reason":"retry_exhausted","events":{"tool_retry":2,"retry_exhausted":1}}},"timeoutMs":300000,"config":"pi-agent/models.json","isolation":"createIsolatedPi; in-memory session; thinking off"}}
+{"timestamp":"2026-11-02T04:10:27.560Z","eventType":"harness_start","case_id":"retry-exhausted-brake","extensions":0,"activeTools":["flaky"],"maxTurns":8,"toolTimeoutMs":0,"contextBudgetChars":0,"toolResultMaxChars":0,"retry":{"maxRetries":2,"backoffMs":50,"onExhausted":"stop"},"writableDirs":[],"confirmTools":[],"tokenBudget":0,"latencyBudgetMs":0}
+{"timestamp":"2026-11-02T04:10:27.563Z","eventType":"agent_start"}
+{"timestamp":"2026-11-02T04:10:27.563Z","eventType":"turn_start"}
+{"timestamp":"2026-11-02T04:10:27.563Z","eventType":"message_start","role":"system"}
+{"timestamp":"2026-11-02T04:10:27.563Z","eventType":"message_end","role":"system"}
+{"timestamp":"2026-11-02T04:10:27.564Z","eventType":"message_start","role":"user"}
+{"timestamp":"2026-11-02T04:10:27.564Z","eventType":"message_end","role":"user"}
+{"timestamp":"2026-11-02T04:10:27.832Z","eventType":"message_start","role":"assistant"}
+{"timestamp":"2026-11-02T04:10:27.832Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:27.833Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:27.896Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:27.896Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:27.897Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:27.960Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:27.960Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:27.961Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:27.961Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:27.961Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.023Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.023Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.023Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.023Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.082Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.082Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.141Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.142Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.142Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.142Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.142Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.204Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.267Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.267Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.325Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.385Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.385Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.444Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.445Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.445Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.445Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.504Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.504Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.564Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.564Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.624Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.624Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.978Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.978Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.986Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.986Z","eventType":"message_update"}
+{"timestamp":"2026-11-02T04:10:28.986Z","eventType":"message_end","role":"assistant"}
+{"timestamp":"2026-11-02T04:10:28.987Z","eventType":"tool_execution_start","toolName":"flaky","toolCallId":"call_bz74h714","args":{"location":"横店"}}
+{"timestamp":"2026-11-02T04:10:28.989Z","eventType":"tool_retry","toolName":"flaky","attempt":1,"error":"weather service unavailable (call 1)"}
+{"timestamp":"2026-11-02T04:10:29.040Z","eventType":"tool_retry","toolName":"flaky","attempt":2,"error":"weather service unavailable (call 2)"}
+{"timestamp":"2026-11-02T04:10:29.141Z","eventType":"retry_exhausted","toolName":"flaky","attempts":3,"error":"weather service unavailable (call 3)","action":"stop"}
+{"timestamp":"2026-11-02T04:10:29.141Z","eventType":"harness_stop","stop_reason":"retry_exhausted","toolName":"flaky","attempts":3,"error":"weather service unavailable (call 3)","action":"stop"}
+{"timestamp":"2026-11-02T04:10:29.142Z","eventType":"tool_execution_end","toolName":"flaky","toolCallId":"call_bz74h714","isError":true}
+{"timestamp":"2026-11-02T04:10:29.142Z","eventType":"message_start","role":"toolResult"}
+{"timestamp":"2026-11-02T04:10:29.142Z","eventType":"message_end","role":"toolResult"}
+{"timestamp":"2026-11-02T04:10:29.142Z","eventType":"turn_end"}
+{"timestamp":"2026-11-02T04:10:29.142Z","eventType":"agent_end"}
+{"timestamp":"2026-11-02T04:10:29.143Z","eventType":"agent_settled"}
+{"timestamp":"2026-11-02T04:10:29.143Z","eventType":"harness_end","stop_reason":"retry_exhausted","turns":0,"tokens":842,"case_id":"retry-exhausted-brake","model":"ollama/qwen3.8:27b","tools":["flaky"],"durationMs":1582}
