@@ -13,7 +13,7 @@ export function appendEvent(rows: TimelineRow[], event: ProjectEvent): TimelineR
     case "project_state": return event.project.running ? rows : settleTools(rows);
     case "run_ended": return [...settleTools(rows), {
       kind: "note", id: `${event.run.id}:end`,
-      text: `${stageNames[event.run.stage]} · ${runSummary(event.run).text} · stop_reason=${event.run.stop_reason}`,
+      text: `${stageNames[event.run.stage]} · ${runSummary(event.run).text}`,
       details: event.run.errors,
     }];
     case "message_update": {

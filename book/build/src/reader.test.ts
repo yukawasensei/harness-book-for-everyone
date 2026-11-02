@@ -121,3 +121,35 @@ test("暂存进度取当前运行成功 write_scene 的 scene_count，覆盖不�
   assert.equal(current?.text, "运行中");
   assert.equal(current?.stopReason, null);
 });
+
+test("设定集按三组显示可读卡片、别名与来源场，JSON 默认折叠", async () => {
+  const { ArtifactPreview } = await import(new URL("../web/src/ArtifactPreview.tsx", import.meta.url).href);
+  const bible = sample("bible"); bible.characters[2].aliases = ["修表师"];
+  const html = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "bible", value: bible }));
+  assert.equal((html.match(/class="setting-card"/g) ?? []).length, 7);
+  for (const label of ["角色", "道具", "场景"]) assert.ok(html.includes(`aria-label="${label}"`));
+  for (const text of ["C01", "P01", "L01", "固定描述", "来源场：S01、S02、S03", "别名：修表师", "粗筛", bible.characters[0].appearance]) assert.ok(html.includes(text), text);
+  assert.match(html, /<details><summary>查看原始 JSON<\/summary><pre>/);
+  assert.ok(!html.includes("<details open"));
+  bible.props = [];
+  assert.match(renderToStaticMarkup(createElement(ArtifactPreview, { stage: "bible", value: bible })), /无关键道具/);
+});
+
+test("设定集真实错误显示覆盖缺漏、来源、固定描述与中文字段；原始结果不变", () => {
+  const show = (message: string) => toolErrorText({ content: [{ type: "text", text: message }] });
+  const bible = sample("bible");
+  bible.characters[0].appears_in = [];
+  assert.match(show(errorOf(() => validateArtifact("bible", bible))), /角色列表第 1 项的来源场.*至少/);
+  bible.characters[0].appears_in = ["S1"];
+  assert.match(show(errorOf(() => validateArtifact("bible", bible))), /来源场.*S01/);
+  bible.characters[0].appears_in = ["S01"];
+  bible.characters[0].id = "C1";
+  assert.match(show(errorOf(() => validateArtifact("bible", bible))), /C01 至 C99/);
+  const old = sample("bible"); Reflect.deleteProperty(old.characters[0], "appears_in");
+  assert.match(show(errorOf(() => validateArtifact("bible", old))), /缺少来源场.*重新抽取/);
+  assert.ok(!show(errorOf(() => validateArtifact("bible", old))).includes("appears_in"));
+  for (const raw of ["设定集覆盖检查未通过：缺少台词角色“陆岑”（S02），请补充角色或别名", "C01 固定描述含剧情词：拿起；请移入剧本或镜头动作（粗筛仍需人工审阅）"]) {
+    const result = { content: [{ type: "text", text: raw }] };
+    assert.equal(toolErrorText(result), raw); assert.equal(result.content[0].text, raw);
+  }
+});

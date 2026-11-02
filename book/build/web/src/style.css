@@ -57,7 +57,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
 .badge.ready, .badge.adopted { color: #26734f; }
 .badge.pending_review { color: #94600e; }
 .version-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 12px 20px; font-size: 13px; }
-.preview { padding: 16px; margin: 0 20px; border: 1px solid #d9dfd9; background: #fff; border-radius: 6px; min-height: 160px; overflow-y: auto; flex: 1; }
+.preview { padding: 16px; margin: 0 20px; border: 1px solid #d9dfd9; background: #fff; border-radius: 6px; min-height: min(480px, 60dvh); overflow-y: auto; flex: 1 0 min(480px, 60dvh); }
 .preview pre { line-height: 1.7; }
 .notice { margin: 8px 16px; padding: 10px 12px; background: #fff5dd; border-radius: 6px; font-size: 12px; color: #795e27; }
 .error-banner { background: #fff0eb; color: #a23928; padding: 10px 16px; margin-bottom: 10px; font-size: 13px; overflow-wrap: anywhere; }
@@ -78,7 +78,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
   .conversation { min-height: 560px; border-right: 0; }
   .timeline { max-height: 440px; }
   .artifacts { border-top: 1px solid #dce1dd; min-height: 600px; }
-  .preview { overflow: visible; }
+  .preview { overflow: visible; min-height: 240px; flex: 0 0 auto; }
 }
 .version-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 20px 12px; }
 .version-list button { font-size: 12px; }
@@ -111,3 +111,22 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
 .script-preview details pre { margin-top: 10px; }
 .revision-summary { color: #285b46; padding: 10px 12px; border: 1px solid #cbdcd1; border-radius: 6px; }
 .scene-progress { color: #285b46; font-size: 13px; margin-top: 8px; }
+
+.bible-preview, .bible-group { display: grid; gap: 12px; font-size: 14px; }
+.bible-group > h3 { margin: 4px 0; font-size: 16px; }
+.bible-group > h3 span { color: #586a60; font-size: 13px; font-weight: 400; }
+.setting-card { border: 1px solid #dce4dd; border-radius: 10px; padding: 14px; background: #fbfcf9; overflow-wrap: anywhere; }
+.setting-card header { display: flex; align-items: baseline; gap: 10px; }
+.setting-card header strong { color: #416552; font-size: 12px; }
+.setting-card h4 { margin: 0; font-size: 15px; }
+.setting-card p { margin: 10px 0 0; line-height: 1.7; }
+.setting-label { display: block; color: #586a60; font-size: 12px; }
+.setting-scenes { color: #416552; font-size: 12px; }
+.bible-preview summary { cursor: pointer; color: #586a60; font-size: 12px; }
+.setting-context { margin-top: 8px; }
+@media (min-width: 801px) {
+  .stages { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 10px 16px; }
+  .stages button { padding: 6px 8px; }
+  .version-heading { padding-top: 4px; padding-bottom: 6px; }
+  .version-list { margin-bottom: 8px; }
+}

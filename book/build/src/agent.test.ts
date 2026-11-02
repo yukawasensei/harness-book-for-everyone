@@ -235,9 +235,11 @@ test("创建会话也受状态机约束，占位阶段明确拒绝运行", async
     f.store.writeDraft(f.project.id, "topic", sample("topic")); f.store.adopt(f.project.id, "topic", 1);
     f.store.writeDraft(f.project.id, "synopsis", sample("synopsis")); f.store.adopt(f.project.id, "synopsis", 1);
     f.store.writeDraft(f.project.id, "script", sample("script")); f.store.adopt(f.project.id, "script", 1);
-    await assert.rejects(() => createStageSession({ ...options, stage: "bible" }), /模板尚未实现/);
+    await assert.rejects(() => createStageSession({ ...options, stage: "storyboard" }), /bible 尚未采用/);
     assert.equal(existsSync(join(f.store.projectDir(f.project.id), "sessions")), false);
-    for (const stage of ["bible", "storyboard", "prompts"] as const) assert.equal(STAGE_PROMPTS[stage], null);
+    f.store.writeDraft(f.project.id, "bible", sample("bible")); f.store.adopt(f.project.id, "bible", 1);
+    await assert.rejects(() => createStageSession({ ...options, stage: "storyboard" }), /模板尚未实现/);
+    for (const stage of ["storyboard", "prompts"] as const) assert.equal(STAGE_PROMPTS[stage], null);
   } finally { f.cleanup(); }
 });
 

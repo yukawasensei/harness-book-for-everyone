@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { appendFileSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseStage, validateArtifact, validateVersionMetadata, type Artifacts, type Stage, type VersionMetadata } from "../contracts/index.js";
+import { parseStage, validateArtifact, validateBibleCoverage, validateVersionMetadata, type Artifacts, type Stage, type VersionMetadata } from "../contracts/index.js";
 import { adoptDraft, assertRunnable, initialWorkflow, recordDraft, reviewDraft, reviewOf, type Workflow } from "../workflow/index.js";
 
 export interface Project {
@@ -36,8 +36,19 @@ export class ProjectStore {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
       throw error;
     }
-    return entries.filter(entry => entry.isDirectory() && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/.test(entry.name))
-      .map(entry => this.load(entry.name));
+    const projects: Project[] = [];
+    for (const entry of entries) {
+      try {
+        if (!entry.isDirectory()) throw new Error("非项目目录");
+        const project = this.load(entry.name); // 复用 ID 与 project.json 检查。
+        if (project.id !== entry.name) throw new Error("项目 ID 与目录不一致");
+        projects.push(project);
+      } catch {
+        // 不输出异常原文或文件内容；名称转义，保证每个跳过项仅记一行。
+        console.warn(`跳过无效项目条目 ${JSON.stringify(entry.name)}：不是可读取的项目目录`);
+      }
+    }
+    return projects;
   }
 
   load(id: string): Project {
@@ -72,7 +83,7 @@ export class ProjectStore {
     parseStage(stage);
     const project = this.load(id);
     assertRunnable(project.stages, stage);
-    validateArtifact(stage, artifact); // 在创建目录或文件之前验收。
+    this.validate(id, stage, artifact); // 在创建目录或文件之前验收。
     const version = (project.stages[stage].versions.at(-1) ?? 0) + 1;
     const file = this.artifactPath(id, stage, version);
     mkdirSync(join(this.projectDir(id), "artifacts", stage), { recursive: true });
@@ -100,7 +111,7 @@ export class ProjectStore {
     // 先检查状态和版本，拒绝时不改磁盘；再检查版本文件没有损坏。
     const alreadyAdopted = project.stages[stage].adopted_version === version;
     adoptDraft(project.stages, stage, version);
-    validateArtifact(stage, JSON.parse(readFileSync(this.artifactPath(id, stage, version), "utf8")));
+    this.validate(id, stage, JSON.parse(readFileSync(this.artifactPath(id, stage, version), "utf8")));
     this.save(project);
     if (!alreadyAdopted) this.audit(project, stage, version);
     return project;
@@ -137,7 +148,7 @@ export class ProjectStore {
       throw new Error(`不能按意见修改 ${stage} v${version}：必须是有修改意见的 changes_requested 版本`);
     }
     const original_json = readFileSync(this.artifactPath(id, stage, version), "utf8");
-    validateArtifact(stage, JSON.parse(original_json));
+    this.validate(id, stage, JSON.parse(original_json));
     return { original_json, note: review.note };
   }
 
@@ -152,8 +163,13 @@ export class ProjectStore {
     const file = this.artifactPath(id, stage, version);
     if (!this.load(id).stages[stage].versions.includes(version)) throw new Error(`草稿版本不存在：${stage} v${version}`);
     const artifact: unknown = JSON.parse(readFileSync(file, "utf8"));
-    validateArtifact(stage, artifact);
+    this.validate(id, stage, artifact);
     return artifact;
+  }
+
+  private validate<S extends Stage>(id: string, stage: S, artifact: unknown): asserts artifact is Artifacts[S] {
+    validateArtifact(stage, artifact);
+    if (stage === "bible") validateBibleCoverage(artifact as Artifacts["bible"], this.readAdopted(id, "script"));
   }
 
   sessionDir(id: string): string {

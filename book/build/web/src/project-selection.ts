@@ -1,3 +1,5 @@
+import { STAGES, type Stage } from "../../src/contracts/index.js";
+
 const selectionKey = "storyboard-studio.selected-project";
 type StorageAccess = () => Pick<Storage, "getItem" | "setItem">;
 const browserStorage: StorageAccess = () => window.localStorage;
@@ -14,4 +16,17 @@ export function rememberSelectedProject(id: string, access: StorageAccess = brow
   if (!id) return;
   try { access().setItem(selectionKey, id); }
   catch { /* 存储不可用或已满，不影响选择项目。 */ }
+}
+export function restoreSelectedStage(id: string, access: StorageAccess = browserStorage): Stage {
+  try {
+    const saved = access().getItem(`${selectionKey}.stage.${id}`);
+    if (STAGES.includes(saved as Stage)) return saved as Stage;
+  } catch { /* 存储不可用时从选题开始。 */ }
+  return "topic";
+}
+
+export function rememberSelectedStage(id: string, stage: Stage, access: StorageAccess = browserStorage): void {
+  if (!id || !STAGES.includes(stage)) return;
+  try { access().setItem(`${selectionKey}.stage.${id}`, stage); }
+  catch { /* 存储不可用不影响阶段操作。 */ }
 }

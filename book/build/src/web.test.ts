@@ -207,8 +207,12 @@ test("禁用原因由服务端真实状态机和模板检查给出：依赖未�
     f.store.writeDraft(f.project.id, "script", sample("script"));
     f.store.adopt(f.project.id, "script", 1);
     project = await read();
-    assert.throws(() => stagePrompt("bible"), error => {
-      assert.equal(project.run_blocked_reasons.bible, (error as Error).message); return true;
+    assert.equal(project.run_blocked_reasons.bible, null);
+    f.store.writeDraft(f.project.id, "bible", sample("bible"));
+    f.store.adopt(f.project.id, "bible", 1);
+    project = await read();
+    assert.throws(() => stagePrompt("storyboard"), error => {
+      assert.equal(project.run_blocked_reasons.storyboard, (error as Error).message); return true;
     });
   } finally { await app.close(); f.cleanup(); }
 });
@@ -253,5 +257,5 @@ test("剧本演示预填仅改 S02 的意见；汇总结果可读显示原版本
   assert.equal(demoRevisionNotice(true, DEMO_SCRIPT_CHANGE_NOTE, "script"), null);
   assert.equal(demoRevisionNotice(true, DEMO_CHANGE_NOTE, "script"), "离线演示的修改结果为预设内容");
   assert.equal(demoRevisionNotice(false, "删掉第一场", "script"), null);
-  assert.equal(toolResultText({ content: [{ type: "text", text: "本版相对 v1：重交/新增 S02；沿用 S01、S03；删除 无。" }] }), "本版相对 v1：重交 S02；沿用 S01、S03；删除 无。");
+  assert.equal(toolResultText({ content: [{ type: "text", text: "本版相对 v1：重交/新增 S02；沿用 S01、S03；删除 无。" }] }), "本版相对 v1：重交 S02；沿用 S01、S03。");
 });

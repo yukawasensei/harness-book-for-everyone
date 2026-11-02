@@ -1,4 +1,4 @@
-import { schemas, type Stage } from "../contracts/index.js";
+import { schemas, FIXED_DESCRIPTION_LIMITS, PLOT_WORDS, type Stage } from "../contracts/index.js";
 
 export const TOPIC_PROMPT = `你是原创短片的选题编辑。本阶段只做选题，不推进下一阶段。
 根据用户给的项目标题，提出一个可拍摄的原创短片选题。
@@ -36,14 +36,30 @@ finalize 成功后简短说明并等待人审阅；不能自动采用或重复 f
 完整产物契约供参考（不要整份提交）：
 ${JSON.stringify(schemas.script)}`;
 
+export const BIBLE_PROMPT = `你是短片设定编辑。本阶段从人工采用剧本抽取设定集，不推进阶段。
+先用 read_upstream({"stage":"script"}) 读取采用剧本，只能使用 read_upstream 和 write_draft。
+不要发明剧本里没有的角色；检查动作行中的出场人物，并覆盖所有 dialogue 的 character。
+角色 name 使用稳定称呼；剧本称呼变体写入可选 aliases 数组，同一称呼只能归属一个角色。
+道具只收对剧情有作用的物品；地点覆盖全部场。不要把布景中每个物品都当作关键道具。
+characters / props / locations 都必须有非空、无重复的 appears_in 场号数组，来源必须真实存在于采用剧本；角色来源还须覆盖其台词所在场。
+id 分别为 C01、P01、L01 这样的两位正数编号，同类不重复，稳定保留已有编号。
+角色的 appearance、道具和地点的 description 是固定描述：只写可视化、稳定、与剧情无关的外观、材质、服饰、空间布局。
+固定描述去除首尾空白后须为 ${FIXED_DESCRIPTION_LIMITS.min}–${FIXED_DESCRIPTION_LIMITS.max} 个字符，不含 S01 或第几场之类场次号，不含剧情词：${PLOT_WORDS.join("、")}。
+这些规则只是确定性粗筛，不能代替人工审阅；通过也不证明外观真实来自剧本。剧本未给出视觉细节时用保守的造型建议，交给人确认，不能声称是剧本原文。
+role 写叙事定位，personality 写性格；不可将剧情动作塞进固定描述，因为固定描述会被程序原样注入镜头提示词。
+用 write_draft 的 artifact 提交完整 JSON；覆盖检查拒绝时按缺漏补全并重交，成功后等待人工采用。
+收到按意见修改时，用户提示包含原稿和意见；重新读取采用剧本，保留未要求改变的 ID 和稳定描述，提交完整新版本，不覆盖原稿。
+产物契约：
+${JSON.stringify(schemas.bible)}`;
+
 /** 尚未实现的阶段明确拒绝运行，避免产生伪完成。 */
 export const STAGE_PROMPTS: Record<Stage, string | null> = {
   topic: TOPIC_PROMPT,
-  synopsis: SYNOPSIS_PROMPT, script: SCRIPT_PROMPT, bible: null, storyboard: null, prompts: null,
+  synopsis: SYNOPSIS_PROMPT, script: SCRIPT_PROMPT, bible: BIBLE_PROMPT, storyboard: null, prompts: null,
 };
 
 export function stagePrompt(stage: Stage): string {
   const prompt = STAGE_PROMPTS[stage];
-  if (prompt === null) throw new Error(`${stage} 系统提示模板尚未实现；目前只运行 topic、synopsis、script`);
+  if (prompt === null) throw new Error(`${stage} 系统提示模板尚未实现；目前只运行 topic、synopsis、script、bible`);
   return prompt;
 }

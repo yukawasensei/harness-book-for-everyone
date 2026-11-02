@@ -66,7 +66,8 @@ export function createStageTools(store: ProjectStore, projectId: string, stage: 
       async execute() {
         const details = draft.finalize();
         const changes = details.scene_changes;
-        const comparison = changes.revise_from === null ? "" : `本版相对 v${changes.revise_from}：重交/新增 ${changes.resubmitted.join("、") || "无"}；沿用 ${changes.reused.join("、") || "无"}；删除 ${changes.removed.join("、") || "无"}。`;
+        const parts = [["重交/新增", changes.resubmitted], ["沿用", changes.reused], ["删除", changes.removed]] as const;
+        const comparison = changes.revise_from === null ? "" : `本版相对 v${changes.revise_from}：${parts.filter(([, ids]) => ids.length).map(([label, ids]) => `${label} ${ids.join("、")}`).join("；") || "没有场次变动"}。`;
         return { content: [{ type: "text" as const, text: `已保存 script v${details.version}；待审阅。${comparison}${details.warnings.join("\n")}` }], details };
       },
     }),

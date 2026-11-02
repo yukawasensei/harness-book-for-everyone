@@ -6,7 +6,7 @@ const fields: Record<string, string> = {
   beats: "叙事拍", tone: "基调", scenes: "剧本场次", scene_id: "场次编号", heading: "地点与时间", summary: "摘要",
   lines: "内容行", kind: "行类型", text: "内容", character: "角色", characters: "角色列表", props: "道具列表",
   locations: "地点列表", id: "编号", name: "名称", role: "角色定位", appearance: "外观", personality: "性格",
-  description: "描述", shots: "镜头列表", shot_id: "镜头编号", location_id: "地点编号", character_ids: "角色编号",
+  description: "描述", appears_in: "来源场", aliases: "别名", shots: "镜头列表", shot_id: "镜头编号", location_id: "地点编号", character_ids: "角色编号",
   prop_ids: "道具编号", shot_size: "景别", camera: "镜头运动", action: "动作", dialogue: "台词",
   duration_s: "时长", items: "条目", shot_part: "镜头描述", injected_ids: "引用编号", final_prompt: "完整提示词",
 };
@@ -17,6 +17,10 @@ const comparisons: Record<string, string> = { ">": "大于", "<": "小于", ">="
 function location(path: string, scene: Record<string, unknown>): string {
   const segments = path.split("/").slice(1).map(part => part.replaceAll("~1", "/").replaceAll("~0", "~"));
   let label = "";
+  const group = segments[0];
+  if (["characters", "props", "locations"].includes(group) && /^\d+$/.test(segments[1] ?? "")) {
+    label = `${field(group)}第 ${Number(segments[1]) + 1} 项`;
+  }
   const sceneIndex = segments.indexOf("scenes");
   const sceneNumber = sceneIndex >= 0 && /^\d+$/.test(segments[sceneIndex + 1] ?? "")
     ? Number(segments[sceneIndex + 1]) + 1 : typeof scene.scene_id === "string" ? Number(scene.scene_id.slice(1)) : null;
@@ -24,12 +28,16 @@ function location(path: string, scene: Record<string, unknown>): string {
   const lineIndex = segments.indexOf("lines");
   if (lineIndex >= 0 && /^\d+$/.test(segments[lineIndex + 1] ?? "")) label += `第 ${Number(segments[lineIndex + 1]) + 1} 行`;
   const last = segments.at(-1);
+  if (last && /^\d+$/.test(last) && segments.length > 2 && ["appears_in", "aliases"].includes(segments.at(-2)!)) {
+    label += `${label ? "的" : ""}${field(segments.at(-2)!)}`;
+  }
   if (last && !/^\d+$/.test(last)) label += `${label ? "的" : ""}${field(last)}`;
   else if (!label) label = "产物";
   return label;
 }
 
 export function translateValidationError(raw: string, context: ValidationContext = {}): string {
+  if (raw.startsWith("设定集缺少来源场 appears_in")) return "设定集缺少来源场，请从采用剧本重新抽取；旧文件不会自动迁移或覆盖。";
   if (raw.startsWith("Invalid arguments for tool")) return "工具参数不是完整的 JSON，请修正后重新提交。";
   if (raw.startsWith("Validation failed for tool")) {
     const reasons = raw.split("Received arguments:")[0].split("\n").filter(line => /^\s*- /.test(line));
@@ -86,6 +94,11 @@ export function translateValidationError(raw: string, context: ValidationContext
     if (/duplicate|unique/i.test(message)) return `${at}不能有重复项`;
     if (/pattern/.test(message)) {
       if (/scene_id/.test(path)) return `${at}格式不正确，请使用 S01 这样的编号`;
+      if (/appears_in/.test(path)) return `${at}格式不正确，请使用 S01 这样的场次编号`;
+      if (/\/(characters|props|locations)\/\d+\/id$/.test(path)) {
+        const prefix = path.includes("characters") ? "C" : path.includes("props") ? "P" : "L";
+        return `${at}格式不正确，请使用 ${prefix}01 至 ${prefix}99 这样的编号`;
+      }
       if (message.includes("\\S")) return `${at}不能为空白`;
       return `${at}格式不正确，请检查编号或文字格式`;
     }

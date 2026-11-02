@@ -188,7 +188,9 @@ test("非法推进返回状态机原文；缺少模板或会话失败不留下�
     f.store.adopt(f.project.id, "synopsis", 1);
     f.store.writeDraft(f.project.id, "script", sample("script"));
     f.store.adopt(f.project.id, "script", 1);
-    const placeholder = await f.post(`${f.path}/stages/bible/run`);
+    f.store.writeDraft(f.project.id, "bible", sample("bible"));
+    f.store.adopt(f.project.id, "bible", 1);
+    const placeholder = await f.post(`${f.path}/stages/storyboard/run`);
     assert.equal(placeholder.status, 422);
     assert.match((await placeholder.json() as { error: string }).error, /模板尚未实现/);
     assert.equal((await f.detail()).running, null);
@@ -305,7 +307,7 @@ test("离线演示完整闭环：选题修改采用、梗概采用、逐场修�
     assert.equal((await f.post(`${synopsis}/adopt`, { version: 1 })).status, 200);
     assert.equal((await f.detail()).stages.script.status, "ready");
     const config = await (await f.get("/api/config")).json() as { runnable_stages: string[] };
-    assert.deepEqual(config.runnable_stages, ["topic", "synopsis", "script"]);
+    assert.deepEqual(config.runnable_stages, ["topic", "synopsis", "script", "bible"]);
     const sse = await subscribe(f.base, f.path);
     try {
       assert.equal((await f.post(`${f.path}/stages/script/run`)).status, 202);
@@ -346,4 +348,46 @@ test("离线演示完整闭环：选题修改采用、梗概采用、逐场修�
       assert.equal(revisedDetail.stages.script.reviews?.[1].status, "changes_requested");
     } finally { await sse.close(); }
   } finally { await f.cleanup(); }
+});
+
+test("设定集离线 HTTP/SSE：漏角色被拒、补全待审、采用后分镜解锁；支持默认与老站长剧本", async () => {
+  for (const older of [false, true]) {
+    const f = await setup({ factory: createDemoSession });
+    const sse = await subscribe(f.base, f.path);
+    try {
+      for (const stage of ["topic", "synopsis"] as const) {
+        f.store.writeDraft(f.project.id, stage, sample(stage)); f.store.adopt(f.project.id, stage, 1);
+      }
+      const script = sample("script");
+      if (older) for (const scene of script.scenes) {
+        scene.summary = scene.summary.replaceAll("麦冬", "老站长何望");
+        for (const line of scene.lines) {
+          line.text = line.text.replaceAll("麦冬", "老站长何望");
+          if (line.kind === "dialogue" && line.character === "麦冬") line.character = "老站长何望";
+        }
+      }
+      f.store.writeDraft(f.project.id, "script", script); f.store.adopt(f.project.id, "script", 1);
+      const route = `${f.path}/stages/bible`;
+      assert.equal((await f.post(`${route}/run`)).status, 202);
+      const detail = await eventually(f.detail, p => !p.running && p.stages.bible.versions.length === 1);
+      await eventually(async () => sse.frames, frames => frames.some(f => f.event.type === "run_ended" && f.event.run.stage === "bible"));
+      assert.equal(detail.last_run?.stop_reason, "draft_written");
+      assert.equal(detail.last_run?.errors.length, 1);
+      assert.match(detail.last_run!.errors[0], /覆盖检查.*陆岑.*S02/s);
+      assert.equal(detail.stages.bible.reviews?.[1].status, "pending");
+      assert.equal(detail.stages.storyboard.status, "locked");
+      const writes = sse.frames.map(f => f.event).filter(e => e.type === "tool_execution_end" && e.toolName === "write_draft");
+      assert.deepEqual(writes.map(e => e.type === "tool_execution_end" ? e.isError : undefined), [true, false]);
+      const artifact = await (await f.get(`${route}/versions/1`)).json();
+      assert.ok(!("logline" in artifact));
+      if (older) {
+        assert.equal(artifact.characters[1].name, "何望");
+        assert.ok(artifact.characters[1].aliases.includes("老站长何望"));
+        assert.ok(!JSON.stringify(artifact).includes("麦冬"));
+      } else assert.deepEqual(artifact, sample("bible"));
+      assert.equal((await f.post(`${route}/adopt`, { version: 1 })).status, 200);
+      assert.equal((await f.detail()).stages.storyboard.status, "ready");
+      await eventually(async () => sse.frames, frames => frames.some(f => f.event.type === "project_state" && f.event.project.stages.storyboard.status === "ready"));
+    } finally { await sse.close(); await f.cleanup(); }
+  }
 });

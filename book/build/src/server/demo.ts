@@ -18,7 +18,7 @@ export async function createDemoSession(options: StageSessionOptions) {
       artifact.beats = artifact.beats.map((beat: string) => beat.replaceAll("麦冬", "老站长何望"));
     }
   }
-  if (versions.length && options.stage !== "script") {
+  if (versions.length && ["topic", "synopsis"].includes(options.stage)) {
     artifact.logline = "急着填满旧候船亭时刻表的志愿者，与坚持保留空白格的老站长争执后，决定用三分钟听完一位修表师没讲完的告别。";
   }
   const dependency = DEPENDENCIES[options.stage][0];
@@ -60,6 +60,27 @@ export async function createDemoSession(options: StageSessionOptions) {
       ...artifact.scenes.map((scene: Scene) => ({ call: "write_scene", args: { scene }, text: scene.scene_id === "S01" ? "补齐台词角色后重交第一场。每场仅暂存，不产生版本。" : `继续提交 ${scene.scene_id}。` })),
       { call: "finalize_draft", args: {}, text: "各场已交齐，交给程序排序并校验完整剧本。" },
       { text: "剧本已保存为待审阅版本。场数与四个叙事拍不同是提醒，请人工检查故事转折后再决定是否采用。" },
+    ];
+  } else if (options.stage === "bible") {
+    const script = options.store.readAdopted(options.projectId, "script");
+    if (JSON.stringify(script).includes("老站长何望")) {
+      Object.assign(artifact.characters[1], {
+        name: "何望", aliases: ["老站长何望", "老站长"],
+        role: "提出保留空白格的老站长，让志愿者与修表师相遇",
+        appearance: "年长男性，灰白短发，穿姜黄色夹克、棕色长裤与黑色布鞋，胸前别着一枚黄铜圆徽章。",
+        personality: "沉稳、耐心，愿意替还没开口的人留位置。",
+      });
+    }
+    if (options.reviseFrom !== undefined) {
+      artifact.characters[0].appearance = artifact.characters[0].appearance.replace("浅灰", "深灰");
+    }
+    const missing = structuredClone(artifact);
+    missing.characters = missing.characters.filter((character: { id: string }) => character.id !== "C03");
+    turns = [
+      { call: "read_upstream", args: { stage: "script" }, text: "从人工采用剧本抽取角色、道具和场景；固定描述与剧情动作分开。" },
+      { call: "write_draft", args: { artifact: missing }, text: "这份草稿漏了有台词的陆岑；覆盖检查会拒绝，不形成版本。" },
+      { call: "write_draft", args: { artifact }, text: "补齐陆岑及其来源场，保持其他编号和固定描述。" },
+      { text: "覆盖检查与固定描述粗筛已通过，设定集待审阅。请人工核对动作行人物、关键道具及视觉描述，再决定是否采用。" },
     ];
   } else turns = [
     { call: "read_upstream", args: dependency ? { stage: dependency } : {}, text: "这是离线演示。先检查上游，再提交草稿。" },

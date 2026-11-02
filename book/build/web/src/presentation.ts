@@ -13,22 +13,30 @@ export const reviewLabels: Record<ReviewStatus, string> = {
 const stageLabels: Record<StageStatus, string> = {
   locked: "锁定", ready: "可运行", pending_review: reviewLabels.pending, adopted: reviewLabels.adopted,
 };
-export function stageBadge(status: StageStatus | undefined, stage: Stage, running: Pick<RunInfo, "stage"> | null) {
+export function stageBadge(status: StageStatus | undefined, stage: Stage, running: Pick<RunInfo, "stage"> | null, implemented = true) {
+  if (!implemented) return { text: "暂未开放", className: "unavailable" };
   return running?.stage === stage ? { text: "运行中", className: "running" }
     : { text: status ? stageLabels[status] : "加载中", className: status ?? "" };
 }
 
 /** 服务端保留技术原因；页面用读者能理解的说法呈现。 */
 export function readerMessage(text: string): string {
+  const unavailable = text.match(/^(\w+) 系统提示模板尚未实现/);
+  if (unavailable && unavailable[1] in stageNames) return `${stageNames[unavailable[1] as Stage]}暂未开放运行。`;
   return translateValidationError(text.replace(/不能运行 (\w+)：当前状态 adopted；已采用阶段的返工留到 P\d+/g,
     (_match, stage: Stage) => `${stageNames[stage] ?? stage}已采用，暂不支持再次运行。`)
     .replace(/；(?:已采用阶段的)?返工留到 P\d+/g, "；已采用的版本暂不支持修改")
-    .replace(/待采用|待确认/g, "待审阅").replaceAll("重交/新增", "重交"));
+    .replace(/待采用|待确认/g, "待审阅").replaceAll("重交/新增", "重交")
+    .replace(/；(?:重交|沿用|删除) 无(?=[；。]|$)/g, ""))
+    .replace(/\b(topic|synopsis|script|bible|storyboard|prompts)\b/g, key => stageNames[key as Stage])
+    .replace(/(?:status=)?\b(pending_review|changes_requested|discarded|adopted|pending|locked|ready)\b/g,
+      key => ({ ...stageLabels, ...reviewLabels } as Record<string, string>)[key.replace("status=", "")] ?? key);
 }
 
 export function revisionDescription(revision?: SceneChanges): string | null {
   if (!revision || revision.revise_from === null) return null;
-  return `相对 v${revision.revise_from}：重交 ${revision.resubmitted.join("、") || "无"}；沿用 ${revision.reused.join("、") || "无"}；删除 ${revision.removed.join("、") || "无"}`;
+  const parts = [["重交", revision.resubmitted], ["沿用", revision.reused], ["删除", revision.removed]] as const;
+  return `相对 v${revision.revise_from}：${parts.filter(([, ids]) => ids.length).map(([label, ids]) => `${label} ${ids.join("、")}`).join("；") || "没有场次变动"}`;
 }
 
 export function currentRunDisplay(running: RunInfo | null | undefined, last: RunResult | null | undefined) {
@@ -52,7 +60,8 @@ export function scriptProgress(running: RunInfo | null | undefined, rows: Timeli
 
 export const DEMO_CHANGE_NOTE = "把孩子换成一位老站长，保留空白格的意象。";
 export const DEMO_SCRIPT_CHANGE_NOTE = "只修改 S02：让程禾先询问陆岑是否愿意讲述，其他场保持原样。";
-export const demoChangeNote = (stage: Stage) => stage === "script" ? DEMO_SCRIPT_CHANGE_NOTE : DEMO_CHANGE_NOTE;
+export const DEMO_BIBLE_CHANGE_NOTE = "保留角色与来源场，只把程禾外套改为深灰色。";
+export const demoChangeNote = (stage: Stage) => stage === "script" ? DEMO_SCRIPT_CHANGE_NOTE : stage === "bible" ? DEMO_BIBLE_CHANGE_NOTE : DEMO_CHANGE_NOTE;
 export const DEMO_REVISION_NOTICE = "离线演示的修改结果为预设内容";
 export function demoRevisionNotice(demo: boolean, note: string, stage: Stage = "topic"): string | null {
   return demo && note !== demoChangeNote(stage) ? DEMO_REVISION_NOTICE : null;
