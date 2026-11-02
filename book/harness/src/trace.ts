@@ -3,6 +3,7 @@
 //（tool_execution_end.details）和助手最终说的话（text），用来对比“口头陈述 vs 真实 toolCall”。
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
+import { scrubSecrets } from "./secrets.js";
 
 export type StopReason =
   | "success"
@@ -33,19 +34,21 @@ function assistantText(message: unknown): string | undefined {
     .map((part) => part.text as string)
     .join("")
     .trim();
-  return text ? text.slice(0, MAX_TEXT_CHARS) : undefined;
+  return text ? scrubSecrets(text).slice(0, MAX_TEXT_CHARS) : undefined;
 }
 
 /** 只保留验收需要的字段，不把整段模型输出塞进 trace。 */
 export function toTraceRow(event: { type: string; [key: string]: unknown }, now = new Date()): TraceRow {
   const row: TraceRow = { timestamp: now.toISOString(), eventType: event.type };
-  const message = event.message as { role?: string } | undefined;
+  const message = event.message as { role?: string; usage?: unknown; errorMessage?: string } | undefined;
   if ((event.type === "message_start" || event.type === "message_end") && message?.role) {
     row.role = message.role;
   }
   if (event.type === "message_end" && message?.role === "assistant") {
     const text = assistantText(message);
     if (text) row.text = text;
+    if (message.usage) row.usage = message.usage;
+    if (message.errorMessage) row.error = scrubSecrets(message.errorMessage);
   }
   if (event.type === "tool_execution_start" || event.type === "tool_execution_end") {
     row.toolName = event.toolName;
@@ -66,5 +69,5 @@ export function toTraceRow(event: { type: string; [key: string]: unknown }, now 
 export function createTraceWriter(path: string) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, "", "utf8");
-  return (row: TraceRow) => appendFileSync(path, `${JSON.stringify(row)}\n`, "utf8");
+  return (row: TraceRow) => appendFileSync(path, `${scrubSecrets(JSON.stringify(row))}\n`, "utf8");
 }

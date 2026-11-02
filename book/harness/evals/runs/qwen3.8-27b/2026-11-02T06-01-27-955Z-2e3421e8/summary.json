@@ -1,0 +1,68 @@
+{
+  "model": "ollama/qwen3.8:27b",
+  "startedAt": "2026-11-02T06:01:27.955Z",
+  "finishedAt": "2026-11-02T06:02:02.015Z",
+  "passCount": 1,
+  "total": 1,
+  "cases": [
+    {
+      "id": "read-happy",
+      "chapter": "ch02",
+      "passCount": 1,
+      "total": 1,
+      "passRate": 1,
+      "flaky": false,
+      "stopReasons": {
+        "success": 1
+      },
+      "medianDurationMs": 34058,
+      "attempts": [
+        {
+          "id": "read-happy",
+          "chapter": "ch02",
+          "attempt": 1,
+          "tracePath": "evals/runs/qwen3.8-27b/2026-11-02T06-01-27-955Z-2e3421e8/traces/read-happy-1.jsonl",
+          "pass": true,
+          "stop_reason": "success",
+          "tools": [
+            "read"
+          ],
+          "reasons": [],
+          "durationMs": 34058,
+          "exitCode": 0,
+          "usage": {
+            "input": 956,
+            "output": 101,
+            "cacheRead": 964,
+            "cacheWrite": 0,
+            "totalTokens": 2021,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input": 956,
+    "output": 101,
+    "cacheRead": 964,
+    "cacheWrite": 0,
+    "totalTokens": 2021,
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0
+    }
+  },
+  "repeat": 1,
+  "timeoutMs": 300000,
+  "partial": true
+}

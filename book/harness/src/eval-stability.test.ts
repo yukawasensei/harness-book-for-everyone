@@ -68,7 +68,7 @@ test("archived paths are relative, including errors and denied paths outside har
 
 test("only explicitly registered model ids are accepted", () => {
   const config = { providers: { ollama: { models: [{ id: "registered" }] } } };
-  assert.equal(validateModel(config, "registered"), "registered");
+  assert.equal(validateModel(config, "registered"), "ollama/registered");
   assert.throws(() => validateModel(config, "unknown"), /unknown.*pi-agent\/models.json/);
   assert.throws(() => validateModel({}, "unknown"), /unknown.*pi-agent\/models.json/);
 });

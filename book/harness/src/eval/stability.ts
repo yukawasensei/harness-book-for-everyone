@@ -1,7 +1,9 @@
 import type { Baseline, CaseResult } from "./baseline.js";
+import type { Usage } from "@earendil-works/pi-ai";
+import { sumUsage } from "./usage.js";
 
-export const DEFAULT_MODEL = "qwen3.8:27b";
-export type Attempt = CaseResult & { attempt?: number; tracePath?: string; exitCode?: number | null; error?: string };
+export const DEFAULT_MODEL = "ollama/qwen3.8:27b";
+export type Attempt = CaseResult & { attempt?: number; tracePath?: string; exitCode?: number | null; error?: string; usage?: Usage };
 export type CaseSummary = {
   id: string;
   chapter?: string;
@@ -20,6 +22,7 @@ export type StabilitySummary = {
   passCount: number;
   total: number;
   cases: CaseSummary[];
+  usage?: Usage;
 };
 
 export function parseRepeat(args: string[]): number {
@@ -35,8 +38,9 @@ export function parseRepeat(args: string[]): number {
 
 /** undefined 表示唯一允许更新签收基线的运行。其他运行永不触碰旧 trace。 */
 export function runDirectory(modelId: string, repeat: number, partial: boolean): string | undefined {
-  if (modelId === DEFAULT_MODEL && repeat === 1 && !partial) return undefined;
-  const slug = modelId.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^[.-]+|[.-]+$/g, "") || "model";
+  if ([DEFAULT_MODEL, "qwen3.8:27b"].includes(modelId) && repeat === 1 && !partial) return undefined;
+  // Keep existing Ollama artifact paths stable; remote providers retain their prefix.
+  const slug = modelId.replace(/^ollama\//, "").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^[.-]+|[.-]+$/g, "") || "model";
   return `evals/runs/${slug}`;
 }
 
@@ -81,6 +85,7 @@ export function aggregateRuns(runs: (Baseline | StabilitySummary)[]): StabilityS
     finishedAt: runs.map(r => r.finishedAt).sort().at(-1)!,
     passCount: cases.reduce((n, c) => n + c.passCount, 0),
     total: cases.reduce((n, c) => n + c.total, 0), cases,
+    usage: sumUsage(cases.flatMap(c => c.attempts.flatMap(a => a.usage ? [a.usage] : []))),
   };
 }
 
@@ -88,6 +93,7 @@ const cell = (value: string) => value.replace(/\|/g, "\\|").replace(/[\r\n]+/g, 
 export function formatStabilityReport(summary: StabilitySummary): string {
   const lines = [
     `model=${summary.model}  pass=${summary.passCount}/${summary.total}  startedAt=${summary.startedAt}  finishedAt=${summary.finishedAt}`,
+    ...(summary.usage ? [`Provider-reported tokens: input=${summary.usage.input}, output=${summary.usage.output}, cacheRead=${summary.usage.cacheRead}, cacheWrite=${summary.usage.cacheWrite}, total=${summary.usage.totalTokens}; catalog-estimated USD=$${summary.usage.cost.total.toFixed(6)} (not an invoice).`] : []),
     "", "| case id | chapter | pass / attempts (rate) | flaky | stop_reason distribution | median (ms) |",
     "| --- | --- | --- | --- | --- | ---: |",
     ...summary.cases.map(c => `| ${cell(c.id)} | ${cell(c.chapter ?? "—")} | ${c.passCount}/${c.total} (${(c.passRate * 100).toFixed(2)}%) | ${c.flaky ? "yes" : "no"} | ${Object.entries(c.stopReasons).map(([k, v]) => `${cell(k)}: ${v}`).join(", ")} | ${c.medianDurationMs} |`),

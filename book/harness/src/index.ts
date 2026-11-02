@@ -23,10 +23,16 @@ import { withRetry } from "./gates/retry.js";
 import { createFlakyTool } from "./tools/flaky.js";
 import { denyAllApprover, simulatedApprover, ttyApprover } from "./gates/hitl.js";
 import { createBudgetGuard } from "./gates/budget.js";
+import { configuredModel, splitModelId } from "./eval/model-config.js";
+import { scrubSecrets } from "./secrets.js";
+import { sumUsage } from "./eval/usage.js";
+import type { Usage } from "@earendil-works/pi-ai";
 
 if (process.platform !== "linux") throw new Error("Run the harness inside Linux/WSL");
 
 const cwd = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const modelId = configuredModel(cwd); // Validate credentials before traces, sessions or writes.
+const selectedModel = splitModelId(modelId);
 const caseId = process.env.CASE_ID ?? "read-happy";
 const cases = JSON.parse(readFileSync(resolve(cwd, "cases/cases.json"), "utf8")) as CaseSpec[];
 const spec = cases.find((c) => c.id === caseId);
@@ -34,9 +40,8 @@ if (!spec) throw new Error(`unknown case ${caseId}`);
 
 const writeTrace = createTraceWriter(resolve(cwd, "traces/latest.jsonl"));
 const { agentDir, modelRuntime, settingsManager, resourceLoader } = await createIsolatedPi(cwd);
-const modelId = process.env.MODEL_ID ?? "qwen3.8:27b";
-const model = modelRuntime.getModel("ollama", modelId);
-if (!model) throw new Error(`ollama/${modelId} not configured in pi-agent/models.json`);
+const model = modelRuntime.getModel(selectedModel.provider, selectedModel.id);
+if (!model) throw new Error(scrubSecrets(`${modelId} not configured in pi-agent/models.json`));
 
 const run = createRunState(writeTrace);
 const maxTurns = spec.max_turns ?? 8;
@@ -95,6 +100,7 @@ writeTrace({
   timestamp: new Date().toISOString(),
   eventType: "harness_start",
   case_id: spec.id,
+  model: modelId,
   extensions: extensionsResult.extensions.length,
   activeTools: session.getActiveToolNames(),
   maxTurns,
@@ -158,22 +164,29 @@ session.agent.afterToolCall = async ({ toolCall, result }) => {
   return { content: cut.content };
 };
 
+let output = "";
+let error: string | undefined;
+const usages: Usage[] = [];
 const unsubscribe = session.subscribe((event) => {
   writeTrace(toTraceRow(event as unknown as { type: string }));
+  if (event.type === "message_end" && event.message.role === "assistant") usages.push(event.message.usage);
   if (event.type === "message_update" && event.assistantMessageEvent.type === "text_delta") {
-    process.stdout.write(event.assistantMessageEvent.delta);
+    output += event.assistantMessageEvent.delta;
+  }
+  if (event.type === "message_end" && event.message.role === "assistant" && ["error", "aborted"].includes(event.message.stopReason)) {
+    error = scrubSecrets(event.message.errorMessage ?? event.message.stopReason);
+    run.stop("model_error", { error });
   }
 });
 
 const startedAt = Date.now();
-let error: string | undefined;
 try {
   await session.prompt(spec.prompt);
-  process.stdout.write("\n");
 } catch (err) {
-  error = err instanceof Error ? err.message : String(err);
+  error = scrubSecrets(err instanceof Error ? err.message : String(err));
   run.stop("model_error", { error });
 } finally {
+  process.stdout.write(`${scrubSecrets(output)}\n`);
   const stopReason = run.stopReason;
   // 退出码：0 = success；2 = 闸门刹车（预期内的停机）；1 = 模型/运行错误。
   process.exitCode = stopReason === "success" ? 0 : stopReason === "model_error" ? 1 : 2;
@@ -183,8 +196,9 @@ try {
     stop_reason: stopReason,
     turns: turns.completed,
     tokens: budget.tokens,
+    usage: sumUsage(usages),
     case_id: spec.id,
-    model: `ollama/${modelId}`,
+    model: modelId,
     tools: spec.allowed_tools,
     durationMs: Date.now() - startedAt,
     ...(error ? { error } : {}),

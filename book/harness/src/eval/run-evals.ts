@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { checkCase, parseTrace, type CaseSpec } from "../check-trace.js";
 import { compareBaselines, formatReport, summarize, type Baseline } from "./baseline.js";
 import { configuredModel } from "./model-config.js";
+import { scrubSecrets } from "../secrets.js";
+import type { Usage } from "@earendil-works/pi-ai";
 import { aggregateRuns, DEFAULT_MODEL, formatStabilityReport, parseRepeat, runDirectory, scrubPaths, type Attempt } from "./stability.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -30,7 +32,7 @@ const runDir = directory ? resolve(root, directory, `${startedAt.replace(/[:.]/g
 const tracesDir = runDir ? resolve(runDir, "traces") : resolve(root, "evals/traces");
 mkdirSync(tracesDir, { recursive: true });
 mkdirSync(resolve(root, "traces"), { recursive: true });
-const scrub = (text: string) => scrubPaths(text, root, repoRoot);
+const scrub = (text: string) => scrubPaths(scrubSecrets(text), root, repoRoot);
 const results: Attempt[] = [];
 for (const spec of selected) {
   for (let attempt = 1; attempt <= repeat; attempt++) {
@@ -54,27 +56,29 @@ for (const spec of selected) {
     } catch (err) {
       verdict = { pass: false, reasons: [`invalid trace: ${err instanceof Error ? err.message : String(err)}`] };
     }
+    const end = rows.filter(r => r.eventType === "harness_end").at(-1);
     if (child.error || child.signal || (child.status !== 0 && child.status !== 2)) {
-      error = scrub([child.error?.message, child.signal, `exit=${child.status}`, child.stderr?.trim()].filter(Boolean).join("; "));
+      error = scrub([end?.error, child.error?.message, child.signal, `exit=${child.status}`, child.stderr?.trim()].filter(Boolean).join("; "));
       verdict = { pass: false, reasons: [...verdict.reasons, error] };
     }
     const tracePath = relative(root, resolve(tracesDir, runDir ? `${spec.id}-${attempt}.jsonl` : `${spec.id}.jsonl`));
-    const context = JSON.stringify({ eventType: "eval_context", timestamp: new Date(t0).toISOString(), model: `ollama/${modelId}`, attempt, repeat, prompt: spec.prompt, tools: spec.allowed_tools, contextNotes: { case: spec, timeoutMs: timeout, config: "pi-agent/models.json", isolation: "createIsolatedPi; in-memory session; thinking off" } });
+    const context = JSON.stringify({ eventType: "eval_context", timestamp: new Date(t0).toISOString(), model: modelId, attempt, repeat, prompt: spec.prompt, tools: spec.allowed_tools, contextNotes: { case: spec, timeoutMs: timeout, config: "pi-agent/models.json", isolation: "createIsolatedPi; in-memory session; thinking off" } });
     const archived = `${scrub(context)}\n${scrub(rawTrace)}`;
     writeFileSync(resolve(root, tracePath), archived, "utf8");
     writeFileSync(latest, archived, "utf8");
-    const end = rows.filter(r => r.eventType === "harness_end").at(-1);
     results.push({
       id: spec.id, chapter: (spec as { chapter?: string }).chapter, attempt, tracePath,
       pass: verdict.pass, stop_reason: (end?.stop_reason as string) ?? null,
       tools: rows.filter(r => r.eventType === "tool_execution_start").map(r => String(r.toolName)),
       reasons: verdict.reasons.map(scrub), durationMs: Date.now() - t0, exitCode: child.status, ...(error ? { error } : {}),
+      ...(end?.usage ? { usage: end.usage as Usage } : {}),
     });
     process.stderr.write(`${verdict.pass ? "PASS" : "FAIL"} (${results.at(-1)!.durationMs}ms, stop=${end?.stop_reason ?? "missing"})\n`);
   }
 }
 
-const current = summarize({ model: `ollama/${modelId}`, startedAt, finishedAt: new Date().toISOString() }, results);
+// Scrub once more across complete summaries/reports, not just archived trace rows.
+const current = JSON.parse(scrub(JSON.stringify(summarize({ model: modelId, startedAt, finishedAt: new Date().toISOString() }, results)))) as Baseline;
 const stability = aggregateRuns([current]);
 // 基线对比按 case 聚合：任何一次失败都阻止签收。
 const perCase = summarize(current, stability.cases.map(c => ({ ...(c.attempts.find(r => !r.pass) ?? c.attempts[0]), pass: !c.flaky })));
