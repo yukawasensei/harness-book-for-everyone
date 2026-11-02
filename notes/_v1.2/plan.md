@@ -34,3 +34,7 @@
 - gemma4:26b 对照暂停：下载在网络不稳时停在约 4.8/16.3 GB，用户决定先不做。task-A2-codex.md 和 task-D-docs.md 第 2、3 项挂起。
 - 附录「稳定性与换模型」一节：稳定性那条已填入真实数字；换模型那条如实写明“尚未做”，并给出复现方法。
 - Ollama 里留有约 4.8 GB 的 gemma4 未完成下载，是否清理由用户决定（之后重新 pull 会从断点续传）。
+
+## 收尾（2026-11-02 15:10）
+- DeepSeek 接入（7927ed8）、对照真跑（28dffb3）、书稿（b4ce02a）都已推送到 main。
+- 待用户决定：是否打 book-v1.3 tag / 发 Release；是否清理 Ollama 里 gemma4 的残留；是否删除旧路径的符号链接 ~/ai-learning/pi-qwen-harness。
