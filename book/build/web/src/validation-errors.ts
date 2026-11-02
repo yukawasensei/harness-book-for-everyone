@@ -39,7 +39,9 @@ function location(path: string, scene: Record<string, unknown>): string {
 }
 
 export function translateValidationError(raw: string, context: ValidationContext = {}): string {
-  raw = raw.replaceAll("来源场", "出场场次");
+  raw = raw.replaceAll("来源场", "出场场次")
+    .replace(/提到“([^”]+)”，该角色 (.+?) 不在本镜角色引用中；请移除镜头外角色，或回到分镜修正引用/g,
+      (_match, mention: string) => `“${mention}”不在本镜角色引用中；请移除该角色，或回到分镜修正引用`);
   if (raw.startsWith("分镜引用检查未通过：")) return raw
     .replaceAll("location_id", "地点编号").replaceAll("character_ids", "角色编号").replaceAll("prop_ids", "道具编号");
   if (raw.startsWith("设定集缺少出场场次 appears_in")) return "设定集缺少出场场次，请从采用剧本重新抽取；旧文件不会自动迁移或覆盖。";
@@ -56,8 +58,8 @@ export function translateValidationError(raw: string, context: ValidationContext
   if (/scene_id 不合规/.test(raw)) return "场次编号格式不正确，请使用 S01 这样的两位连续编号。";
   const removed = raw.match(/进行中草稿不存在 (S\d+)/);
   if (removed) return `暂存草稿中不存在 ${removed[1]}，无法删除。`;
-  const finalized = raw.match(/本次(剧本|分镜)已生成 v(\d+)/);
-  if (finalized) return `本次${finalized[1]}已经汇总为 v${finalized[2]}，不能继续写场或重复汇总。`;
+  const finalized = raw.match(/本次(剧本|分镜|提示词)已生成 v(\d+)/);
+  if (finalized) return `本次${finalized[1]}已经汇总为 v${finalized[2]}，不能继续提交或重复汇总。`;
   const lineRule = raw.match(/(S\d+) (dialogue 必须有 character|action 不得有 character)/);
   if (lineRule) return `${lineRule[1]}${lineRule[2].startsWith("dialogue") ? "的台词必须填写角色。" : "的动作行不能填写角色。"}`;
   if (!/schema 不合规/.test(raw)) return raw;

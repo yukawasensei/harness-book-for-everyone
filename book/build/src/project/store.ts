@@ -1,3 +1,4 @@
+import { validatePromptReferences } from "../contracts/prompts.js";
 import { randomUUID } from "node:crypto";
 import { appendFileSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -169,6 +170,7 @@ export class ProjectStore {
 
   private validate<S extends Stage>(id: string, stage: S, artifact: unknown): asserts artifact is Artifacts[S] {
     validateArtifact(stage, artifact);
+    if (stage === "prompts") validatePromptReferences(artifact as Artifacts["prompts"], this.readAdopted(id, "storyboard"), this.readAdopted(id, "bible"));
     if (stage === "storyboard") validateStoryboardReferences(artifact as Artifacts["storyboard"], this.readAdopted(id, "script"), this.readAdopted(id, "bible"));
     if (stage === "bible") validateBibleCoverage(artifact as Artifacts["bible"], this.readAdopted(id, "script"));
   }

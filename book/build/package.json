@@ -10,7 +10,8 @@
     "dev": "node scripts/dev.mjs",
     "dev:server": "tsx src/server/main.ts",
     "dev:web": "vite --config web/vite.config.ts",
-    "build": "vite build --config web/vite.config.ts"
+    "build": "vite build --config web/vite.config.ts",
+    "context:compare": "tsx scripts/context-budget.ts"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "1.4.0",

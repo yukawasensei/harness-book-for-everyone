@@ -2,14 +2,14 @@ import type { ProjectEvent } from "../../src/server/protocol.js";
 import { runSummary, stageNames } from "./presentation.js";
 
 export type TimelineRow =
-  | { kind: "text" | "user" | "note"; id: string; text: string; details?: string[] }
+  | { kind: "text" | "user" | "note"; id: string; text: string; at?: string; details?: string[] }
   | { kind: "tool"; id: string; name: string; args: unknown; status: "running" | "success" | "error" | "unknown"; result?: unknown };
 
 export function appendEvent(rows: TimelineRow[], event: ProjectEvent): TimelineRow[] {
   // 页面只保留最近 300 个块；完整会话由服务端 sessions 保存。
   rows = rows.slice(-299);
   switch (event.type) {
-    case "run_started": return [...rows, { kind: "note", id: event.run.id, text: `开始${stageNames[event.run.stage]}` }];
+    case "run_started": return [...rows, { kind: "note", id: event.run.id, text: `开始${stageNames[event.run.stage]}`, at: event.run.started_at }];
     case "project_state": return event.project.running ? rows : settleTools(rows);
     case "run_ended": return [...settleTools(rows), {
       kind: "note", id: `${event.run.id}:end`,

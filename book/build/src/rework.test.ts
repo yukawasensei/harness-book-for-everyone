@@ -42,13 +42,8 @@ test("各阶段提示与工具结果只显示中文阶段、审阅状态", () =>
     assert.ok(!/\b(topic|synopsis|script|bible|storyboard|prompts)\b/.test(visible));
     assert.match(visible, /剧本 尚未采用版本/);
   }
-  for (const stage of ["prompts"] as const) {
-    try { stagePrompt(stage); } catch (error) {
-      const visible = readerMessage((error as Error).message);
-      assert.match(visible, /暂未开放/);
-      assert.ok(!/\b(topic|synopsis|script|bible|storyboard|prompts)\b/.test(visible));
-    }
-  }
+  assert.ok(stagePrompt("prompts"));
+  assert.equal(readerMessage("已保存 prompts v1；status=pending_review"), "已保存 分镜提示词 v1；待审阅");
   assert.equal(readerMessage("已保存 bible v1；status=pending_review，等待人工采用"), "已保存 设定集 v1；待审阅，等待人工采用");
 });
 

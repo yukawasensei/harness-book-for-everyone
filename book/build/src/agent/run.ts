@@ -1,13 +1,13 @@
 import type { AgentSession } from "@earendil-works/pi-coding-agent";
-import { type Stage } from "../contracts/index.js";
+import { type Stage, type SceneChanges, type ShotChanges } from "../contracts/index.js";
 import { ProjectStore } from "../project/store.js";
 import { scrubSecrets } from "./model.js";
 import { stagePrompt } from "./prompts.js";
 import { assertRunnable } from "../workflow/index.js";
-import { sessionSceneDraft } from "./session.js";
+import { sessionSceneDraft, sessionPromptDraft } from "./session.js";
 
 export const STAGE_TURN_LIMITS: Readonly<Record<Stage, number>> = {
-  topic: 8, synopsis: 8, script: 20, bible: 8, storyboard: 24, prompts: 8,
+  topic: 8, synopsis: 8, script: 20, bible: 8, storyboard: 24, prompts: 32,
 };
 
 /** 单次阶段运行；会话保留原始 SDK 事件，自定义条目记录签收所需的运行摘要。 */
@@ -19,7 +19,13 @@ export async function runStage(
   assertRunnable(project.stages, stage);
   const revision = reviseFrom === undefined ? null : store.revisionContext(projectId, stage, reviseFrom);
   const before = project.stages[stage].versions.length;
-  const draft = sessionSceneDraft(session);
+  const draft = sessionSceneDraft(session) ?? sessionPromptDraft(session);
+  const changeRecord = (): { scene_changes?: SceneChanges; shot_changes?: ShotChanges } => draft
+    ? stage === "prompts" ? { shot_changes: draft.changes() } : { scene_changes: draft.changes() } : {};
+  // 修改运行也不把历史 final_prompt 中的固定描述送入模型。
+  const originalJson = revision && stage === "prompts"
+    ? JSON.stringify({ items: store.readVersion(projectId, "prompts", reviseFrom!).items.map(({ shot_id, shot_part }) => ({ shot_id, shot_part })) }, null, 2)
+    : revision?.original_json;
   draft?.reset(revision ? reviseFrom : undefined);
   const maxTurns = STAGE_TURN_LIMITS[stage];
   const submission = stage === "script"
@@ -28,10 +34,13 @@ export async function runStage(
     : stage === "storyboard"
       ? revision ? "只重交需要修改的场（write_scene_shots），删整场镜头用 remove_scene_shots，然后 finalize_draft；原稿全部场已预装，未重交的场由程序原样沿用"
         : "逐场用 write_scene_shots 的 scene 参数提交该场全部镜头，最后 finalize_draft"
-      : "用 write_draft 提交草稿";
+      : stage === "prompts"
+        ? revision ? "只重交受影响镜头（write_shot_prompt），其余已预装沿用，然后 finalize_draft"
+          : "先 list_shots，逐镜 read_shot 与 write_shot_prompt，最后 finalize_draft"
+        : "用 write_draft 提交草稿";
   const prompt = `项目标题：${project.title}\n请完成本阶段，并${submission}。本阶段最多 ${maxTurns} 轮模型响应，请预留修正与结束的轮数。`
     + (additionalInstructions.trim() ? `\n\n补充要求：\n${additionalInstructions.trim()}` : "")
-    + (revision ? `\n\n按意见修改 v${reviseFrom}。以下是待修改的原稿数据与审阅意见，请提交完整新版本，不覆盖原稿。\n原版本 JSON：\n${revision.original_json}\n修改意见：\n${revision.note}` : "");
+    + (revision ? `\n\n按意见修改 v${reviseFrom}。以下是待修改的原稿数据与审阅意见，请提交完整新版本，不覆盖原稿。\n原版本 JSON：\n${originalJson}\n修改意见：\n${revision.note}` : "");
   const errors: string[] = [];
   let stopReason = "no_draft";
   let turns = 0;
@@ -39,15 +48,15 @@ export async function runStage(
   session.sessionManager.appendCustomEntry("stage_run_start", {
     stage, max_turns: maxTurns, model: `${session.model!.provider}/${session.model!.id}`,
     prompt, revise_from: reviseFrom ?? null, system_prompt: stagePrompt(stage), tools: session.getActiveToolNames(),
-    context_notes: "全新阶段会话；仅通过 read_upstream 按 stage 读取显式依赖的采用版本；无全局上下文文件",
-    ...(draft ? { scene_changes: draft.changes() } : {}),
+    context_notes: stage === "prompts" ? "全新阶段会话；仅 list_shots/read_shot 按镜读取采用分镜与名称；固定描述由程序注入，不进入工具上下文；修改仅传镜号与镜头部分" : "全新阶段会话；仅通过 read_upstream 按 stage 读取显式依赖的采用版本；无全局上下文文件",
+    ...changeRecord(),
   });
   const unsubscribe = session.subscribe(event => {
     if (event.type === "tool_execution_end" && event.isError) errors.push(scrubSecrets(JSON.stringify(event.result)));
     if (event.type === "tool_execution_end" && !event.isError && event.toolName === "finalize_draft" && draft) {
       const snapshot = draft.snapshot();
-      if (snapshot.finalized_version !== null && snapshot.scene_changes.revise_from !== null) {
-        try { store.saveVersionMetadata(projectId, stage, snapshot.finalized_version, { revision: snapshot.scene_changes }); }
+      if (snapshot.finalized_version !== null && draft.changes().revise_from !== null) {
+        try { store.saveVersionMetadata(projectId, stage, snapshot.finalized_version, { revision: draft.changes() }); }
         catch (error) { stopReason = "runtime_error"; errors.push(scrubSecrets(String(error))); }
       }
     }
@@ -85,8 +94,8 @@ export async function runStage(
     unsubscribe();
     session.sessionManager.appendCustomEntry("stage_run_end", {
       stage, duration_ms: Date.now() - started, turns, max_turns: maxTurns, errors, stop_reason: stopReason,
-      ...(draft ? { in_progress: draft.snapshot(), scene_changes: draft.changes() } : {}),
+      ...(draft ? { in_progress: draft.snapshot(), ...changeRecord() } : {}),
     });
   }
-  return { stop_reason: stopReason, errors, ...(draft ? { scene_changes: draft.changes() } : {}) };
+  return { stop_reason: stopReason, errors, ...changeRecord() };
 }

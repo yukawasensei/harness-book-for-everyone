@@ -1,3 +1,4 @@
+import { SHOT_PART_LIMITS, PROMPT_MARKERS } from "../contracts/prompts.js";
 import { schemas, FIXED_DESCRIPTION_LIMITS, PLOT_WORDS, type Stage } from "../contracts/index.js";
 
 export const TOPIC_PROMPT = `你是原创短片的选题编辑。本阶段只做选题，不推进下一阶段。
@@ -67,14 +68,25 @@ location_id、character_ids、prop_ids 只能引用采用设定集里的已有 I
 完整契约仅供参考：
 ${JSON.stringify(schemas.storyboard)}`;
 
-/** 尚未实现的阶段明确拒绝运行，避免产生伪完成。 */
+export const PROMPTS_PROMPT = `你是原创短片的镜头提示词编辑。只写每镜特有的动作、构图、情绪、镜头语言，不描述角色外貌。
+只有 list_shots、read_shot、write_shot_prompt、finalize_draft 四种工具。没有 read_upstream，不读取整份设定集。
+先 list_shots({}) 获取镜号和动作摘要，再 read_shot({"shot_id":"S01-01"}) 读取该镜的分镜字段与引用实体名称。
+外貌、地点和道具的固定描述由系统从人采用的设定集原样注入，你不需要也不能改写它们。
+每镜用 write_shot_prompt({"shot_id":"S01-01","shot_part":"..."}) 仅提交镜头部分，不能填写 final_prompt 或 injected_ids。
+shot_part 去除首尾空白后为 ${SHOT_PART_LIMITS.min}–${SHOT_PART_LIMITS.max} 个字符；不能含 C01、P01、L01 等设定编号，不能提到该镜没有引用的角色名或别名，不能含 ${PROMPT_MARKERS.join("、")} 这些保留标记。
+这些是字面粗筛，不能保证创作质量或自动识别所有外貌描述。遵守不写外貌的创作要求，留待人工审阅。
+提交成功只是暂存；同镜重交只替换该镜，失败保留旧暂存。全部镜头齐备后 finalize_draft({})，程序按采用分镜顺序拼装完整提示词、计算注入编号，生成待审阅版本。
+按意见修改时程序已预装指定原稿全部镜头，用户提示仅含原稿的 shot_id 与 shot_part，以及修改意见；只重交受影响镜头，其余由程序原样沿用。需要时用 read_shot 复核该镜，最后汇总。
+汇总成功后不能继续提交或重复汇总。不能采用版本、改变上游引用或推进阶段，等待人审阅。`;
+
+/** 阶段模板与工具权限分别配置，由 harness 控制阶段顺序。 */
 export const STAGE_PROMPTS: Record<Stage, string | null> = {
   topic: TOPIC_PROMPT,
-  synopsis: SYNOPSIS_PROMPT, script: SCRIPT_PROMPT, bible: BIBLE_PROMPT, storyboard: STORYBOARD_PROMPT, prompts: null,
+  synopsis: SYNOPSIS_PROMPT, script: SCRIPT_PROMPT, bible: BIBLE_PROMPT, storyboard: STORYBOARD_PROMPT, prompts: PROMPTS_PROMPT,
 };
 
 export function stagePrompt(stage: Stage): string {
   const prompt = STAGE_PROMPTS[stage];
-  if (prompt === null) throw new Error(`${stage} 系统提示模板尚未实现；目前只运行 topic、synopsis、script、bible、storyboard`);
+  if (prompt === null) throw new Error(`${stage} 系统提示模板尚未实现`);
   return prompt;
 }

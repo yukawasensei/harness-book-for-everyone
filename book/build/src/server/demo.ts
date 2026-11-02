@@ -61,6 +61,32 @@ export async function createDemoSession(options: StageSessionOptions) {
       { call: "finalize_draft", args: {}, text: "各场已交齐，交给程序排序并校验完整剧本。" },
       { text: "剧本已保存为待审阅版本。场数与四个叙事拍不同是提醒，请人工检查故事转折后再决定是否采用。" },
     ];
+  } else if (options.stage === "prompts") {
+    const board = options.store.readAdopted(options.projectId, "storyboard");
+    const bible = options.store.readAdopted(options.projectId, "bible");
+    const read: Turn[] = [{ call: "list_shots", args: {}, text: "只读取镜号清单；外观由程序原样注入，不进入模型上下文。" }];
+    if (options.reviseFrom !== undefined) {
+      const source = options.store.readVersion(options.projectId, "prompts", options.reviseFrom).items.find(item => item.shot_id === "S02-01");
+      if (!source) throw new Error("提示词修改演示需要 S02-01");
+      turns = [...read,
+        { call: "read_shot", args: { shot_id: source.shot_id } },
+        { call: "write_shot_prompt", args: { shot_id: source.shot_id, shot_part: source.shot_part + "动作之后停顿，构图留白，让等待成为画面重心。" }, text: "只重交 S02-01，其余镜头由程序原样沿用。" },
+        { call: "finalize_draft", args: {}, text: "程序重新拼装全部镜头，并记录重交与沿用镜号。" },
+        { text: "修改后的提示词已待审阅，其他镜头沿用指定原稿。" },
+      ];
+    } else {
+      const outside = bible.characters.find(c => !board.shots[0].character_ids.includes(c.id));
+      const drafts: Turn[] = board.shots.flatMap(shot => {
+        const part = `${shot.action}构图围绕人物动作展开，保留自然停顿与克制情绪。`;
+        return [{ call: "read_shot", args: { shot_id: shot.shot_id }, text: `读取 ${shot.shot_id} 的分镜与名称。` },
+          ...(shot === board.shots[0] && outside ? [{ call: "write_shot_prompt", args: { shot_id: shot.shot_id, shot_part: part + `${outside.name}在旁鼓掌。` }, text: "先试交镜头外角色，粗筛会拒绝。" }] : []),
+          { call: "write_shot_prompt", args: { shot_id: shot.shot_id, shot_part: part }, text: `提交 ${shot.shot_id} 的镜头部分；只写动作与镜头语言。` }];
+      });
+      turns = [...read, ...drafts,
+        { call: "finalize_draft", args: {}, text: "全部镜头齐备，由程序原样注入固定设定，生成待审阅版本。" },
+        { text: "请核对双色提示词卡片，复制完整提示词；采用后六阶段全部完成。" },
+      ];
+    }
   } else if (options.stage === "storyboard") {
     const bible = options.store.readAdopted(options.projectId, "bible");
     const second = bible.characters.find(c => c.id === "C02")!;

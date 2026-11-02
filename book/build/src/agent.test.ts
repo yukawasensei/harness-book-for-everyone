@@ -127,7 +127,7 @@ test("read_upstream 越界读取先拒绝，不读项目或产物文件", async 
   } finally { f.cleanup(); }
 });
 
-test("storyboard 能分别读取 script 与 bible；prompts 能读 storyboard 与 bible", async () => {
+test("storyboard 能分别读取 script 与 bible；prompts 只允许按镜读取", async () => {
   const f = await setup([{ text: "未运行" }]);
   try {
     for (const stage of ["topic", "synopsis", "script", "bible"] as const) {
@@ -141,12 +141,14 @@ test("storyboard 能分别读取 script 与 bible；prompts 能读 storyboard �
       assert.deepEqual(JSON.parse((result.content[0] as { text: string }).text), sample(stage));
     }
     f.store.writeDraft(f.project.id, "storyboard", sample("storyboard")); f.store.adopt(f.project.id, "storyboard", 1);
-    const promptsTool = createStageTools(f.store, f.project.id, "prompts").find(t => t.name === "read_upstream")!;
-    for (const stage of ["storyboard", "bible"] as const) {
-      assert.equal(Value.Check(promptsTool.parameters, { stage }), true);
-      const result = await promptsTool.execute("dependencies", { stage }, undefined, undefined, context);
-      assert.deepEqual(JSON.parse((result.content[0] as { text: string }).text), sample(stage));
-    }
+    const tools = createStageTools(f.store, f.project.id, "prompts");
+    assert.ok(!tools.some(t => t.name === "read_upstream"));
+    const tool = tools.find(t => t.name === "read_shot")!;
+    const result = await tool.execute("shot", { shot_id: "S01-01" }, undefined, undefined, context);
+    const value = JSON.parse((result.content[0] as { text: string }).text);
+    assert.equal(value.shot_id, "S01-01");
+    assert.deepEqual(value.names.characters, ["程禾", "麦冬"]);
+    for (const c of sample("bible").characters) assert.ok(!JSON.stringify(value).includes(c.appearance));
   } finally { f.cleanup(); }
 });
 
@@ -228,7 +230,7 @@ test("反复提交错误草稿在八轮停止，不生成版本", async () => {
   } finally { f.cleanup(); }
 });
 
-test("创建会话也受状态机约束，占位阶段明确拒绝运行", async () => {
+test("创建会话也受状态机约束，依赖齐备后提示词可运行", async () => {
   const f = fixture(); try {
     const options = { root: packageRoot, store: f.store, projectId: f.project.id, stage: "synopsis" as const };
     await assert.rejects(() => createStageSession(options), /topic 尚未采用/);
@@ -241,8 +243,10 @@ test("创建会话也受状态机约束，占位阶段明确拒绝运行", async
     const storyboard = await createStageSession({ ...options, stage: "storyboard" });
     storyboard.dispose();
     f.store.writeDraft(f.project.id, "storyboard", sample("storyboard")); f.store.adopt(f.project.id, "storyboard", 1);
-    await assert.rejects(() => createStageSession({ ...options, stage: "prompts" }), /模板尚未实现/);
-    assert.equal(STAGE_PROMPTS.prompts, null);
+    const prompts = await createStageSession({ ...options, stage: "prompts" });
+    assert.ok(STAGE_PROMPTS.prompts);
+    assert.deepEqual(prompts.getActiveToolNames().sort(), ["finalize_draft", "list_shots", "read_shot", "write_shot_prompt"]);
+    prompts.dispose();
   } finally { f.cleanup(); }
 });
 

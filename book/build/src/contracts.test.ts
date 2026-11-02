@@ -76,7 +76,9 @@ test("原创样例三场三角色、两道具两地点，引用与原文拼装�
     const item = prompts.items.find(p => p.shot_id === shot.shot_id)!;
     assert.deepEqual(item.injected_ids, ids);
     for (const id of ids) assert.ok(descriptions.has(id), id);
-    assert.equal(item.final_prompt, `${item.shot_part}\n${ids.map(id => descriptions.get(id)).join("\n")}`);
+    for (const id of ids) assert.ok(item.final_prompt.includes(descriptions.get(id)!));
+    assert.ok(item.final_prompt.startsWith(`[镜头] ${item.shot_part}\n[场景] `));
+    assert.ok(item.final_prompt.endsWith(`[规格] 景别 ${shot.shot_size}，机位 ${shot.camera}，时长 ${shot.duration_s} 秒`));
   }
   assert.equal(board.shots.reduce((n, shot) => n + shot.duration_s, 0), sample("topic").target_minutes * 60);
 });

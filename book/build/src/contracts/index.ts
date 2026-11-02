@@ -134,6 +134,9 @@ export function validateSceneShots(value: unknown, script: Artifacts["script"], 
   validateStoryboardReferences({ shots: group.shots }, script, bible, false);
 }
 
+export const ShotPromptInputSchema = Type.Object({ shot_id: shotId(), shot_part: text() }, closed);
+export type ShotPromptInput = Static<typeof ShotPromptInputSchema>;
+
 export const PromptsSchema = Type.Object({
   items: Type.Array(Type.Object({
     shot_id: shotId(), shot_part: text(),
@@ -198,10 +201,17 @@ export const SceneChangesSchema = Type.Object({
   removed: Type.Array(sceneId(), { uniqueItems: true }),
 }, closed);
 export type SceneChanges = Static<typeof SceneChangesSchema>;
-export interface VersionMetadata { revision: SceneChanges }
+export const ShotChangesSchema = Type.Object({
+  revise_from: Type.Union([Type.Integer({ minimum: 1 }), Type.Null()]),
+  resubmitted: Type.Array(shotId(), { uniqueItems: true }),
+  reused: Type.Array(shotId(), { uniqueItems: true }),
+  removed: Type.Array(shotId(), { uniqueItems: true }),
+}, closed);
+export type ShotChanges = Static<typeof ShotChangesSchema>;
+export interface VersionMetadata { revision: SceneChanges | ShotChanges }
 
 export function validateVersionMetadata(value: VersionMetadata): void {
-  if (!Value.Check(Type.Object({ revision: SceneChangesSchema }, closed), value)) throw new Error("版本修改记录不合规");
+  if (!Value.Check(Type.Object({ revision: Type.Union([SceneChangesSchema, ShotChangesSchema]) }, closed), value)) throw new Error("版本修改记录不合规");
 }
 
 export function parseStage(value: string): Stage {

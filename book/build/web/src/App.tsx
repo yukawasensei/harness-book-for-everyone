@@ -8,6 +8,9 @@ import { artifactGuidance, demoRevisionNotice, missingEventsNotice, readerMessag
 import { rememberSelectedProject, restoreSelectedProject, rememberSelectedStage, restoreSelectedStage } from "./project-selection";
 import { ReviewPanel } from "./ReviewPanel";
 import { ArtifactPreview } from "./ArtifactPreview";
+import { ErrorDetails } from "./ErrorDetails";
+import { TechnicalDetails } from "./TechnicalDetails";
+import { formatLocalDateTime } from "./date-time";
 
 const stages: [Stage, string][] = [
   ["topic", "选题"], ["synopsis", "梗概"], ["script", "剧本"],
@@ -71,6 +74,12 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
   const [version, setVersion] = useState<number | null>(null);
   const [preview, setPreview] = useState<{ version: number; stage: Stage; value: unknown } | null>(null);
   const [previewError, setPreviewError] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const previewDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (expanded) previewDialog.current?.showModal(); else previewDialog.current?.close();
+  }, [expanded]);
+  useEffect(() => { setExpanded(false); }, [stage]);
   const [script, setScript] = useState<Artifacts["script"] | null>(null);
   const [bible, setBible] = useState<Artifacts["bible"] | null>(null);
   const [rows, setRows] = useState<TimelineRow[]>([]);
@@ -147,6 +156,7 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
   const historyNotice = missingEventsNotice(project, rows);
   const summary = running || (implemented && state?.status !== "adopted" && project?.last_run?.stage === stage)
     ? currentRunDisplay(running, project?.last_run) : null;
+  const displayRun = running ?? project?.last_run;
   const guidance = artifactGuidance(stage, implemented, state?.adopted_version);
   const revision = version === null ? undefined : project?.version_metadata?.[stage]?.[version]?.revision;
   const progress = scriptProgress(running, rows);
@@ -166,7 +176,7 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
         <label htmlFor="instructions">补充要求 · {stageNames[stage]}</label>
         <textarea id="instructions" placeholder="例如：两位角色，雨天，三分钟原创短片" value={instructions} onChange={e => setInstructions(e.target.value)} maxLength={8000} disabled={!!running || submitting} />
         <div className="composer-actions">
-          <span id="run-reason" className="muted">{running ? `正在运行${stageNames[running.stage]}${running.abort_requested ? " · 正在中断…" : ""}` : blockedReason ?? "采用后才能继续下一步"}</span>
+          <span id="run-reason" className="muted">{running ? `正在运行${stageNames[running.stage]}${running.abort_requested ? " · 正在中断…" : ""}` : blockedReason ?? (stage === "prompts" ? "审阅并采用后完成六阶段" : "采用后才能继续下一步")}</span>
           {running ? <button type="button" className="danger" disabled={submitting || running.abort_requested} onClick={() => void action(async () => { await api(`${path}/abort`, {}); })}>中断</button>
             : <button className="primary" aria-describedby="run-reason" disabled={!runnable || submitting}>{submitting ? "正在提交…" : "运行阶段"}</button>}
         </div>
@@ -185,12 +195,14 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
           </button>;
         })}
       </nav>
+      {project && stages.every(([key]) => project.stages[key].status === "adopted") && <p className="pipeline-complete" role="status">全流程已完成 · 六阶段产物均已采用</p>}
       {!implemented && <p className="notice">{stageNames[stage]}暂未开放运行。</p>}
       <div className="version-heading">
         <label>版本 <select aria-label="选择产物版本" value={version ?? ""} disabled={!versions.length} onChange={e => setVersion(Number(e.target.value))}>
           {!versions.length && <option value="">暂无草稿</option>}
           {versions.map(v => <option key={v} value={v}>v{v} · {reviewLabels[state?.reviews?.[v]?.status ?? "pending"]}</option>)}
         </select></label>
+        <button type="button" disabled={!visiblePreview} onClick={() => setExpanded(true)}>放大预览</button>
       </div>
       <div className="version-list" aria-label="版本列表">{versions.map(v => {
         const status = state?.reviews?.[v]?.status ?? "pending";
@@ -208,28 +220,30 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
         onRevise={() => { if (version !== null) startRun(version); }} />
       {summary && <div className={`run-summary${summary.failed ? " failed" : ""}`}>
         <p>{running ? "当前运行" : "最近运行"}：{stageNames[summary.stage]} · {summary.text}{progress ? ` · ${progress}` : ""}</p>
-        {summary.stopReason && <details><summary>查看运行标记</summary><code>stop_reason={summary.stopReason}</code></details>}
+        {displayRun && <p className="muted">运行开始：<time dateTime={displayRun.started_at}>{formatLocalDateTime(displayRun.started_at)}</time></p>}
+        {summary.stopReason && <TechnicalDetails><p>运行标记：<code>stop_reason={summary.stopReason}</code></p></TechnicalDetails>}
         <ErrorDetails errors={summary.errors} />
       </div>}
-      {stage === "storyboard" && project?.stages.prompts.status === "ready" && <p className="notice">分镜已采用，分镜提示词已解锁（依赖已满足）；提示词模板暂未开放运行。</p>}
+      {stage === "storyboard" && project?.stages.prompts.status === "ready" && <p className="notice">分镜已采用，分镜提示词已解锁（依赖已满足）；可切换到分镜提示词运行。</p>}
       <p className="muted artifact-note">{guidance.footer}</p>
     </aside>
+    {expanded && <dialog ref={previewDialog} className="expanded-preview" aria-labelledby="expanded-preview-title" onCancel={() => setExpanded(false)}>
+      <header><h2 id="expanded-preview-title">{stageNames[stage]} · v{version} · 放大预览</h2><button type="button" onClick={() => setExpanded(false)}>收起预览</button></header>
+      <div className="expanded-preview-content">{visiblePreview && <ArtifactPreview stage={stage} value={visiblePreview.value} bible={bible} script={script} revision={revision} />}</div>
+    </dialog>}
   </main>;
 }
 
 function TimelineItem({ row }: { row: TimelineRow }) {
-  if (row.kind !== "tool") return <article className={`message ${row.kind}`}><span className="message-label">{row.kind === "user" ? "你" : row.kind === "text" ? "助手" : "运行记录"}</span><p>{row.kind === "user" ? row.text : readerMessage(row.text)}</p><ErrorDetails errors={row.details ?? []} /></article>;
+  if (row.kind !== "tool") return <article className={`message ${row.kind}`}><span className="message-label">{row.kind === "user" ? "你" : row.kind === "text" ? "助手" : "运行记录"}</span>{row.at && <time className="muted" dateTime={row.at}>{formatLocalDateTime(row.at)}</time>}<p>{row.kind === "user" ? row.text : readerMessage(row.text)}</p><ErrorDetails errors={row.details ?? []} /></article>;
   const args = JSON.stringify(row.args, null, 2) ?? "";
   return <article className={`tool-card ${row.status}`}>
-    <div><strong>{({ read_upstream: "读取采用上游", write_draft: "提交草稿", write_scene: "提交单场", remove_scene: "删除单场", write_scene_shots: "提交单场镜头", remove_scene_shots: "删除单场镜头", finalize_draft: "汇总草稿" } as Record<string, string>)[row.name] ?? "阶段工具"}</strong><span>{({ running: "执行中", success: "成功", error: "错误", unknown: "结果未收到" })[row.status]}</span></div>
-    <details><summary>查看工具参数</summary><pre>{args}</pre></details>
+    <div><strong>{({ read_upstream: "读取采用上游", write_draft: "提交草稿", write_scene: "提交单场", remove_scene: "删除单场", write_scene_shots: "提交单场镜头", remove_scene_shots: "删除单场镜头", list_shots: "列出镜头", read_shot: "读取单镜", write_shot_prompt: "提交镜头部分", finalize_draft: "汇总草稿" } as Record<string, string>)[row.name] ?? "阶段工具"}</strong><span>{({ running: "执行中", success: "成功", error: "错误", unknown: "结果未收到" })[row.status]}</span></div>
     {row.status === "error" && <p className="tool-error-reason">{toolErrorText(row.result, { toolName: row.name, args: row.args })}</p>}
     {row.status === "success" && row.name === "finalize_draft" && <p>{toolResultText(row.result)}</p>}
-    {row.result !== undefined && <details><summary>查看原始工具结果</summary><pre>{JSON.stringify(row.result, null, 2)}</pre></details>}
+    <details><summary>查看工具详情</summary>
+      <p>{row.status === "error" ? toolErrorText(row.result, { toolName: row.name, args: row.args }) : row.status === "success" ? "工具执行成功，结果已提供给本阶段。" : row.status === "running" ? "工具正在执行。" : "未收到工具结果。"}</p>
+      <TechnicalDetails><h4>工具参数</h4><pre>{args}</pre>{row.result !== undefined && <><h4>工具结果</h4><pre>{JSON.stringify(row.result, null, 2)}</pre></>}</TechnicalDetails>
+    </details>
   </article>;
-}
-
-function ErrorDetails({ errors }: { errors: string[] }) {
-  if (!errors.length) return null;
-  return <details className="error-details"><summary>查看过程错误（{errors.length}）</summary><pre>{errors.join("\n\n")}</pre></details>;
 }

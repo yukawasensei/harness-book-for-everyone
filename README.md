@@ -101,6 +101,7 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | P04 | [剧本：把输出预算变成产品规则](./book/build/chapters/p04.md) | tag `p2-04` |
 | P05 | [从剧本抽取设定集](./book/build/chapters/p05.md) | tag `p2-05` |
 | P06 | [分镜脚本与引用一致性](./book/build/chapters/p06.md) | tag `p2-06` |
+| P07 | [模型写镜头，程序注入设定](./book/build/chapters/p07.md) | tag `p2-07` |
 
 ## 安全基线 / Safety baseline
 

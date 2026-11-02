@@ -10,13 +10,19 @@ import { assertRunnable, DEPENDENCIES } from "../workflow/index.js";
 import { configuredModel } from "./model.js";
 import { stagePrompt } from "./prompts.js";
 import { ScriptDraft } from "./script-draft.js";
+import { PromptDraft } from "./prompt-draft.js";
+import { createPromptTools } from "./prompt-tools.js";
 import { StoryboardDraft } from "./storyboard-draft.js";
 
 const sceneDrafts = new WeakMap<AgentSession, ScriptDraft | StoryboardDraft>();
+const promptDrafts = new WeakMap<AgentSession, PromptDraft>();
+export const sessionPromptDraft = (session: AgentSession) => promptDrafts.get(session);
 export const sessionSceneDraft = (session: AgentSession) => sceneDrafts.get(session);
 
-export function createStageTools(store: ProjectStore, projectId: string, stage: Stage, draft: ScriptDraft | StoryboardDraft = stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId)) {
+export function createStageTools(store: ProjectStore, projectId: string, stage: Stage, draft: ScriptDraft | StoryboardDraft | PromptDraft = stage === "prompts" ? new PromptDraft(store, projectId) : stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId)) {
   parseStage(stage);
+  if (stage === "prompts") return createPromptTools(store, projectId, draft as PromptDraft);
+  if (draft instanceof PromptDraft) throw new Error("提示词暂存区只能用于提示词阶段");
   const dependencies = DEPENDENCIES[stage];
   const readParameters = dependencies.length === 0
     ? Type.Object({}, { additionalProperties: false })
@@ -126,7 +132,7 @@ export async function createStageSession(options: StageSessionOptions) {
     extensionFactories: [{ name: "stage-system-prompt", factory: replacePrompt }],
   });
   await resourceLoader.reload();
-  const draft: ScriptDraft | StoryboardDraft = stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId);
+  const draft: ScriptDraft | StoryboardDraft | PromptDraft = stage === "prompts" ? new PromptDraft(store, projectId) : stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId);
   const tools = createStageTools(store, projectId, stage, draft);
   const { session } = await createAgentSession({
     cwd: root, agentDir, model, modelRuntime, settingsManager, resourceLoader,
@@ -134,6 +140,7 @@ export async function createStageSession(options: StageSessionOptions) {
     tools: tools.map(t => t.name), customTools: tools,
     sessionManager: SessionManager.create(root, store.sessionDir(projectId)),
   });
-  if (stage === "script" || stage === "storyboard") sceneDrafts.set(session, draft);
+  if (draft instanceof PromptDraft) promptDrafts.set(session, draft);
+  else if (stage === "script" || stage === "storyboard") sceneDrafts.set(session, draft);
   return session;
 }

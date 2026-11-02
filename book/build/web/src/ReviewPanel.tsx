@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, type FormEvent } from "react";
+import { formatLocalDateTime } from "./date-time";
 import type { StageState } from "../../src/workflow/index.js";
 import type { SceneChanges, Stage } from "../../src/contracts/index.js";
 import { demoChangeNote, DEMO_REVISION_NOTICE, demoRevisionNotice, reviewLabels, revisionDescription, stageNames } from "./presentation";
@@ -35,7 +36,7 @@ export function ReviewPanel({ stage, state, revision, version, loaded, busy, imp
     {revisionDescription(revision) && <p className="revision-summary">{revisionDescription(revision)}</p>}
     {demo && version !== null && version > 1 && <p className="notice demo-revision-notice">{DEMO_REVISION_NOTICE}</p>}
     {review?.note && <p className="review-note">审阅意见：{review.note}</p>}
-    {review?.at && <p className="muted">审阅时间：{new Date(review.at).toLocaleString()}</p>}
+    {review?.at && <p className="muted">审阅时间：<time dateTime={review.at}>{formatLocalDateTime(review.at)}</time></p>}
     <div className="review-actions">
       <button disabled={!!adoptReason} title={adoptReason ?? "采用此版本，继续下一步"} onClick={() => void onReview("adopt")}>采用此版本</button>
       <button disabled={!!reason} title={reason ?? "确认后标记为已丢弃，保留版本内容"} onClick={() => setOpen("discard")}>丢弃</button>
