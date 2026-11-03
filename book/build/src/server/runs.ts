@@ -9,9 +9,10 @@ import { scrubSecrets } from "../agent/model.js";
 import { assertRunnable } from "../workflow/index.js";
 import type { ProjectEvents } from "./events.js";
 import { HttpError, validation } from "./http.js";
-import type { ProjectDetail, RunInfo, RunResult } from "./protocol.js";
+import type { ProjectDetail, RunInfo, RunResult, RunOutcome } from "./protocol.js";
 import type { ResumeChoice } from "../project/checkpoints.js";
 
+type ReleaseRun = (result?: RunOutcome) => void;
 export type SessionFactory = (options: StageSessionOptions) => Promise<AgentSession>;
 interface ActiveRun {
   info: RunInfo;
@@ -29,6 +30,7 @@ export class StageRuns {
   constructor(
     private root: string, private store: ProjectStore, private events: ProjectEvents,
     private sessionFactory: SessionFactory = createStageSession,
+    private reserve?: (id: string, stage: Stage) => ReleaseRun,
   ) { this.store.recoverInterruptedRuns(); }
 
   detail(id: string): ProjectDetail {
@@ -65,20 +67,22 @@ export class StageRuns {
       if (options.staging === "resume") this.store.assertStagingCurrent(id, stage, reviseFrom);
       if (reviseFrom !== undefined) this.store.revisionContext(id, stage, reviseFrom);
     });
+    const release = this.reserve?.(id, stage);
     let finish!: () => void;
     const run: ActiveRun = {
       info: { id: randomUUID(), stage, started_at: new Date().toISOString(), abort_requested: false },
       controller: new AbortController(), done: new Promise<void>(resolve => { finish = resolve; }), finish: () => finish(),
     };
     // 在第一次 await 之前占位，创建会话期间也拒绝重复运行与采用。
-    this.store.saveRunLock(id, run.info);
+    try { this.store.saveRunLock(id, run.info); }
+    catch (error) { release?.(); throw error; }
     this.active.set(id, run);
     let session: AgentSession;
     try { session = await this.sessionFactory({ root: this.root, store: this.store, projectId: id, stage, reviseFrom, staging: options.staging }); }
     catch (error) {
       this.active.delete(id);
-      this.store.finishRunLock(id);
-      run.finish();
+      try { release?.(); this.store.finishRunLock(id); }
+      finally { run.finish(); }
       this.notify(id);
       if (error instanceof Error && !("code" in error)) throw new HttpError(422, scrubSecrets(error.message));
       throw error;
@@ -114,23 +118,26 @@ export class StageRuns {
       this.events.publish(id, { type: "staging_restored", stage, run_id: run.info.id, ids, unit: stage === "prompts" ? "镜" : "场" });
     }
     this.notify(id);
-    void this.execute(id, session, run, instructions, unsubscribe, reviseFrom, options);
+    void this.execute(id, session, run, instructions, unsubscribe, reviseFrom, options, release).catch(() => {
+      console.error("运行收尾写入失败，请检查服务器存储与会话记录");
+    });
     return run.info;
   }
 
-  private async execute(id: string, session: AgentSession, run: ActiveRun, instructions: string, unsubscribe: () => void, reviseFrom?: number, options: { confirmed?: boolean; staging?: ResumeChoice } = {}) {
-    let result: import("./protocol.js").RunOutcome;
+  private async execute(id: string, session: AgentSession, run: ActiveRun, instructions: string, unsubscribe: () => void, reviseFrom?: number, options: { confirmed?: boolean; staging?: ResumeChoice } = {}, release?: ReleaseRun) {
+    let result: RunOutcome;
     try { result = await runStage(session, this.store, id, run.info.stage, instructions, run.controller.signal, reviseFrom, options); }
     catch { result = { stop_reason: "runtime_error", errors: ["运行异常，请检查本地会话记录"] }; }
     finally { unsubscribe(); session.dispose(); }
-    const summary: RunResult = { ...run.info, ...result };
-    this.last.set(id, summary);
-    this.store.finishRunLock(id);
-    this.active.delete(id);
     try {
+      release?.(result);
+      const summary: RunResult = { ...run.info, ...result };
+      this.last.set(id, summary);
+      this.store.finishRunLock(id);
+      this.active.delete(id);
       this.events.publish(id, { type: "run_ended", run: summary });
       this.notify(id);
-    } finally { run.finish(); }
+    } finally { this.active.delete(id); run.finish(); }
   }
 
   abort(id: string): RunInfo {

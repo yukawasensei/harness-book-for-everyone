@@ -23,6 +23,8 @@ export interface ProjectDetail extends Project {
   reassemble_reason?: string | null;
 }
 export interface ServerConfig {
+  deployment?: "local" | "hosted";
+  user_id?: string;
   mode: "demo" | "model";
   runnable_stages: Stage[];
 }

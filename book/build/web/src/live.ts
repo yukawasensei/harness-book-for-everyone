@@ -1,5 +1,6 @@
 import type { ProjectDetail, ProjectEvent } from "../../src/server/protocol.js";
-import { api } from "./api.js";
+import { authenticatedEvents } from "./auth-events.js";
+import { api, getAccessToken } from "./api.js";
 
 export type Connection = "connecting" | "live" | "polling";
 interface FeedHandlers {
@@ -45,7 +46,7 @@ export function connectProject(
   }
   handlers.connection("connecting");
   poll();
-  const source: EventConnection = (options.open ?? (url => new EventSource(url)))(`${path}/events`);
+  const source: EventConnection = (options.open ?? (url => getAccessToken() ? authenticatedEvents(url) : new EventSource(url)))(`${path}/events`);
   source.onmessage = message => {
     if (disposed) return;
     const sequence = Number(message.lastEventId);

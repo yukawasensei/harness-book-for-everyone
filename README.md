@@ -88,7 +88,7 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | 10 | [综合项目：片场场记（精简版）](./book/harness/chapters/ch10.md) | tag `ch10` |
 | 11 | [从失败到修复](./book/harness/chapters/ch11.md) | tag `ch11` |
 
-### 第二篇（实操，连载中）：book/build · 分镜工坊
+### 第二篇（实操，已完结）：book/build · 分镜工坊
 
 用 pi SDK 做一个真正能用的文本内容生产 harness：选题 → 梗概 → 剧本 → 设定集 → 分镜 → 分镜提示词。外层由程序状态机管阶段，内层由受限 agent 写草稿，人决定采用哪一版。入口：[`book/build/README.md`](./book/build/README.md)。
 
@@ -104,6 +104,7 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | P07 | [模型写镜头，程序注入设定](./book/build/chapters/p07.md) | tag `p2-07` |
 | P08 | [版本与返工：改上游，下游怎么办](./book/build/chapters/p08.md) | tag `p2-08` |
 | P09 | [评测与签收：结构能签，质量要人评](./book/build/chapters/p09.md) | tag `p2-09` |
+| P10 | [上云：需不需要沙盒？隔离、权限与配额](./book/build/chapters/p10.md) | tag `p2-10` |
 
 ## 安全基线 / Safety baseline
 

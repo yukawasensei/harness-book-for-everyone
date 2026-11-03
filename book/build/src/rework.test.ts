@@ -6,6 +6,7 @@ import { createLocalServer } from "./server/index.js";
 import { fixture, packageRoot } from "./testing/fixtures.js";
 import { readerMessage, revisionDescription, stageBadge } from "../web/src/presentation.js";
 import { stagePrompt } from "./agent/prompts.js";
+import { ProjectStore } from "./project/store.js";
 import { STAGES } from "./contracts/index.js";
 
 test("项目列表跳过文件、无项目文件的目录、不合规 ID 和坏项目；每项一行警告，HTTP 不再 500", async t => {
@@ -66,4 +67,20 @@ test("阶段记忆按项目保存，刷新和项目切换恢复各自阶段；�
   const blocked = () => { throw new Error("不可用"); };
   assert.equal(restoreSelectedStage("a", blocked), "topic");
   assert.doesNotThrow(() => rememberSelectedStage("a", "script", blocked));
+});
+
+
+test("local 扫描静默跳过 hosted 用户分区，仍列出本机项目并警告真正坏项目", t => {
+  const f = fixture(); t.after(f.cleanup);
+  const hosted = new ProjectStore(f.dir, "alice");
+  const privateProject = hosted.create("用户私有项目");
+  mkdirSync(join(f.store.root, "bob"));
+  writeFileSync(join(f.store.root, "bob/quota.json"), JSON.stringify({ day: "2000-01-01", runs: 1, stages: {} }));
+  mkdirSync(join(f.store.root, "broken"));
+  writeFileSync(join(f.store.root, "broken/project.json"), "{}");
+  const warning = t.mock.method(console, "warn", () => {});
+  assert.deepEqual(f.store.list().map(project => project.id), [f.project.id]);
+  assert.equal(warning.mock.calls.length, 1);
+  assert.match(String(warning.mock.calls[0].arguments[0]), /broken/);
+  assert.deepEqual(hosted.list().map(project => project.id), [privateProject.id]);
 });

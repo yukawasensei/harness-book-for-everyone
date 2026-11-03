@@ -1,8 +1,9 @@
+import { assertId, containedPath, tenantRoot } from "./paths.js";
 import { validateRating, SCORE_LABELS, type Ratings, type Dimension } from "./ratings.js";
 import { assembleShotPrompt, validatePromptReferences } from "../contracts/prompts.js";
 import { randomUUID } from "node:crypto";
-import { appendFileSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { STAGES, parseStage, validateArtifact, validateBibleCoverage, validateStoryboardReferences, validateVersionMetadata, type Artifacts, type Stage, type VersionMetadata } from "../contracts/index.js";
 import { adoptDraft, assertAdopted, assertRunnable, initialWorkflow, recordDraft, reviewDraft, reviewOf, type Workflow } from "../workflow/index.js";
 import { compareBible, currentBasis, refreshStale, sameBasis, type Basis, type Provenance, type Source } from "./provenance.js";
@@ -18,14 +19,24 @@ export interface Project {
   ratings?: Ratings;
 }
 
-/** 单进程本地存储；支持业务暂存与残留运行恢复，不提供跨文件事务或多用户权限。 */
+/** 单进程本地存储；支持业务暂存与残留运行恢复，不提供跨文件事务；hosted 实例固定一个租户。 */
 export class ProjectStore {
   readonly root: string;
-  constructor(packageRoot: string) { this.root = resolve(packageRoot, "projects"); }
+  constructor(private packageRoot: string, readonly userId?: string) {
+    const projects = resolve(packageRoot, "projects");
+    if (userId !== undefined) assertId(userId);
+    this.root = userId === undefined ? projects : tenantRoot(packageRoot, userId);
+  }
+
+  private path(id: string, ...parts: string[]): string {
+    assertId(id);
+    if (this.userId !== undefined) tenantRoot(this.packageRoot, this.userId);
+    return containedPath(this.root, id, ...parts);
+  }
 
   projectDir(id: string): string {
-    if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,79}$/.test(id)) throw new Error("项目 ID 不合规（不接受路径）");
-    return join(this.root, id);
+    assertId(id);
+    return this.path(id);
   }
 
   create(title: string): Project {
@@ -37,6 +48,7 @@ export class ProjectStore {
   }
 
   list(): Project[] {
+    if (this.userId !== undefined) tenantRoot(this.packageRoot, this.userId);
     let entries;
     try { entries = readdirSync(this.root, { withFileTypes: true }); }
     catch (error) {
@@ -45,8 +57,17 @@ export class ProjectStore {
     }
     const projects: Project[] = [];
     for (const entry of entries) {
+      if (this.userId !== undefined && ["quota.json", "quota.json.tmp", "quota-audit.jsonl"].includes(entry.name)) continue;
       try {
         if (!entry.isDirectory()) throw new Error("非项目目录");
+        if (this.userId === undefined) {
+          const directory = this.projectDir(entry.name);
+          // local 与 hosted 共用 projects 根；用户分区不是损坏的本机项目。
+          if (!existsSync(containedPath(directory, "project.json")) && (
+            existsSync(containedPath(directory, "quota.json")) || readdirSync(directory, { withFileTypes: true }).some(child =>
+              child.isDirectory() && existsSync(containedPath(directory, child.name, "project.json")))
+          )) continue;
+        }
         const project = this.load(entry.name); // 复用 ID 与 project.json 检查。
         if (project.id !== entry.name) throw new Error("项目 ID 与目录不一致");
         projects.push(project);
@@ -59,9 +80,10 @@ export class ProjectStore {
   }
 
   load(id: string): Project {
-    const file = join(this.projectDir(id), "project.json");
+    const file = this.path(id, "project.json");
     try {
       const project = JSON.parse(readFileSync(file, "utf8")) as Project;
+      if (project.id !== id) throw new Error("项目 ID 与目录不一致");
       for (const state of Object.values(project.stages)) {
         for (const version of state.versions) (state.reviews ??= {})[version] ??= reviewOf(state, version);
       }
@@ -74,8 +96,8 @@ export class ProjectStore {
   }
 
   private save(project: Project): void {
-    const target = join(this.projectDir(project.id), "project.json");
-    const temp = `${target}.tmp`;
+    const target = this.path(project.id, "project.json");
+    const temp = this.path(project.id, "project.json.tmp");
     writeFileSync(temp, `${JSON.stringify(project, null, 2)}\n`, { mode: 0o600 });
     renameSync(temp, target);
   }
@@ -83,7 +105,7 @@ export class ProjectStore {
   artifactPath(id: string, stage: Stage, version: number): string {
     parseStage(stage);
     if (!Number.isSafeInteger(version) || version < 1) throw new Error("版本号必须为正整数");
-    return join(this.projectDir(id), "artifacts", stage, `v${version}.json`);
+    return this.path(id, "artifacts", stage, `v${version}.json`);
   }
 
   writeDraft<S extends Stage>(id: string, stage: S, artifact: unknown, generatedBy?: Source["generated_by"]): number {
@@ -93,7 +115,7 @@ export class ProjectStore {
     this.validate(id, stage, artifact); // 在创建目录或文件之前验收。
     const version = (project.stages[stage].versions.at(-1) ?? 0) + 1;
     const file = this.artifactPath(id, stage, version);
-    mkdirSync(join(this.projectDir(id), "artifacts", stage), { recursive: true });
+    mkdirSync(this.path(id, "artifacts", stage), { recursive: true });
     writeFileSync(file, `${JSON.stringify(artifact, null, 2)}\n`, { flag: "wx", mode: 0o600 });
     recordDraft(project.stages, stage, version);
     const sources: Provenance = project.provenance ??= {};
@@ -152,8 +174,8 @@ export class ProjectStore {
 
   private audit(project: Project, stage: Stage, version: number): void {
     const { status, at, note } = reviewOf(project.stages[stage], version);
-    appendFileSync(join(this.projectDir(project.id), "audit.jsonl"),
-      `${JSON.stringify({ actor: "local", action: status, at, stage, version, ...(note === undefined ? {} : { note }) })}\n`, { mode: 0o600 });
+    appendFileSync(this.path(project.id, "audit.jsonl"),
+      `${JSON.stringify({ actor: this.userId ?? "local", action: status, at, stage, version, ...(note === undefined ? {} : { note }) })}\n`, { mode: 0o600 });
   }
 
   revisionContext(id: string, stage: Stage, version: number): { original_json: string; note: string } {
@@ -201,7 +223,7 @@ export class ProjectStore {
   }
 
   auditAction(id: string, action: string, details: Record<string, unknown>) {
-    appendFileSync(join(this.projectDir(id), "audit.jsonl"), JSON.stringify({ actor: "local", action, at: new Date().toISOString(), ...details }) + "\n", { mode: 0o600 });
+    appendFileSync(this.path(id, "audit.jsonl"), JSON.stringify({ actor: this.userId ?? "local", action, at: new Date().toISOString(), ...details }) + "\n", { mode: 0o600 });
   }
 
   confirmValid(id: string, stage: Stage, reason: string, confirmed = false) {
@@ -264,10 +286,10 @@ export class ProjectStore {
   }
 
   readStaging(id: string, stage: Stage) {
-    parseStage(stage); return readOptional<Checkpoint>(join(this.projectDir(id), "staging", `${stage}.json`));
+    parseStage(stage); return readOptional<Checkpoint>(this.path(id, "staging", `${stage}.json`));
   }
   saveStaging(id: string, stage: Stage, snapshot: Checkpoint["snapshot"], basis = currentBasis(this.load(id).stages, stage)) {
-    parseStage(stage); writeJson(join(this.projectDir(id), "staging", `${stage}.json`), { based_on: basis, snapshot });
+    parseStage(stage); this.path(id, "staging", `${stage}.json.tmp`); writeJson(this.path(id, "staging", `${stage}.json`), { based_on: basis, snapshot });
   }
   assertStagingCurrent(id: string, stage: Stage, reviseFrom?: number) {
     const saved = this.readStaging(id, stage);
@@ -277,16 +299,17 @@ export class ProjectStore {
     if (source !== (reviseFrom ?? null)) throw new Error("暂存修改来源不同，请重新开始或选择原修改版本");
     return saved;
   }
-  saveRunLock(id: string, run: RunInfo) { writeJson(join(this.projectDir(id), "run-lock.json"), { status: "running", ...run }); }
-  finishRunLock(id: string) { writeJson(join(this.projectDir(id), "run-lock.json"), { status: "finished" }); }
+  saveRunLock(id: string, run: RunInfo) { this.path(id, "run-lock.json.tmp"); writeJson(this.path(id, "run-lock.json"), { status: "running", ...run }); }
+  finishRunLock(id: string) { this.path(id, "run-lock.json.tmp"); writeJson(this.path(id, "run-lock.json"), { status: "finished" }); }
   lastInterruptedRun(id: string) {
-    const lock = readOptional<RunInfo & { status: string }>(join(this.projectDir(id), "run-lock.json"));
+    const lock = readOptional<RunInfo & { status: string }>(this.path(id, "run-lock.json"));
     return lock?.status === "interrupted" ? { ...lock, stop_reason: "interrupted", errors: [] as string[] } : null;
   }
   recoverInterruptedRuns() {
     for (const project of this.list()) {
-      const file = join(this.projectDir(project.id), "run-lock.json"), lock = readOptional<RunInfo & { status: string }>(file);
+      const file = this.path(project.id, "run-lock.json"), lock = readOptional<RunInfo & { status: string }>(file);
       if (lock?.status !== "running") continue;
+      this.path(project.id, "run-lock.json.tmp");
       writeJson(file, { ...lock, status: "interrupted" });
       this.auditAction(project.id, "interrupted", { stage: lock.stage, run_id: lock.id });
     }
@@ -297,7 +320,7 @@ export class ProjectStore {
     const project = this.load(id);
     if (!project.stages[stage].versions.includes(version)) throw new Error("评分版本不存在");
     const value = validateRating(stage, input);
-    const rating = { ...value, at: new Date().toISOString(), actor: "local" as const, source: "human" as const };
+    const rating = { ...value, at: new Date().toISOString(), actor: this.userId ?? "local", source: "human" as const };
     ((project.ratings ??= {})[stage] ??= {})[version] = rating;
     this.save(project);
     this.auditAction(id, "human_rating", { stage, version, rating });
@@ -322,7 +345,7 @@ export class ProjectStore {
 
   sessionDir(id: string): string {
     this.load(id);
-    const dir = join(this.projectDir(id), "sessions");
+    const dir = this.path(id, "sessions");
     mkdirSync(dir, { recursive: true });
     return dir;
   }

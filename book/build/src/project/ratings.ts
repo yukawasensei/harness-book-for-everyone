@@ -12,7 +12,7 @@ export const STAGE_DIMENSIONS: Record<Stage, Dimension[]> = {
   topic: ['appeal'], synopsis: ['appeal', 'structure'], script: ['structure', 'character'],
   bible: ['character'], storyboard: ['structure', 'filmability'], prompts: ['usability'],
 };
-export interface Rating { scores: Partial<Record<Dimension, number>>; note: string; at: string; actor: 'local'; source: 'human' }
+export interface Rating { scores: Partial<Record<Dimension, number>>; note: string; at: string; actor: string; source: 'human' }
 export type Ratings = Partial<Record<Stage, Record<number, Rating>>>;
 export function validateRating(stage: Stage, value: unknown): Omit<Rating, 'at' | 'actor' | 'source'> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('评分必须是对象');

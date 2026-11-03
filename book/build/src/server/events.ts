@@ -4,6 +4,7 @@ import type { ProjectEvent } from "./protocol.js";
 
 /** 每项目递增序号；不承诺历史重放，重连后以项目快照为准。 */
 export class ProjectEvents {
+  constructor(private sanitize: (data: unknown) => unknown = data => data) {}
   private channels = new Map<string, { sequence: number; clients: Set<ServerResponse> }>();
 
   private channel(id: string) {
@@ -17,7 +18,7 @@ export class ProjectEvents {
 
   publish(id: string, event: ProjectEvent, only?: ServerResponse) {
     const channel = this.channel(id);
-    const frame = `id: ${++channel.sequence}\ndata: ${scrubSecrets(JSON.stringify(event))}\n\n`;
+    const frame = `id: ${++channel.sequence}\ndata: ${scrubSecrets(JSON.stringify(this.sanitize(event)))}\n\n`;
     for (const response of only ? [only] : channel.clients) {
       // 慢客户端断开后走快照轮询，避免无限积压文本。
       if (!response.write(frame)) response.destroy();

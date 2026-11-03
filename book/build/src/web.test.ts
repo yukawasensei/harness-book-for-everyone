@@ -261,3 +261,35 @@ test("剧本演示预填仅改 S02 的意见；汇总结果可读显示原版本
   assert.equal(demoRevisionNotice(false, "删掉第一场", "script"), null);
   assert.equal(toolResultText({ content: [{ type: "text", text: "本版相对 v1：重交/新增 S02；沿用 S01、S03；删除 无。" }] }), "本版相对 v1：重交 S02；沿用 S01、S03。");
 });
+
+test("运行提交被 429 拒绝时不追加运行消息，202 后才追加一次", async t => {
+  const { submitRun, ApiError } = await import("../web/src/api.js");
+  const rows: string[] = [];
+  const fetchMock = t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ error: "已达到今日运行次数上限" }), { status: 429 }));
+  await assert.rejects(submitRun("/api/projects/example/stages/topic/run", {}, () => rows.push("运行选题")), error => error instanceof ApiError && error.status === 429);
+  assert.equal(rows.length, 0);
+  let respond!: (response: Response) => void;
+  fetchMock.mock.mockImplementation(() => new Promise<Response>(resolve => { respond = resolve; }));
+  const pending = submitRun("/api/projects/example/stages/topic/run", {}, () => rows.push("运行选题"));
+  assert.equal(rows.length, 0);
+  respond(new Response("{}", { status: 202 }));
+  await pending;
+  assert.deepEqual(rows, ["运行选题"]);
+});
+
+test("401 区分未填写与失效令牌，按该次请求实际发送的身份判断", async t => {
+  const { api, setAccessToken, getAccessToken, ApiError } = await import("../web/src/api.js");
+  const previous = getAccessToken(); t.after(() => setAccessToken(previous));
+  const requests: Headers[] = [];
+  t.mock.method(globalThis, "fetch", async (_url: unknown, options?: RequestInit) => {
+    requests.push(new Headers(options?.headers));
+    setAccessToken(""); // 等待响应期间切换身份，不得改变这次请求的错误含义。
+    return new Response(JSON.stringify({ error: "请填写有效的访问令牌后连接" }), { status: 401 });
+  });
+  setAccessToken("");
+  await assert.rejects(api("/api/config"), error => error instanceof ApiError && error.message === "未填写访问令牌");
+  setAccessToken("public-invalid-token-for-test");
+  await assert.rejects(api("/api/config"), error => error instanceof ApiError && error.message === "令牌无效或已失效");
+  assert.equal(requests[0].has("authorization"), false);
+  assert.equal(requests[1].get("authorization"), "Bearer public-invalid-token-for-test");
+});

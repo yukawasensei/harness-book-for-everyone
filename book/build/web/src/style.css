@@ -203,3 +203,7 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
 .rating-panel label { display: grid; gap: 6px; }
 .rating-panel select { max-width: 100%; }
 .rating-panel textarea { width: 100%; min-height: 70px; }
+
+.access-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 24px; border-bottom: 1px solid #d8d8d8; }
+.access-bar label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; max-width: 100%; }
+.access-bar input { width: 14rem; min-width: 0; max-width: 100%; }

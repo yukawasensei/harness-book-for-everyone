@@ -2,7 +2,7 @@ import { RatingPanel } from "./RatingPanel";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Artifacts, Stage } from "../../src/contracts/index.js";
 import type { ProjectDetail, ServerConfig } from "../../src/server/protocol.js";
-import { api } from "./api";
+import { api, ApiError, getAccessToken, setAccessToken, submitRun } from "./api";
 import { connectProject, type Connection } from "./live";
 import { appendEvent, type TimelineRow } from "./timeline";
 import { artifactGuidance, demoRevisionNotice, missingEventsNotice, readerMessage, reviewLabels, runRequestText, currentRunDisplay, scriptProgress, stageBadge, stageNames, toolErrorText, toolResultText } from "./presentation";
@@ -23,6 +23,9 @@ const connectionLabel: Record<Connection, string> = { connecting: "正在连接"
 const errorMessage = (error: unknown) => error instanceof Error ? readerMessage(error.message) : "操作失败";
 
 export function App() {
+  const [token, setToken] = useState(getAccessToken);
+  const [authRequired, setAuthRequired] = useState(false);
+  const [authRevision, setAuthRevision] = useState(0);
   const [projects, setProjects] = useState<ProjectDetail[]>([]);
   const [id, setId] = useState("");
   const [title, setTitle] = useState("");
@@ -36,11 +39,18 @@ export function App() {
       api<ServerConfig>("/api/config", undefined, controller.signal),
     ]).then(([list, settings]) => {
       if (controller.signal.aborted) return;
-      setProjects(list); setConfig(settings); setId(current => list.some(project => project.id === current) ? current : restoreSelectedProject(list));
-    }).catch(error => { if (!controller.signal.aborted) setError(errorMessage(error)); });
+      setAuthRequired(settings.deployment === "hosted"); setProjects(list); setConfig(settings); setId(current => list.some(project => project.id === current) ? current : restoreSelectedProject(list));
+    }).catch(error => { if (!controller.signal.aborted) { setError(errorMessage(error)); if (error instanceof ApiError && error.status === 401) setAuthRequired(true); } });
     return () => controller.abort();
-  }, []);
+  }, [authRevision]);
   useEffect(() => { rememberSelectedProject(id); }, [id]);
+  function connect(event: FormEvent) {
+    event.preventDefault();
+    if (!token.trim()) { setError("未填写访问令牌"); return; }
+    setProjects([]); setId(""); setConfig(null); setError("");
+    setAccessToken(token.trim()); setToken("");
+    setAuthRevision(value => value + 1);
+  }
   async function create(event: FormEvent) {
     event.preventDefault(); setCreating(true); setError("");
     try {
@@ -52,8 +62,14 @@ export function App() {
   return <div className="app">
     <header className="app-header">
       <div><h1>分镜工坊</h1><span className="muted">Storyboard Studio</span></div>
-      <span className="mode">{config?.mode === "demo" ? "离线演示 · 假模型 / 不发网络请求" : "本地工作区 · 点击运行后请求模型"}</span>
+      <span className="mode">{config?.mode === "demo" ? "离线演示 · 假模型 / 不发网络请求" : authRequired ? "托管工作区 · 使用令牌连接" : "本地工作区 · 点击运行后请求模型"}</span>
     </header>
+    {authRequired && <form className="access-bar" onSubmit={connect}>
+      <label>访问令牌 <input aria-label="访问令牌" type="password" autoComplete="off" value={token} onChange={event => setToken(event.target.value)} placeholder="输入访问令牌" /></label>
+      <button>连接用户</button>
+      {config?.user_id && <span>当前用户：{config.user_id}</span>}
+      <span className="muted">令牌仅在当前标签页会话保存</span>
+    </form>}
     <div className="project-bar">
       <label>项目 <select aria-label="选择项目" value={id} onChange={e => setId(e.target.value)} disabled={!projects.length}>
         {!projects.length && <option value="">尚无项目</option>}
@@ -65,8 +81,8 @@ export function App() {
       </form>
     </div>
     {error && <p className="error-banner" role="alert">{error}</p>}
-    {id && config ? <ProjectWorkspace key={id} id={id} config={config} />
-      : <main className="empty">{config ? "创建一个项目，从选题开始。" : "正在连接本地服务…"}</main>}
+    {id && config ? <ProjectWorkspace key={`${authRevision}:${id}`} id={id} config={config} />
+      : <main className="empty">{config ? "创建一个项目，从选题开始。" : authRequired ? "请填写访问令牌连接工作区。" : "正在连接服务…"}</main>}
   </div>;
 }
 
@@ -153,8 +169,9 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
       const note = reviseFrom === undefined ? "" : project?.stages[stage].reviews?.[reviseFrom]?.note ?? "";
       const text = runRequestText(stage, instructions, reviseFrom === undefined ? undefined : { version: reviseFrom, note });
       const notice = reviseFrom === undefined ? null : demoRevisionNotice(config.mode === "demo", note, stage);
-      setRows(rows => [...rows, { kind: "user", id: `user:${Date.now()}`, text: text + (notice ? `\n\n${notice}` : "") }]);
-      await api(`${path}/stages/${stage}/run`, { instructions, confirmed, staging, ...(reviseFrom === undefined ? {} : { revise_from: reviseFrom }) });
+      await submitRun(`${path}/stages/${stage}/run`, { instructions, confirmed, staging, ...(reviseFrom === undefined ? {} : { revise_from: reviseFrom }) }, () => {
+        setRows(rows => [...rows, { kind: "user", id: `user:${Date.now()}`, text: text + (notice ? `\n\n${notice}` : "") }]);
+      });
     });
   }
   const state = project?.stages[stage];
