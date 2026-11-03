@@ -9,8 +9,8 @@ import { runStage } from "./agent/run.js";
 import { createStageSession } from "./agent/session.js";
 import { fakeStream } from "./testing/fake-model.js";
 import { fixture, packageRoot, sample } from "./testing/fixtures.js";
-import { toolErrorText, toolResultText, revisionDescription, currentRunDisplay, scriptProgress } from "../web/src/presentation.js";
-import { appendEvent, type TimelineRow } from "../web/src/timeline.js";
+import { toolErrorText, toolResultText, revisionDescription, currentRunDisplay, scriptProgress } from "../web/src/features/artifacts/lib/presentation.js";
+import { appendEvent, type TimelineRow } from "../web/src/features/chat/lib/append-event.js";
 
 function errorOf(fn: () => void) { try { fn(); } catch (error) { return (error as Error).message; } throw new Error("应当校验失败"); }
 
@@ -47,17 +47,18 @@ test("通用翻译覆盖真实 schema 的缺字段、类型、数量、格式、
 });
 
 test("剧本按场可读，角色和动作逐行，原始 JSON 默认折叠；其他阶段仍显示 JSON", async () => {
-  const { ArtifactPreview } = await import(new URL("../web/src/ArtifactPreview.tsx", import.meta.url).href);
+  const { ArtifactPreview } = await import(new URL("../web/src/features/artifacts/components/ArtifactPreview.tsx", import.meta.url).href);
   const html = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "script", value: sample("script") }));
   assert.equal((html.match(/class="scene-card"/g) ?? []).length, 3);
   assert.match(html, /S01/);
   assert.match(html, /外景·旧候船亭·傍晚/);
   assert.match(html, /程禾[：:]/);
   assert.match(html, /动作/);
-  assert.match(html, /<details><summary>查看原始 JSON<\/summary><pre>/);
-  assert.ok(!html.includes("<details open"));
+  assert.match(html, /查看原始 JSON/);
+  assert.ok(!html.includes("<details"));
+  assert.ok(!html.includes('data-state="open"'));
   const topic = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "topic", value: sample("topic") }));
-  assert.match(topic, /^<pre>/);
+  assert.match(topic, /^<pre/);
   assert.ok(!topic.includes("scene-card"));
 });
 
@@ -93,7 +94,7 @@ test("剧本修改范围保存到版本元数据，重新创建存储后及审�
     const revision = metadata.script[2].revision;
     assert.deepEqual(revision, { revise_from: 1, resubmitted: ["S02"], reused: ["S01", "S03"], removed: [] });
     assert.match(revisionDescription(revision) ?? "", /相对 v1：重交 S02；沿用 S01、S03/);
-    const { ReviewPanel } = await import(new URL("../web/src/ReviewPanel.tsx", import.meta.url).href);
+    const { ReviewPanel } = await import(new URL("../web/src/features/artifacts/components/ReviewPanel.tsx", import.meta.url).href);
     const html = renderToStaticMarkup(createElement(ReviewPanel, {
       stage: "script", state: reload.load(f.project.id).stages.script, revision, version: 2, loaded: true,
       busy: false, demo: false, runReason: null, error: "", onReview: async () => true, onRevise: () => {},
@@ -123,14 +124,15 @@ test("暂存进度取当前运行成功 write_scene 的 scene_count，覆盖不�
 });
 
 test("设定集按三组显示可读卡片、别名与出场场次，JSON 默认折叠", async () => {
-  const { ArtifactPreview } = await import(new URL("../web/src/ArtifactPreview.tsx", import.meta.url).href);
+  const { ArtifactPreview } = await import(new URL("../web/src/features/artifacts/components/ArtifactPreview.tsx", import.meta.url).href);
   const bible = sample("bible"); bible.characters[2].aliases = ["修表师"];
   const html = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "bible", value: bible }));
   assert.equal((html.match(/class="setting-card"/g) ?? []).length, 7);
   for (const label of ["角色", "道具", "场景"]) assert.ok(html.includes(`aria-label="${label}"`));
   for (const text of ["C01", "P01", "L01", "固定描述", "出场场次：S01、S02、S03", "别名：修表师", "粗筛", bible.characters[0].appearance]) assert.ok(html.includes(text), text);
-  assert.match(html, /<details><summary>查看原始 JSON<\/summary><pre>/);
-  assert.ok(!html.includes("<details open"));
+  assert.match(html, /查看原始 JSON/);
+  assert.ok(!html.includes("<details"));
+  assert.ok(!html.includes('data-state="open"'));
   bible.props = [];
   assert.match(renderToStaticMarkup(createElement(ArtifactPreview, { stage: "bible", value: bible })), /无关键道具/);
 });
@@ -155,8 +157,8 @@ test("设定集真实错误显示覆盖缺漏、来源、固定描述与中文�
 });
 
 test("未开放与已采用阶段的页面引导不再要求运行或审阅", async () => {
-  const { artifactGuidance } = await import("../web/src/presentation.js");
-  const { ReviewPanel } = await import(new URL("../web/src/ReviewPanel.tsx", import.meta.url).href);
+  const { artifactGuidance } = await import("../web/src/features/artifacts/lib/presentation.js");
+  const { ReviewPanel } = await import(new URL("../web/src/features/artifacts/components/ReviewPanel.tsx", import.meta.url).href);
   const guidance = artifactGuidance("prompts", false);
   assert.match(guidance.empty, /分镜提示词暂未开放/);
   assert.ok(!/运行后|请先运行|先查看草稿/.test(Object.values(guidance).join("")));
@@ -172,7 +174,7 @@ test("未开放与已采用阶段的页面引导不再要求运行或审阅", as
 });
 
 test("剧本和分镜场次标题含地点时间，仅重交场高亮且有文字图例", async () => {
-  const { ArtifactPreview } = await import(new URL("../web/src/ArtifactPreview.tsx", import.meta.url).href);
+  const { ArtifactPreview } = await import(new URL("../web/src/features/artifacts/components/ArtifactPreview.tsx", import.meta.url).href);
   const revision = { revise_from: 1, resubmitted: ["S02"], reused: ["S01", "S03"], removed: [] };
   for (const stage of ["script", "storyboard"] as const) {
     const props = { stage, value: sample(stage), script: sample("script"), bible: sample("bible"), revision };

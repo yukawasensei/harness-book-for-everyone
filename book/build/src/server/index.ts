@@ -7,6 +7,8 @@ import type { Stage } from "../contracts/index.js";
 import { ProjectEvents } from "./events.js";
 import { body, guardLocalRequest, HttpError, json, validation } from "./http.js";
 import { StageRuns, type SessionFactory } from "./runs.js";
+import { ProjectTimeline } from "./timeline.js";
+import { scrubSecrets } from "../agent/model.js";
 
 export interface ServerOptions {
   root: string;
@@ -30,7 +32,9 @@ export function createLocalServer(options: ServerOptions) {
       const store = hosted ? new ProjectStore(options.root, user) : options.store ?? new ProjectStore(options.root);
       const quota = hosted ? new TenantQuota(options.root, user, hosting) : undefined;
       const events = new ProjectEvents(sanitize);
-      const runs = new StageRuns(options.root, store, events, options.sessionFactory, quota ? (id, stage) => quota.reserve(id, stage) : undefined);
+      const cleanTimeline = (data: unknown) => JSON.parse(scrubSecrets(JSON.stringify(publicData(data, options.root, Object.values(hosting.tokens ?? {})))));
+      const timeline = new ProjectTimeline(store, events, cleanTimeline);
+      const runs = new StageRuns(options.root, store, events, options.sessionFactory, quota ? (id, stage) => quota.reserve(id, stage) : undefined, timeline);
       value = { store, events, runs, quota }; contexts.set(user, value);
     }
     return value;
@@ -65,10 +69,15 @@ export function createLocalServer(options: ServerOptions) {
         if (method === "GET") return send(200, store.list().map(project => runs.detail(project.id)));
         if (method === "POST") {
           const input = await body(request);
-          if (typeof input.title !== "string" || !input.title.trim() || input.title.length > 200) {
+          const message = input.message;
+          if (message !== undefined && (typeof message !== "string" || !message.trim() || message.length > 8000)) throw new HttpError(400, "首条消息需为 1–8000 字文本");
+          const title = input.title ?? (typeof message === "string" ? Array.from(message.trim()).slice(0, 20).join("") : "新任务");
+          if (typeof title !== "string" || !title.trim() || title.length > 200) {
             throw new HttpError(400, "项目标题需为 1–200 字文本");
           }
-          return send(201, runs.detail(store.create(input.title).id));
+          const project = store.create(title);
+          if (typeof message === "string") await runs.message(project.id, message.trim());
+          return send(201, runs.detail(project.id));
         }
       }
       if (parts[0] !== "api" || parts[1] !== "projects" || !parts[2]) throw new HttpError(404, "接口不存在");
@@ -81,6 +90,19 @@ export function createLocalServer(options: ServerOptions) {
       }
       if (parts.length === 4 && parts[3] === "ratings" && method === "GET") return send(200, store.exportRatings(id));
       if (parts.length === 3 && method === "GET") return send(200, runs.detail(id));
+      if (parts.length === 3 && method === "PATCH") {
+        const input = await body(request);
+        if (typeof input.autopilot !== "boolean") throw new HttpError(400, "自动推进必须是布尔值");
+        store.setAutopilot(id, input.autopilot);
+        runs.notify(id);
+        return send(200, runs.detail(id));
+      }
+      if (parts.length === 4 && parts[3] === "timeline" && method === "GET") return send(200, { items: runs.timeline.read(id) });
+      if (parts.length === 4 && parts[3] === "messages" && method === "POST") {
+        const input = await body(request);
+        if (typeof input.text !== "string" || !input.text.trim() || input.text.length > 8000) throw new HttpError(400, "消息需为 1–8000 字文本");
+        return send(200, await runs.message(id, input.text.trim()));
+      }
       if (parts.length === 4 && parts[3] === "events" && method === "GET") {
         events.connect(id, response, { type: "project_state", project: runs.detail(id) });
         return;
@@ -110,15 +132,19 @@ export function createLocalServer(options: ServerOptions) {
         }
         if (parts.length === 6 && ["confirm-valid", "reassemble"].includes(parts[5]) && method === "POST") {
           const input = await body(request); runs.assertIdle(id);
+          const legacy = store.readConversation(id) === null ? runs.timeline.read(id) : null;
+          let reassembled: number | undefined;
           validation(() => {
             if (parts[5] === "reassemble") {
               if (stage !== "prompts") throw new Error("只有提示词阶段可重新拼装");
-              store.reassemblePrompts(id, input.confirmed === true);
+              reassembled = store.reassemblePrompts(id, input.confirmed === true);
             } else {
               if (typeof input.reason !== "string" || input.reason.length > 8000) throw new Error("请填写最多 8000 字的理由");
               store.confirmValid(id, stage, input.reason, input.confirmed === true);
             }
           });
+          if (legacy !== null) store.appendConversation(id, legacy);
+          if (reassembled !== undefined) runs.timeline.add(id, { kind: "review_request", stage: "prompts", version: reassembled });
           runs.notify(id); return send(200, runs.detail(id));
         }
         if (parts.length === 6 && ["adopt", "discard", "request-changes"].includes(parts[5]) && method === "POST") {
@@ -130,12 +156,22 @@ export function createLocalServer(options: ServerOptions) {
           const note = input.note;
           if (note !== undefined && (typeof note !== "string" || note.length > 8000)) throw new HttpError(400, "审阅意见需为最多 8000 字文本");
           if (parts[5] === "request-changes" && (typeof note !== "string" || !note.trim())) throw new HttpError(400, "修改意见不能为空");
+          const wasAdopted = store.load(id).stages[stage].adopted_version === input.version && store.load(id).stages[stage].status === "adopted";
+          // 先持久化旧项目的最小时间线，避免审阅后合成重复的决定。
+          const legacy = store.readConversation(id) === null ? runs.timeline.read(id) : null;
           validation(() => {
             const version = input.version as number;
             if (parts[5] === "adopt") store.adopt(id, stage, version, input.confirmed === true);
             else if (parts[5] === "discard") store.discard(id, stage, version, note as string | undefined);
             else store.requestChanges(id, stage, version, note as string);
           });
+          if (legacy !== null) store.appendConversation(id, legacy);
+          if (parts[5] !== "adopt" || !wasAdopted) runs.timeline.add(id, {
+            kind: "review_decision", stage, version: input.version as number,
+            decision: parts[5] === "adopt" ? "adopted" : parts[5] === "discard" ? "discarded" : "changes_requested",
+            ...(typeof note === "string" ? { note } : {}),
+          });
+          if (parts[5] === "adopt" && !wasAdopted) await runs.autoAdvance(id, stage);
           runs.notify(id);
           return send(200, runs.detail(id));
         }

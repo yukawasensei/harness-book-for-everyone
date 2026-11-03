@@ -208,7 +208,7 @@ test("网页令牌在 sessionStorage 拒绝读写时仍使用内存，并随 RES
     globalThis.fetch = originalFetch;
   });
   Object.defineProperty(globalThis, "sessionStorage", { configurable: true, get() { throw new Error("存储被禁用"); } });
-  const client = await import(new URL("../web/src/api.ts?blocked-storage", import.meta.url).href) as typeof import("../web/src/api.js");
+  const client = await import(new URL("../web/src/lib/api/client.ts?blocked-storage", import.meta.url).href) as typeof import("../web/src/lib/api/client.js");
   assert.equal(client.getAccessToken(), "");
   client.setAccessToken(tokens.alice);
   globalThis.fetch = async (input, options) => {
@@ -222,7 +222,7 @@ test("网页令牌在 sessionStorage 拒绝读写时仍使用内存，并随 RES
 
 test("网页 401、403、429 具有中文提示并保留服务端配额原因", async t => {
   const originalFetch = globalThis.fetch; t.after(() => { globalThis.fetch = originalFetch; });
-  const client = await import("../web/src/api.js");
+  const client = await import("../web/src/lib/api/index.js");
   for (const status of [401, 403, 429]) {
     globalThis.fetch = async () => new Response("{}", { status });
     await assert.rejects(client.api("/api/config"), error => error instanceof client.ApiError && error.status === status && /[\u4e00-\u9fff]/.test(error.message));
@@ -233,8 +233,8 @@ test("网页 401、403、429 具有中文提示并保留服务端配额原因", 
 
 test("网页 hosted SSE 使用请求头鉴权，正确拼接跨字节和跨块事件且关闭后不重连", async t => {
   const originalFetch = globalThis.fetch; t.after(() => { globalThis.fetch = originalFetch; });
-  const client = await import("../web/src/api.js");
-  const { authenticatedEvents } = await import("../web/src/auth-events.js");
+  const client = await import("../web/src/lib/api/index.js");
+  const { authenticatedEvents } = await import("../web/src/lib/api/index.js");
   client.setAccessToken(tokens.alice); t.after(() => client.setAccessToken(""));
   const bytes = new TextEncoder().encode('id: 1\ndata: {"text":"中文事件"}\n\n: heartbeat\n\nid: 2\ndata: {"text":"完成"}\n\n');
   let requests = 0;

@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 import { createLocalServer } from "./server/index.js";
 import { fixture, packageRoot } from "./testing/fixtures.js";
-import { readerMessage, revisionDescription, stageBadge } from "../web/src/presentation.js";
+import { readerMessage, revisionDescription, stageBadge } from "../web/src/features/artifacts/lib/presentation.js";
 import { stagePrompt } from "./agent/prompts.js";
 import { ProjectStore } from "./project/store.js";
 import { STAGES } from "./contracts/index.js";
@@ -56,7 +56,7 @@ test("修改记录省略空项，有删除时保留实际场号", () => {
 });
 
 test("阶段记忆按项目保存，刷新和项目切换恢复各自阶段；坏值与不可用存储回退", async () => {
-  const { rememberSelectedStage, restoreSelectedStage } = await import("../web/src/project-selection.js");
+  const { rememberSelectedStage, restoreSelectedStage } = await import("../web/src/features/sessions/lib/project-selection.js");
   const values = new Map<string, string>();
   const access = () => ({ getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } });
   rememberSelectedStage("a", "bible", access); rememberSelectedStage("b", "script", access);

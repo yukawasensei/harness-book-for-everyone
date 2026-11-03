@@ -4,6 +4,21 @@ import type { runStage } from "../agent/run.js";
 import type { Basis } from "../project/provenance.js";
 import type { ProjectStore } from "../project/store.js";
 
+export type TranscriptItem =
+  | { type: "text"; text: string }
+  | { type: "tool"; name: string; label: string; args_summary: string; ok: boolean; error?: string };
+interface TimelineBase { id: string; at: string }
+export type TimelineItem = TimelineBase & (
+  | { kind: "user_message"; text: string }
+  | { kind: "assistant_note"; text: string }
+  | { kind: "run"; run_id: string; stage: Stage; revise_from?: number; status: "running" | "done" | "failed" | "interrupted"; stop_reason?: string; version?: number; transcript?: TranscriptItem[] }
+  | { kind: "review_request"; stage: Stage; version: number }
+  | { kind: "review_decision"; stage: Stage; version: number; decision: "adopted" | "discarded" | "changes_requested"; note?: string }
+);
+export interface TimelineResponse { items: TimelineItem[] }
+export type MessageAction = "revise" | "run" | "none";
+export interface MessageResponse { action: MessageAction; item: TimelineItem; run?: RunInfo }
+
 export interface RunInfo {
   id: string;
   stage: Stage;
@@ -15,6 +30,7 @@ type StageResult = Awaited<ReturnType<typeof runStage>>;
 export type RunOutcome = Pick<StageResult, "stop_reason" | "errors"> & Partial<Omit<StageResult, "stop_reason" | "errors">>;
 export type RunResult = RunInfo & RunOutcome;
 export interface ProjectDetail extends Project {
+  updated_at: string;
   running: RunInfo | null;
   last_run: RunResult | null;
   run_blocked_reasons: Record<Stage, string | null>;
@@ -36,6 +52,7 @@ type SessionEvent = (
   | { type: "tool_execution_end"; toolCallId: string; toolName: string; result: unknown; isError: boolean }
 ) & { stage: Stage; run_id: string };
 export type ProjectEvent = SessionEvent
+  | { type: "timeline_item"; item: TimelineItem }
   | { type: "staging_restored"; stage: Stage; run_id: string; ids: string[]; unit: "场" | "镜" }
   | { type: "project_state"; project: ProjectDetail }
   | { type: "run_started"; run: RunInfo }

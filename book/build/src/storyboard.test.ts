@@ -12,7 +12,7 @@ import { runStage, STAGE_TURN_LIMITS } from "./agent/run.js";
 import { createDemoSession } from "./server/demo.js";
 import { fakeStream, type Turn } from "./testing/fake-model.js";
 import { fixture, packageRoot, sample } from "./testing/fixtures.js";
-import { translateValidationError } from "../web/src/validation-errors.js";
+import { translateValidationError } from "../web/src/lib/format/validation-errors.js";
 
 function ready() {
   const f = fixture();
@@ -183,7 +183,7 @@ test("分镜未汇总及中断不出版本，达到阶段预算记录 max_turns"
 });
 
 test("分镜可读预览按场分组、名称及 ID、景别机位动作时长，拒绝消息为中文", async () => {
-  const { ArtifactPreview } = await import(new URL("../web/src/ArtifactPreview.tsx", import.meta.url).href);
+  const { ArtifactPreview } = await import(new URL("../web/src/features/artifacts/components/ArtifactPreview.tsx", import.meta.url).href);
   const html = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "storyboard", value: sample("storyboard"), bible: sample("bible") }));
   for (const text of ["S01 分镜", "S02 分镜", "S03 分镜", "程禾（C01）", "旧候船亭（L01）", "橙色空白磁片（P02）", "机位", "动作", "全景", "180", "原始 JSON"]) assert.ok(html.includes(text), text);
   for (const change of [{ prop_ids: ["P99"] }, { character_ids: ["C03"] }]) {

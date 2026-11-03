@@ -211,7 +211,7 @@ test("提示词示例通过完整引用检查；空镜只注入场景与规格�
 test("提示词预览标明两种职责与复制按钮，修改高亮以镜号为单位", async () => {
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
-  const { ArtifactPreview } = await import(new URL("../web/src/ArtifactPreview.tsx", import.meta.url).href);
+  const { ArtifactPreview } = await import(new URL("../web/src/features/artifacts/components/ArtifactPreview.tsx", import.meta.url).href);
   const html = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "prompts", value: sample("prompts"), revision: { revise_from: 1, resubmitted: ["S02-01"], reused: [], removed: [] } }));
   for (const text of ["模型写的部分", "程序注入的部分", "prompt-model", "prompt-injected", "复制 S01-01 完整提示词", "本版重交的镜头", "原始 JSON"]) assert.ok(html.includes(text), text);
   assert.equal((html.match(/class="prompt-card scene-revised"/g) ?? []).length, 1);

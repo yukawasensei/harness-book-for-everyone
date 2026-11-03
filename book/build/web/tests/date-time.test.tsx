@@ -3,8 +3,8 @@ import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { formatLocalDateTime } from "../src/date-time.js";
-import { ReviewPanel } from "../src/ReviewPanel.js";
+import { formatLocalDateTime } from "../src/lib/format/date-time.js";
+import { ReviewPanel } from "../src/features/artifacts/components/ReviewPanel.js";
 import { initialWorkflow } from "../../src/workflow/index.js";
 
 test("中文时间固定为年月日与24小时分钟，午夜不显示AM或24点", () => {
@@ -21,7 +21,7 @@ test("中文时间固定为年月日与24小时分钟，午夜不显示AM或24�
 });
 
 test("审计与运行的ISO时间按使用者本地时区显示，不固定服务器时区", () => {
-  const source = "import { formatLocalDateTime } from './web/src/date-time.ts'; console.log(formatLocalDateTime('2026-11-02T16:47:00.000Z'));";
+  const source = "import { formatLocalDateTime } from './web/src/lib/format/date-time.ts'; console.log(formatLocalDateTime('2026-11-02T16:47:00.000Z'));";
   for (const [zone, expected] of [["Asia/Taipei", "2026年11月3日 00:47"], ["UTC", "2026年11月2日 16:47"]]) {
     const result = spawnSync(process.execPath, ["--import", "tsx", "--input-type=module", "-e", source], { env: { TZ: zone }, encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
@@ -39,7 +39,7 @@ test("审阅记录用统一中文时间，保留原始时间戳供机器读取",
 });
 
 test("运行记录保留服务端真实开始时间，展示时使用同一格式化函数", async () => {
-  const { appendEvent } = await import("../src/timeline.js");
+  const { appendEvent } = await import("../src/features/chat/lib/append-event.js");
   const started = new Date(2026, 10, 3, 0, 47).toISOString();
   const rows = appendEvent([], { type: "run_started", run: { id: "time-test", stage: "topic", started_at: started, abort_requested: false } });
   assert.equal(rows[0].kind, "note");

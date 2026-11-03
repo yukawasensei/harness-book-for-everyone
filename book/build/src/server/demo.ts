@@ -49,42 +49,42 @@ export async function createDemoSession(options: StageSessionOptions) {
         ],
       };
       turns = [
-        { call: "read_upstream", args: { stage: "synopsis" }, text: `采用梗概不变，程序已预装 v${options.reviseFrom}。离线演示只修改 S02。` },
-        { call: "write_scene", args: { scene: revised }, text: "只重交第二场；S01、S03 由程序原样沿用。" },
-        { call: "finalize_draft", args: {}, text: "汇总新版本，并列出本次改动与沿用的场号。" },
-        { text: "S02 已按预设意见修改，其余场沿用原稿，请重新审阅。" },
+        { call: "read_upstream", args: { stage: "synopsis" }, text: `我先对照已采用的梗概，在第 ${options.reviseFrom} 版剧本上修改第二场。这次演示展示固定的修改示例。` },
+        { call: "write_scene", args: { scene: revised }, text: "我来修改第二场，第一场和第三场保留原稿。" },
+        { call: "finalize_draft", args: {}, text: "第二场改好了，我把三场合成一份新剧本，方便你对照。" },
+        { text: "第二场已改好，其余场保留原稿。请在右侧看一看，满意就采用。" },
       ];
     } else turns = [
-      { call: "read_upstream", args: { stage: "synopsis" }, text: "这是离线演示。先读采用梗概，再逐场提交；全部通过后汇总剧本。" },
-      { call: "write_scene", args: { scene: { ...artifact.scenes[0], lines: [{ kind: "dialogue", text: "这一格先不填。" }] } }, text: "先提交第一场；这次台词漏了角色，校验会拒绝。" },
-      ...artifact.scenes.map((scene: Scene) => ({ call: "write_scene", args: { scene }, text: scene.scene_id === "S01" ? "补齐台词角色后重交第一场。每场仅暂存，不产生版本。" : `继续提交 ${scene.scene_id}。` })),
-      { call: "finalize_draft", args: {}, text: "各场已交齐，交给程序排序并校验完整剧本。" },
-      { text: "剧本已保存为待审阅版本。场数与四个叙事拍不同是提醒，请人工检查故事转折后再决定是否采用。" },
+      { call: "read_upstream", args: { stage: "synopsis" }, text: "我先看一遍你已采用的梗概，接着一场一场写剧本。" },
+      { call: "write_scene", args: { scene: { ...artifact.scenes[0], lines: [{ kind: "dialogue", text: "这一格先不填。" }] } }, text: "我先交第一场，检查一下台词是否齐全。" },
+      ...artifact.scenes.map((scene: Scene) => ({ call: "write_scene", args: { scene }, text: scene.scene_id === "S01" ? "刚才有句台词漏写了说话的人，被检查拦下了。我补上后重新提交第一场。" : `接着写第 ${Number(scene.scene_id.slice(1))} 场。` })),
+      { call: "finalize_draft", args: {}, text: "各场都写好了，我把它们按顺序合成完整剧本，再检查一遍。" },
+      { text: "剧本写好了，请在右侧看一看。梗概的四个故事转折写成了三场，请确认转折是否讲清楚，满意就采用。" },
     ];
   } else if (options.stage === "prompts") {
     const board = options.store.readAdopted(options.projectId, "storyboard");
     const bible = options.store.readAdopted(options.projectId, "bible");
-    const read: Turn[] = [{ call: "list_shots", args: {}, text: "只读取镜号清单；外观由程序原样注入，不进入模型上下文。" }];
+    const read: Turn[] = [{ call: "list_shots", args: {}, text: "我先看一下有哪些镜头，再逐个写提示词。角色外观等已确认的设定会自动带入。" }];
     if (options.reviseFrom !== undefined) {
       const source = options.store.readVersion(options.projectId, "prompts", options.reviseFrom).items.find(item => item.shot_id === "S02-01");
       if (!source) throw new Error("提示词修改演示需要 S02-01");
       turns = [...read,
         { call: "read_shot", args: { shot_id: source.shot_id } },
-        { call: "write_shot_prompt", args: { shot_id: source.shot_id, shot_part: source.shot_part + "动作之后停顿，构图留白，让等待成为画面重心。" }, text: "只重交 S02-01，其余镜头由程序原样沿用。" },
-        { call: "finalize_draft", args: {}, text: "程序重新拼装全部镜头，并记录重交与沿用镜号。" },
-        { text: "修改后的提示词已待审阅，其他镜头沿用指定原稿。" },
+        { call: "write_shot_prompt", args: { shot_id: source.shot_id, shot_part: source.shot_part + "动作之后停顿，构图留白，让等待成为画面重心。" }, text: "我来修改第二场第一个镜头的提示词，其余镜头保留原稿。" },
+        { call: "finalize_draft", args: {}, text: "这条提示词改好了，接着加上已确认的设定，整理成完整的新版本。" },
+        { text: "第二场第一个镜头的提示词改好了，其余镜头保留原稿。请在右侧看一看，满意就采用。" },
       ];
     } else {
       const outside = bible.characters.find(c => !board.shots[0].character_ids.includes(c.id));
       const drafts: Turn[] = board.shots.flatMap(shot => {
         const part = `${shot.action}构图围绕人物动作展开，保留自然停顿与克制情绪。`;
-        return [{ call: "read_shot", args: { shot_id: shot.shot_id }, text: `读取 ${shot.shot_id} 的分镜与名称。` },
-          ...(shot === board.shots[0] && outside ? [{ call: "write_shot_prompt", args: { shot_id: shot.shot_id, shot_part: part + `${outside.name}在旁鼓掌。` }, text: "先试交镜头外角色，粗筛会拒绝。" }] : []),
-          { call: "write_shot_prompt", args: { shot_id: shot.shot_id, shot_part: part }, text: `提交 ${shot.shot_id} 的镜头部分；只写动作与镜头语言。` }];
+        return [{ call: "read_shot", args: { shot_id: shot.shot_id }, text: `我先看镜头 ${shot.shot_id} 里的人物和动作。` },
+          ...(shot === board.shots[0] && outside ? [{ call: "write_shot_prompt", args: { shot_id: shot.shot_id, shot_part: part + `${outside.name}在旁鼓掌。` }, text: "先交第一条提示词，检查一下是否符合分镜。" }] : []),
+          { call: "write_shot_prompt", args: { shot_id: shot.shot_id, shot_part: part }, text: shot === board.shots[0] && outside ? "刚才多写了一个不在这个镜头里的人，被检查拦下了。我去掉后重新提交。" : `我来写镜头 ${shot.shot_id} 的动作、构图和拍摄方式。` }];
       });
       turns = [...read, ...drafts,
-        { call: "finalize_draft", args: {}, text: "全部镜头齐备，由程序原样注入固定设定，生成待审阅版本。" },
-        { text: "请核对双色提示词卡片，复制完整提示词；采用后六阶段全部完成。" },
+        { call: "finalize_draft", args: {}, text: "每个镜头的提示词都写好了，接着加上已确认的设定，整理成完整版本。" },
+        { text: "提示词写好了，请在右侧逐条看一看，满意就采用，六个阶段就全部完成了。每条完整提示词都可以复制使用。" },
       ];
     }
   } else if (options.stage === "storyboard") {
@@ -95,8 +95,8 @@ export async function createDemoSession(options: StageSessionOptions) {
       ...(shot.dialogue ? { dialogue: shot.dialogue.replaceAll("麦冬", second.name) } : {}),
     }));
     const read: Turn[] = [
-      { call: "read_upstream", args: { stage: "script" }, text: "先读取人工采用剧本，按已有场次设计镜头。" },
-      { call: "read_upstream", args: { stage: "bible" }, text: "再读取采用设定集，只引用已有编号与来源场。" },
+      { call: "read_upstream", args: { stage: "script" }, text: "我先看一遍你已采用的剧本，按每一场的内容设计镜头。" },
+      { call: "read_upstream", args: { stage: "bible" }, text: "再对照已采用的设定集，确认各场会出现哪些人物、道具和地点。" },
     ];
     if (options.reviseFrom !== undefined) {
       const original = options.store.readVersion(options.projectId, "storyboard", options.reviseFrom);
@@ -106,18 +106,18 @@ export async function createDemoSession(options: StageSessionOptions) {
       shots[0].action = "程禾收回伸向计时器的手，静静等待陆岑抬头。";
       shots[0].dialogue = "程禾：那次告别，你愿意讲给我们听吗？";
       turns = [...read,
-        { call: "write_scene_shots", args: { scene: { scene_id: "S02", shots } }, text: "只重交 S02 的镜头，其他场由程序原样沿用。" },
-        { call: "finalize_draft", args: {}, text: "汇总并记录相对原稿的场次改动。" },
-        { text: "分镜第二场已按预设意见修改，请重新审阅。" },
+        { call: "write_scene_shots", args: { scene: { scene_id: "S02", shots } }, text: "这次演示会修改第二场的镜头，其他场保留原稿。" },
+        { call: "finalize_draft", args: {}, text: "第二场的镜头改好了，我把各场整理到一起，方便你对照。" },
+        { text: "第二场的分镜改好了，请在右侧看一看，满意就采用。" },
       ];
     } else {
       const first = artifact.shots[0];
       turns = [...read,
-        { call: "write_scene_shots", args: { scene: { scene_id: "S01", shots: [{ ...first, prop_ids: ["P99"] }] } }, text: "先试交不存在的道具 P99，引用闸门会拒绝。" },
-        { call: "write_scene_shots", args: { scene: { scene_id: "S01", shots: [{ ...first, character_ids: [...first.character_ids, "C03"] }] } }, text: "道具修正后，陆岑 C03 不在第一场，来源闸门仍会拒绝。" },
-        ...["S01", "S02", "S03"].map(scene_id => ({ call: "write_scene_shots", args: { scene: { scene_id, shots: artifact.shots.filter((shot: Shot) => shot.scene_id === scene_id) } }, text: `修正引用并提交 ${scene_id} 的全部镜头。` })),
-        { call: "finalize_draft", args: {}, text: "各场镜头已齐，程序复核引用与覆盖，汇总待审阅版本。" },
-        { text: "分镜已保存，请核对镜头动作、角色与节奏，采用后提示词依赖满足。" },
+        { call: "write_scene_shots", args: { scene: { scene_id: "S01", shots: [{ ...first, prop_ids: ["P99"] }] } }, text: "我先交第一场的镜头，检查一下人物和道具是否对得上。" },
+        { call: "write_scene_shots", args: { scene: { scene_id: "S01", shots: [{ ...first, character_ids: [...first.character_ids, "C03"] }] } }, text: "刚才写了一个设定集里没有的道具，被检查拦下了。我改好道具后再提交。" },
+        ...["S01", "S02", "S03"].map(scene_id => ({ call: "write_scene_shots", args: { scene: { scene_id, shots: artifact.shots.filter((shot: Shot) => shot.scene_id === scene_id) } }, text: scene_id === "S01" ? "检查又发现陆岑不该出现在第一场。我去掉他后，重新提交这一场的镜头。" : `接着写第 ${Number(scene_id.slice(1))} 场的镜头。` })),
+        { call: "finalize_draft", args: {}, text: "各场的镜头都写好了，我再检查一遍人物、道具和场次是否齐全，整理成完整分镜。" },
+        { text: "分镜写好了，请在右侧看看人物、动作和节奏是否合适。满意就采用，接下来就能写提示词了。" },
       ];
     }
   } else if (options.stage === "bible") {
@@ -136,16 +136,16 @@ export async function createDemoSession(options: StageSessionOptions) {
     const missing = structuredClone(artifact);
     missing.characters = missing.characters.filter((character: { id: string }) => character.id !== "C03");
     turns = [
-      { call: "read_upstream", args: { stage: "script" }, text: "从人工采用剧本抽取角色、道具和场景；固定描述与剧情动作分开。" },
-      { call: "write_draft", args: { artifact: missing }, text: "这份草稿漏了有台词的陆岑；覆盖检查会拒绝，不形成版本。" },
-      { call: "write_draft", args: { artifact }, text: "补齐陆岑及其来源场，保持其他编号和固定描述。" },
-      { text: "覆盖检查与固定描述粗筛已通过，设定集待审阅。请人工核对动作行人物、关键道具及视觉描述，再决定是否采用。" },
+      { call: "read_upstream", args: { stage: "script" }, text: "我先看一遍你已采用的剧本，整理人物、道具和地点，让后面的画面保持一致。" },
+      { call: "write_draft", args: { artifact: missing }, text: "我先交一版设定集，检查一下剧本里的人物是否都写全了。" },
+      { call: "write_draft", args: { artifact }, text: "刚才漏了有台词的陆岑，被检查拦下了。我补上他的设定和出场场次后重新提交。" },
+      { text: "设定集写好了，已通过检查。请在右侧看看人物有没有遗漏、关键道具是否齐全、外观描述是否合适，满意就采用。" },
     ];
   } else turns = [
-    { call: "read_upstream", args: dependency ? { stage: dependency } : {}, text: "这是离线演示。先检查上游，再提交草稿。" },
-    { call: "write_draft", args: { artifact: {} } },
-    { call: "write_draft", args: { artifact } },
-    { text: "已修正字段并保存草稿，请在右侧预览后采用。" },
+    { call: "read_upstream", args: dependency ? { stage: dependency } : {}, text: dependency ? "我先看一遍你已采用的选题，接着写梗概。" : "我先整理你的想法，接着写选题。" },
+    { call: "write_draft", args: { artifact: {} }, text: "我先交一版草稿，检查一下内容是否齐全。" },
+    { call: "write_draft", args: { artifact }, text: "第一次提交漏了必填内容，被检查拦下了。我补上后重新提交。" },
+    { text: `${options.stage === "topic" ? "选题" : "梗概"}写好了，请在右侧看一看，满意就采用。` },
   ];
   if (options.staging === "resume") {
     const saved = options.store.assertStagingCurrent(options.projectId, options.stage, options.reviseFrom);

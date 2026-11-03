@@ -14,6 +14,8 @@ import type { SessionFactory } from "./server/runs.js";
 
 async function setup(options: { script?: Turn[]; waitForAbort?: boolean; beforeSession?: () => Promise<void>; factory?: SessionFactory } = {}) {
   const f = fixture();
+  // 本文件验证既有手动阶段入口；自动推进闭环见 conversation.test.ts。
+  f.store.setAutopilot(f.project.id, false);
   const contexts: TranscriptContext[] = [];
   const app = createLocalServer({
     root: packageRoot, store: f.store,
@@ -284,7 +286,7 @@ test("HTTP 审阅与修改运行：非法来源 4xx，SSE 带审阅状态，采�
     assert.equal((await f.post(`${route}/run`, { revise_from: 1 })).status, 422);
     assert.equal((await f.detail()).stages.synopsis.status, "ready");
     const rows = readFileSync(join(f.store.projectDir(f.project.id), "audit.jsonl"), "utf8").trim().split("\n").map(row => JSON.parse(row));
-    assert.deepEqual(rows.map(row => row.action), ["changes_requested", "discarded", "adopted"]);
+    assert.deepEqual(rows.map(row => row.action), ["autopilot_changed", "changes_requested", "discarded", "adopted"]);
     assert.ok(rows.every(row => row.actor === "local"));
     assert.equal((await f.post(`${route}/request-changes`, { version: 3, note: "改" })).status, 200);
     assert.equal((await f.post(`${route}/run`, { revise_from: 3, confirmed: true })).status, 202);

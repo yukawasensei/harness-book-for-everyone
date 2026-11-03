@@ -1,18 +1,19 @@
 import assert from "node:assert/strict";
 import { setTimeout } from "node:timers/promises";
 import { test } from "node:test";
-import { connectProject, type EventConnection, type Connection } from "../web/src/live.js";
-import { appendEvent } from "../web/src/timeline.js";
-import { missingEventsNotice, nextActionStage, projectHasProgress, runSummary, toolErrorText, toolResultText, stageBadge, stageNames, stageStatusHelp, readerMessage, runRequestText, DEMO_CHANGE_NOTE, DEMO_SCRIPT_CHANGE_NOTE, demoChangeNote, demoRevisionNotice, reviewLabels } from "../web/src/presentation.js";
-import { rememberSelectedProject, restoreSelectedProject } from "../web/src/project-selection.js";
-import type { ProjectDetail, ProjectEvent, RunResult } from "./server/protocol.js";
+import { connectProject, mergeTimelineItems, type EventConnection, type Connection } from "../web/src/lib/api/index.js";
+import { appendEvent } from "../web/src/features/chat/lib/append-event.js";
+import { formatToolArgs, TOOL_ARG_LABELS } from "../web/src/features/chat/lib/format-tool-args.js";
+import { missingEventsNotice, nextActionStage, projectHasProgress, runSummary, toolErrorText, toolResultText, stageBadge, stageNames, stageStatusHelp, readerMessage, runRequestText, DEMO_CHANGE_NOTE, DEMO_SCRIPT_CHANGE_NOTE, demoChangeNote, demoRevisionNotice, reviewLabels } from "../web/src/features/artifacts/lib/presentation.js";
+import { rememberSelectedProject, restoreSelectedProject } from "../web/src/features/sessions/lib/project-selection.js";
+import type { ProjectDetail, ProjectEvent, RunResult, TimelineItem } from "./server/protocol.js";
 import { assertRunnable, initialWorkflow } from "./workflow/index.js";
 import { createLocalServer } from "./server/index.js";
 import { stagePrompt } from "./agent/prompts.js";
 import { fixture, packageRoot, sample } from "./testing/fixtures.js";
 
 const snapshot = (): ProjectDetail => ({
-  id: "test-project", title: "离线网页测试", stages: initialWorkflow(), running: null, last_run: null,
+  id: "test-project", title: "离线网页测试", updated_at: "2026-01-01T00:00:00.000Z", stages: initialWorkflow(), running: null, last_run: null,
   run_blocked_reasons: { topic: null, synopsis: "依赖未采用", script: "依赖未采用", bible: "依赖未采用", storyboard: "依赖未采用", prompts: "依赖未采用" },
 });
 function event(source: EventConnection, id: number, data: ProjectEvent) {
@@ -52,6 +53,24 @@ test("页面 SSE 出错后实际读取详情轮询；重连快照恢复实时状
   const count = states.length;
   event(source, 3, { type: "project_state", project: snapshot() });
   assert.equal(states.length, count);
+});
+
+test("轮询或重连后时间线按 id 合并不重复，同 id 以后到为准", () => {
+  const note = (id: string, text: string): TimelineItem => ({
+    kind: "assistant_note", id, at: "2026-01-01T00:00:00.000Z", text,
+  });
+  const review = (id: string, version: number): TimelineItem => ({
+    kind: "review_request", id, at: "2026-01-01T00:01:00.000Z", stage: "script", version,
+  });
+  const cached = [note("n1", "旧说明"), review("r1", 1)];
+  const polled = [note("n1", "轮询更新"), review("r1", 1), review("r2", 2)];
+  const merged = mergeTimelineItems(cached, polled);
+  assert.equal(merged.length, 3);
+  assert.deepEqual(merged.map(item => item.id), ["n1", "r1", "r2"]);
+  assert.equal(merged[0].kind === "assistant_note" && merged[0].text, "轮询更新");
+  const again = mergeTimelineItems(merged, [review("r2", 2), note("n1", "重连再取")]);
+  assert.equal(again.length, 3);
+  assert.equal(again[0].kind === "assistant_note" && again[0].text, "重连再取");
 });
 
 test("晚到的轮询不覆盖 SSE 新快照；重复事件不重复追加；关闭后忽略在途结果", async () => {
@@ -281,7 +300,7 @@ test("剧本演示预填仅改 S02 的意见；汇总结果可读显示原版本
 });
 
 test("运行提交被 429 拒绝时不追加运行消息，202 后才追加一次", async t => {
-  const { submitRun, ApiError } = await import("../web/src/api.js");
+  const { submitRun, ApiError } = await import("../web/src/lib/api/index.js");
   const rows: string[] = [];
   const fetchMock = t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ error: "已达到今日运行次数上限" }), { status: 429 }));
   await assert.rejects(submitRun("/api/projects/example/stages/topic/run", {}, () => rows.push("运行选题")), error => error instanceof ApiError && error.status === 429);
@@ -296,7 +315,7 @@ test("运行提交被 429 拒绝时不追加运行消息，202 后才追加一�
 });
 
 test("401 区分未填写与失效令牌，按该次请求实际发送的身份判断", async t => {
-  const { api, setAccessToken, getAccessToken, ApiError } = await import("../web/src/api.js");
+  const { api, setAccessToken, getAccessToken, ApiError } = await import("../web/src/lib/api/index.js");
   const previous = getAccessToken(); t.after(() => setAccessToken(previous));
   const requests: Headers[] = [];
   t.mock.method(globalThis, "fetch", async (_url: unknown, options?: RequestInit) => {
@@ -310,4 +329,37 @@ test("401 区分未填写与失效令牌，按该次请求实际发送的身份�
   await assert.rejects(api("/api/config"), error => error instanceof ApiError && error.message === "令牌无效或已失效");
   assert.equal(requests[0].has("authorization"), false);
   assert.equal(requests[1].get("authorization"), "Bearer public-invalid-token-for-test");
+});
+
+test("工具参数摘要映射中文标签；未知键进入技术详情", () => {
+  assert.equal(TOOL_ARG_LABELS.shot_id, "镜头编号");
+  assert.equal(TOOL_ARG_LABELS.shot_part, "镜头描述");
+  assert.equal(TOOL_ARG_LABELS.stage, "阶段");
+  assert.equal(TOOL_ARG_LABELS.scene_id, "场次编号");
+  assert.equal(TOOL_ARG_LABELS.artifact, "草稿");
+
+  const shot = formatToolArgs({ shot_id: "S03-02", shot_part: "陆岑开口，风吹进候船亭。" });
+  assert.deepEqual(shot.lines, [
+    { label: "镜头编号", value: "S03-02" },
+    { label: "镜头描述", value: "陆岑开口，风吹进候船亭。" },
+  ]);
+  assert.equal(shot.technical, null);
+  assert.ok(!JSON.stringify(shot.lines).includes("shot_id"));
+  assert.ok(!JSON.stringify(shot.lines).includes("shot_part"));
+
+  const staged = formatToolArgs('{"stage":"topic"}');
+  assert.deepEqual(staged.lines, [{ label: "阶段", value: "选题" }]);
+  assert.equal(staged.technical, null);
+
+  const mixed = formatToolArgs({ shot_id: "S01-01", debug_token: "raw", foo: 1 });
+  assert.deepEqual(mixed.lines, [{ label: "镜头编号", value: "S01-01" }]);
+  assert.match(mixed.technical!, /debug_token/);
+  assert.match(mixed.technical!, /"foo": 1/);
+
+  const summary = formatToolArgs("stage: script, version: 1");
+  assert.deepEqual(summary.lines, [
+    { label: "阶段", value: "剧本" },
+    { label: "版本", value: "1" },
+  ]);
+  assert.equal(summary.technical, null);
 });

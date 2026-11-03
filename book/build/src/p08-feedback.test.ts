@@ -10,8 +10,8 @@ import { createDemoSession } from "./server/demo.js";
 import { ScriptDraft } from "./agent/script-draft.js";
 import { StoryboardDraft } from "./agent/storyboard-draft.js";
 import { PromptDraft } from "./agent/prompt-draft.js";
-import { readerMessage } from "../web/src/presentation.js";
-import { appendEvent } from "../web/src/timeline.js";
+import { readerMessage } from "../web/src/features/artifacts/lib/presentation.js";
+import { appendEvent } from "../web/src/features/chat/lib/append-event.js";
 import type { ProjectDetail } from "./server/protocol.js";
 
 function complete(f: ReturnType<typeof fixture>) {
@@ -46,13 +46,13 @@ test("确认理由与程序拼装来源随版本持久化，影响条目返回�
     const project = f.store.load(f.project.id);
     assert.equal(project.provenance?.storyboard?.[1].validity_confirmation?.reason, "仅衣服颜色变化，镜头不变");
     assert.equal(project.provenance?.prompts?.[2].generated_by, "reassemble");
-    const { ProvenancePanel } = await import(new URL("../web/src/ReworkPanel.tsx", import.meta.url).href);
+    const { ProvenancePanel } = await import(new URL("../web/src/features/artifacts/components/ReworkPanel.tsx", import.meta.url).href);
     const html = renderToStaticMarkup(createElement(ProvenancePanel, { project: project as ProjectDetail, stage: "storyboard", version: 1 }));
     assert.match(html, /有效理由：仅衣服颜色变化，镜头不变/);
   } finally { f.cleanup(); }
 });
 test("程序拼装版本不显示假模型预设修改告知；影响清单显示名称加编号", async () => {
-  const { ReviewPanel } = await import(new URL("../web/src/ReviewPanel.tsx", import.meta.url).href);
+  const { ReviewPanel } = await import(new URL("../web/src/features/artifacts/components/ReviewPanel.tsx", import.meta.url).href);
   const props = { stage: "prompts" as const, state: { status: "stale" as const, versions: [1, 2], adopted_version: 1 }, version: 2,
     loaded: true, busy: false, demo: true, runReason: null, error: "", onReview: async () => true, onRevise: () => {} };
   const html = renderToStaticMarkup(createElement(ReviewPanel, { ...props, programAssembled: true }));
@@ -60,21 +60,21 @@ test("程序拼装版本不显示假模型预设修改告知；影响清单显�
   assert.match(renderToStaticMarkup(createElement(ReviewPanel, props)), /离线演示的修改结果为预设内容/);
   const f = fixture(); try {
     complete(f); changed(f);
-    const { ProvenancePanel } = await import(new URL("../web/src/ReworkPanel.tsx", import.meta.url).href);
+    const { ProvenancePanel } = await import(new URL("../web/src/features/artifacts/components/ReworkPanel.tsx", import.meta.url).href);
     const project = { ...f.store.load(f.project.id), bible_impact: f.store.bibleImpact(f.project.id) } as ProjectDetail;
     assert.match(renderToStaticMarkup(createElement(ProvenancePanel, { project, stage: "storyboard", version: 1 })), /程禾（C01）/);
   } finally { f.cleanup(); }
 });
 test("重启中断提示独立于当前阶段采用状态，包含阶段和运行时间", async () => {
-  const { InterruptedRunNotice } = await import(new URL("../web/src/ReworkPanel.tsx", import.meta.url).href);
+  const { InterruptedRunNotice } = await import(new URL("../web/src/features/artifacts/components/ReworkPanel.tsx", import.meta.url).href);
   const run = { id: "orphan", stage: "script" as const, started_at: "2026-11-03T01:02:03.000Z", abort_requested: false, stop_reason: "interrupted", errors: [] };
   const html = renderToStaticMarkup(createElement(InterruptedRunNotice, { run }));
   assert.match(html, /上次运行被中断/); assert.match(html, /剧本/); assert.match(html, /dateTime="2026-11-03T01:02:03.000Z"/);
   assert.equal(renderToStaticMarkup(createElement(InterruptedRunNotice, { run: { ...run, stop_reason: "draft_written" } })), "");
 });
 test("全部采用后的运行提示为完成态；三种处理有各自说明和禁用原因", async () => {
-  const { composerGuidance } = await import("../web/src/presentation.js");
-  const { ReworkActions } = await import(new URL("../web/src/ReworkPanel.tsx", import.meta.url).href);
+  const { composerGuidance } = await import("../web/src/features/artifacts/lib/presentation.js");
+  const { ReworkActions } = await import(new URL("../web/src/features/artifacts/components/ReworkPanel.tsx", import.meta.url).href);
   const f = fixture(); try {
     complete(f);
     for (const stage of STAGES) assert.match(composerGuidance(f.store.load(f.project.id), stage), /全流程已完成/);

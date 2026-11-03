@@ -2,17 +2,18 @@ import { assertId, containedPath, tenantRoot } from "./paths.js";
 import { validateRating, SCORE_LABELS, type Ratings, type Dimension } from "./ratings.js";
 import { assembleShotPrompt, validatePromptReferences } from "../contracts/prompts.js";
 import { randomUUID } from "node:crypto";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
+import { appendFileSync, closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { STAGES, parseStage, validateArtifact, validateBibleCoverage, validateStoryboardReferences, validateVersionMetadata, type Artifacts, type Stage, type VersionMetadata } from "../contracts/index.js";
 import { adoptDraft, assertAdopted, assertRunnable, initialWorkflow, recordDraft, reviewDraft, reviewOf, type Workflow } from "../workflow/index.js";
 import { compareBible, currentBasis, refreshStale, sameBasis, type Basis, type Provenance, type Source } from "./provenance.js";
 import { readOptional, writeJson, type Checkpoint } from "./checkpoints.js";
-import type { RunInfo } from "../server/protocol.js";
+import type { RunInfo, TimelineItem } from "../server/protocol.js";
 
 export interface Project {
   id: string;
   title: string;
+  autopilot?: boolean;
   stages: Workflow;
   version_metadata?: Partial<Record<Stage, Record<number, VersionMetadata>>>;
   provenance?: Provenance;
@@ -41,7 +42,7 @@ export class ProjectStore {
 
   create(title: string): Project {
     if (!title.trim()) throw new Error("项目标题不能为空");
-    const project: Project = { id: randomUUID(), title: title.trim(), stages: initialWorkflow() };
+    const project: Project = { id: randomUUID(), title: title.trim(), autopilot: true, stages: initialWorkflow() };
     mkdirSync(this.projectDir(project.id), { recursive: true });
     this.save(project);
     return project;
@@ -84,6 +85,8 @@ export class ProjectStore {
     try {
       const project = JSON.parse(readFileSync(file, "utf8")) as Project;
       if (project.id !== id) throw new Error("项目 ID 与目录不一致");
+      // 旧项目继续保留原来的手动推进；新建项目显式存 true。
+      project.autopilot ??= false;
       for (const state of Object.values(project.stages)) {
         for (const version of state.versions) (state.reviews ??= {})[version] ??= reviewOf(state, version);
       }
@@ -100,6 +103,87 @@ export class ProjectStore {
     const temp = this.path(project.id, "project.json.tmp");
     writeFileSync(temp, `${JSON.stringify(project, null, 2)}\n`, { mode: 0o600 });
     renameSync(temp, target);
+  }
+
+  setAutopilot(id: string, autopilot: boolean): Project {
+    const project = this.load(id);
+    project.autopilot = autopilot;
+    this.save(project);
+    this.auditAction(id, "autopilot_changed", { autopilot });
+    return project;
+  }
+
+  readConversation(id: string): TimelineItem[] | null {
+    this.load(id);
+    try { return readFileSync(this.path(id, "conversation.jsonl"), "utf8").split("\n").filter(Boolean).map(line => JSON.parse(line) as TimelineItem); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; }
+  }
+
+  appendConversation(id: string, items: TimelineItem[]): void {
+    this.load(id);
+    appendFileSync(this.path(id, "conversation.jsonl"), items.length ? items.map(item => JSON.stringify(item)).join("\n") + "\n" : "", { mode: 0o600 });
+  }
+
+  readAudit(id: string): Record<string, unknown>[] {
+    this.load(id);
+    try { return readFileSync(this.path(id, "audit.jsonl"), "utf8").split("\n").filter(Boolean).map(line => JSON.parse(line)); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }
+  }
+
+  versionTimestamp(id: string, stage: Stage, version: number): string {
+    return statSync(this.artifactPath(id, stage, version)).mtime.toISOString();
+  }
+
+  /** 从持久化记录计算；project.json 的 mtime 也覆盖新建与项目设置变动。 */
+  updatedAt(id: string): string {
+    const project = this.load(id);
+    let latest = statSync(this.path(id, "project.json")).mtime.getTime();
+    for (const file of ["conversation.jsonl", "audit.jsonl"]) {
+      const at = this.lastLogTimestamp(id, file);
+      if (at !== undefined && Number.isFinite(Date.parse(at))) latest = Math.max(latest, Date.parse(at));
+    }
+    for (const stage of STAGES) {
+      for (const version of project.stages[stage].versions) {
+        latest = Math.max(latest, Date.parse(this.versionTimestamp(id, stage, version)));
+      }
+    }
+    return new Date(latest).toISOString();
+  }
+
+  /** 仅从尾部读取最后一条 JSONL，避免列表查询解析整段会话历史。 */
+  private lastLogTimestamp(id: string, file: string): string | undefined {
+    let fd: number;
+    try { fd = openSync(this.path(id, file), "r"); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined; throw error; }
+    try {
+      let position = fstatSync(fd).size;
+      let tail = Buffer.alloc(0);
+      while (position > 0) {
+        const chunk = Buffer.alloc(Math.min(position, 4096));
+        position -= chunk.length;
+        readSync(fd, chunk, 0, chunk.length, position);
+        tail = Buffer.concat([chunk, tail]);
+        const text = tail.toString("utf8").trimEnd();
+        const newline = text.lastIndexOf("\n");
+        if (newline >= 0 || position === 0) {
+          return text ? (JSON.parse(text.slice(newline + 1)) as { at?: string }).at : undefined;
+        }
+      }
+      return undefined;
+    } finally { closeSync(fd); }
+  }
+
+  /** 只读租户项目内的会话，不接受来自 API 或日志内容的任意路径。 */
+  readSessions(id: string): Record<string, unknown>[][] {
+    this.load(id);
+    let names: string[];
+    try { names = readdirSync(this.path(id, "sessions")).filter(name => name.endsWith(".jsonl")).sort(); }
+    catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }
+    return names.map(name => {
+      const text = readFileSync(this.path(id, "sessions", name), "utf8");
+      // SDK 正在追加的最后半行尚未成为记录，下次读取时补上。
+      return text.slice(0, text.lastIndexOf("\n") + 1).split("\n").filter(Boolean).map(line => JSON.parse(line));
+    });
   }
 
   artifactPath(id: string, stage: Stage, version: number): string {
