@@ -54,6 +54,7 @@ export function createLocalServer(options: ServerOptions) {
         if (error instanceof Error && error.message.startsWith("项目不存在：")) throw new HttpError(404, error.message);
         throw error;
       }
+      if (parts.length === 4 && parts[3] === "ratings" && method === "GET") return json(response, 200, store.exportRatings(id));
       if (parts.length === 3 && method === "GET") return json(response, 200, runs.detail(id));
       if (parts.length === 4 && parts[3] === "events" && method === "GET") {
         events.connect(id, response, { type: "project_state", project: runs.detail(id) });
@@ -65,6 +66,12 @@ export function createLocalServer(options: ServerOptions) {
       }
       if (parts.length >= 6 && parts[3] === "stages") {
         const stage = validation(() => parseStage(parts[4]));
+        if (parts.length === 6 && parts[5] === "rating" && method === "POST") {
+          const input = await body(request); runs.assertIdle(id);
+          if (typeof input.version !== "number" || !Number.isSafeInteger(input.version)) throw new HttpError(400, "评分版本号必须为整数");
+          validation(() => store.saveRating(id, stage, input.version as number, { scores: input.scores, note: input.note }));
+          runs.notify(id); return json(response, 200, runs.detail(id));
+        }
         if (parts.length === 6 && parts[5] === "run" && method === "POST") {
           const input = await body(request);
           const instructions = input.instructions ?? "";

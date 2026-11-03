@@ -1,3 +1,4 @@
+import { decodeToolArgument, type ArgumentStats } from "./tool-input.js";
 import { resolve } from "node:path";
 import { InMemoryCredentialStore, Type } from "@earendil-works/pi-ai";
 import {
@@ -14,12 +15,15 @@ import { PromptDraft } from "./prompt-draft.js";
 import { createPromptTools } from "./prompt-tools.js";
 import { StoryboardDraft } from "./storyboard-draft.js";
 
+const argumentStats = new WeakMap<AgentSession, ArgumentStats>();
+export const sessionArgumentStats = (session: AgentSession) => argumentStats.get(session);
+
 const sceneDrafts = new WeakMap<AgentSession, ScriptDraft | StoryboardDraft>();
 const promptDrafts = new WeakMap<AgentSession, PromptDraft>();
 export const sessionPromptDraft = (session: AgentSession) => promptDrafts.get(session);
 export const sessionSceneDraft = (session: AgentSession) => sceneDrafts.get(session);
 
-export function createStageTools(store: ProjectStore, projectId: string, stage: Stage, draft: ScriptDraft | StoryboardDraft | PromptDraft = stage === "prompts" ? new PromptDraft(store, projectId) : stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId)) {
+export function createStageTools(store: ProjectStore, projectId: string, stage: Stage, draft: ScriptDraft | StoryboardDraft | PromptDraft = stage === "prompts" ? new PromptDraft(store, projectId) : stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId), stats: ArgumentStats = { coerced_args: 0 }) {
   parseStage(stage);
   if (stage === "prompts") return createPromptTools(store, projectId, draft as PromptDraft);
   if (draft instanceof PromptDraft) throw new Error("提示词暂存区只能用于提示词阶段");
@@ -53,7 +57,8 @@ export function createStageTools(store: ProjectStore, projectId: string, stage: 
       description: `提交一场到本次运行的进行中草稿；同 scene_id 可覆盖。不会生成版本。单场契约：${JSON.stringify(stage === "script" ? SceneSchema : SceneShotsSchema)}`,
       parameters: Type.Object({ scene: Type.Unknown() }, { additionalProperties: false }),
       async execute(_callId, params) {
-        const details = draft.write(params.scene);
+        const scene = decodeToolArgument(params.scene, stage === "script" ? SceneSchema : SceneShotsSchema, "scene", stage === "script" ? "scene" : "scene_shots", stats);
+        const details = draft.write(scene);
         return { content: [{ type: "text" as const, text: `已暂存 ${details.scene_id}；共 ${details.scene_count} 场，尚未生成版本。` }], details };
       },
     }),
@@ -82,10 +87,11 @@ export function createStageTools(store: ProjectStore, projectId: string, stage: 
   return [readTool, defineTool({
       name: "write_draft", label: "写草稿 / Write draft",
       description: `提交本阶段完整 JSON 产物，只保存草稿，不采用。产物契约：${JSON.stringify(schemas[stage])}`,
-      // artifact 故意用 Unknown：SDK 不得先转换字段类型。真实契约由存储层严格校验。
+      // Unknown 同时容纳对象与 JSON 字符串，避免 SDK 隐式转换；harness 解码后严格执行原契约。
       parameters: Type.Object({ artifact: Type.Unknown() }, { additionalProperties: false }),
       async execute(_callId, params) {
-        const version = store.writeDraft(projectId, stage, params.artifact);
+        const artifact = decodeToolArgument(params.artifact, schemas[stage], "artifact", stage, stats);
+        const version = store.writeDraft(projectId, stage, artifact);
         return {
           content: [{ type: "text", text: `已保存 ${stage} v${version}；status=pending_review，等待人工采用` }],
           details: { stage, version, status: "pending_review" },
@@ -134,13 +140,15 @@ export async function createStageSession(options: StageSessionOptions) {
   });
   await resourceLoader.reload();
   const draft: ScriptDraft | StoryboardDraft | PromptDraft = stage === "prompts" ? new PromptDraft(store, projectId) : stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId);
-  const tools = createStageTools(store, projectId, stage, draft);
+  const stats: ArgumentStats = { coerced_args: 0 };
+  const tools = createStageTools(store, projectId, stage, draft, stats);
   const { session } = await createAgentSession({
     cwd: root, agentDir, model, modelRuntime, settingsManager, resourceLoader,
     thinkingLevel: "off", noTools: "all",
     tools: tools.map(t => t.name), customTools: tools,
     sessionManager: SessionManager.create(root, store.sessionDir(projectId)),
   });
+  argumentStats.set(session, stats);
   if (draft instanceof PromptDraft) promptDrafts.set(session, draft);
   else if (stage === "script" || stage === "storyboard") sceneDrafts.set(session, draft);
   return session;

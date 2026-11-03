@@ -119,7 +119,7 @@ export class StageRuns {
   }
 
   private async execute(id: string, session: AgentSession, run: ActiveRun, instructions: string, unsubscribe: () => void, reviseFrom?: number, options: { confirmed?: boolean; staging?: ResumeChoice } = {}) {
-    let result: Awaited<ReturnType<typeof runStage>>;
+    let result: import("./protocol.js").RunOutcome;
     try { result = await runStage(session, this.store, id, run.info.stage, instructions, run.controller.signal, reviseFrom, options); }
     catch { result = { stop_reason: "runtime_error", errors: ["运行异常，请检查本地会话记录"] }; }
     finally { unsubscribe(); session.dispose(); }

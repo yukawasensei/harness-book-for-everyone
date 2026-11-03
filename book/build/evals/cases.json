@@ -1,0 +1,64 @@
+[
+  {
+    "id": "topic-draft",
+    "stage": "topic",
+    "fixtures": {},
+    "max_turns": 8,
+    "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+  },
+  {
+    "id": "synopsis-draft",
+    "stage": "synopsis",
+    "fixtures": {
+      "topic": "topic.json"
+    },
+    "max_turns": 8,
+    "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+  },
+  {
+    "id": "script-draft",
+    "stage": "script",
+    "fixtures": {
+      "topic": "topic.json",
+      "synopsis": "synopsis.json"
+    },
+    "max_turns": 20,
+    "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+  },
+  {
+    "id": "bible-draft",
+    "stage": "bible",
+    "fixtures": {
+      "topic": "topic.json",
+      "synopsis": "synopsis.json",
+      "script": "script.json"
+    },
+    "max_turns": 8,
+    "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+  },
+  {
+    "id": "storyboard-draft",
+    "stage": "storyboard",
+    "fixtures": {
+      "topic": "topic.json",
+      "synopsis": "synopsis.json",
+      "script": "script.json",
+      "bible": "bible.json"
+    },
+    "max_turns": 24,
+    "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+  },
+  {
+    "id": "prompts-draft",
+    "stage": "prompts",
+    "fixtures": {
+      "topic": "topic.json",
+      "synopsis": "synopsis.json",
+      "script": "script.json",
+      "bible": "bible.json",
+      "storyboard": "storyboard.json"
+    },
+    "max_turns": 32,
+    "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+  }
+]

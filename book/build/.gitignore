@@ -7,3 +7,5 @@ web/dist/
 web/.vite/
 node_modules/.vite/
 *.tsbuildinfo
+
+evals/runs/local/

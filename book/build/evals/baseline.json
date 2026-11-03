@@ -1,0 +1,493 @@
+{
+  "model": "ollama/qwen3.8:27b",
+  "total": 6,
+  "passCount": 6,
+  "cases": [
+    {
+      "id": "topic-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "topic-draft",
+          "stage": "topic",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 3,
+          "max_turns": 8,
+          "duration_ms": 17270,
+          "tool_calls": 2,
+          "rejected_calls": 0,
+          "coerced_args": 1,
+          "errors": [],
+          "project": "projects/4f27f972-7aeb-477e-ad87-5e508f3fa64d",
+          "usage": {
+            "input": 894,
+            "output": 806,
+            "cacheRead": 2354,
+            "cacheWrite": 0,
+            "totalTokens": 4054,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    },
+    {
+      "id": "synopsis-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "synopsis-draft",
+          "stage": "synopsis",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 3,
+          "max_turns": 8,
+          "duration_ms": 29214,
+          "tool_calls": 2,
+          "rejected_calls": 0,
+          "coerced_args": 1,
+          "errors": [],
+          "project": "projects/8634bd31-f36f-49a5-8c4b-eaa8e86eaf82",
+          "usage": {
+            "input": 1011,
+            "output": 1077,
+            "cacheRead": 2969,
+            "cacheWrite": 0,
+            "totalTokens": 5057,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    },
+    {
+      "id": "script-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "script-draft",
+          "stage": "script",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 4,
+          "max_turns": 20,
+          "duration_ms": 90695,
+          "tool_calls": 6,
+          "rejected_calls": 0,
+          "coerced_args": 4,
+          "errors": [],
+          "project": "projects/3599ae1a-fad8-445a-9808-5ab8355cbc72",
+          "usage": {
+            "input": 5211,
+            "output": 3687,
+            "cacheRead": 8479,
+            "cacheWrite": 0,
+            "totalTokens": 17377,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "scene_changes": {
+            "revise_from": null,
+            "resubmitted": [
+              "S01",
+              "S02",
+              "S03",
+              "S04"
+            ],
+            "reused": [],
+            "removed": []
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    },
+    {
+      "id": "bible-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "bible-draft",
+          "stage": "bible",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 5,
+          "max_turns": 8,
+          "duration_ms": 96952,
+          "tool_calls": 4,
+          "rejected_calls": 2,
+          "coerced_args": 1,
+          "errors": [
+            "{\"content\":[{\"type\":\"text\",\"text\":\"参数 artifact：期望 对象(object)，实际 字符串(string)，但不是合法 JSON；请检查双引号、逗号和括号；正确示例（此处的值）：{}。保留其余必填字段。\"}],\"details\":{}}",
+            "{\"content\":[{\"type\":\"text\",\"text\":\"参数 artifact：期望 对象(object)，实际 字符串(string)，但不是合法 JSON；请检查双引号、逗号和括号；正确示例（此处的值）：{}。保留其余必填字段。\"}],\"details\":{}}"
+          ],
+          "project": "projects/96485c4f-7d33-4900-97b3-0506201363c3",
+          "usage": {
+            "input": 5347,
+            "output": 4784,
+            "cacheRead": 17651,
+            "cacheWrite": 0,
+            "totalTokens": 27782,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    },
+    {
+      "id": "storyboard-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "storyboard-draft",
+          "stage": "storyboard",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 4,
+          "max_turns": 24,
+          "duration_ms": 153740,
+          "tool_calls": 6,
+          "rejected_calls": 0,
+          "coerced_args": 3,
+          "errors": [],
+          "project": "projects/80075d7c-bcbd-4e86-bb32-6d78ef0df234",
+          "usage": {
+            "input": 2838,
+            "output": 8241,
+            "cacheRead": 21871,
+            "cacheWrite": 0,
+            "totalTokens": 32950,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "scene_changes": {
+            "revise_from": null,
+            "resubmitted": [
+              "S01",
+              "S02",
+              "S03"
+            ],
+            "reused": [],
+            "removed": []
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    },
+    {
+      "id": "prompts-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "prompts-draft",
+          "stage": "prompts",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 5,
+          "max_turns": 32,
+          "duration_ms": 67166,
+          "tool_calls": 14,
+          "rejected_calls": 0,
+          "coerced_args": 0,
+          "errors": [],
+          "project": "projects/d6ec4435-b9d0-4707-8ae7-fd4b37a711af",
+          "usage": {
+            "input": 3989,
+            "output": 2679,
+            "cacheRead": 10231,
+            "cacheWrite": 0,
+            "totalTokens": 16899,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "shot_changes": {
+            "revise_from": null,
+            "resubmitted": [
+              "S01-01",
+              "S01-02",
+              "S02-01",
+              "S02-02",
+              "S03-01",
+              "S03-02"
+            ],
+            "reused": [],
+            "removed": []
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    }
+  ],
+  "by_stage": {
+    "topic": {
+      "attempts": 1,
+      "duration_ms": 17270,
+      "coerced_args": 1,
+      "usage": {
+        "input": 894,
+        "output": 806,
+        "cacheRead": 2354,
+        "cacheWrite": 0,
+        "totalTokens": 4054,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    "synopsis": {
+      "attempts": 1,
+      "duration_ms": 29214,
+      "coerced_args": 1,
+      "usage": {
+        "input": 1011,
+        "output": 1077,
+        "cacheRead": 2969,
+        "cacheWrite": 0,
+        "totalTokens": 5057,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    "script": {
+      "attempts": 1,
+      "duration_ms": 90695,
+      "coerced_args": 4,
+      "usage": {
+        "input": 5211,
+        "output": 3687,
+        "cacheRead": 8479,
+        "cacheWrite": 0,
+        "totalTokens": 17377,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    "bible": {
+      "attempts": 1,
+      "duration_ms": 96952,
+      "coerced_args": 1,
+      "usage": {
+        "input": 5347,
+        "output": 4784,
+        "cacheRead": 17651,
+        "cacheWrite": 0,
+        "totalTokens": 27782,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    "storyboard": {
+      "attempts": 1,
+      "duration_ms": 153740,
+      "coerced_args": 3,
+      "usage": {
+        "input": 2838,
+        "output": 8241,
+        "cacheRead": 21871,
+        "cacheWrite": 0,
+        "totalTokens": 32950,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    "prompts": {
+      "attempts": 1,
+      "duration_ms": 67166,
+      "coerced_args": 0,
+      "usage": {
+        "input": 3989,
+        "output": 2679,
+        "cacheRead": 10231,
+        "cacheWrite": 0,
+        "totalTokens": 16899,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    }
+  },
+  "completion_rate": 1,
+  "coerced_args": 10,
+  "coerced_args_unknown": 0,
+  "tool_calls": 34,
+  "rejected_calls": 2,
+  "rejection_rate": 0.058823529411764705,
+  "usage": {
+    "input": 19290,
+    "output": 21274,
+    "cacheRead": 63555,
+    "cacheWrite": 0,
+    "totalTokens": 104119,
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0
+    }
+  },
+  "repeat": 1,
+  "fake": false,
+  "case_specs": [
+    {
+      "id": "topic-draft",
+      "stage": "topic",
+      "fixtures": {},
+      "max_turns": 8,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    },
+    {
+      "id": "synopsis-draft",
+      "stage": "synopsis",
+      "fixtures": {
+        "topic": "topic.json"
+      },
+      "max_turns": 8,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    },
+    {
+      "id": "script-draft",
+      "stage": "script",
+      "fixtures": {
+        "topic": "topic.json",
+        "synopsis": "synopsis.json"
+      },
+      "max_turns": 20,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    },
+    {
+      "id": "bible-draft",
+      "stage": "bible",
+      "fixtures": {
+        "topic": "topic.json",
+        "synopsis": "synopsis.json",
+        "script": "script.json"
+      },
+      "max_turns": 8,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    },
+    {
+      "id": "storyboard-draft",
+      "stage": "storyboard",
+      "fixtures": {
+        "topic": "topic.json",
+        "synopsis": "synopsis.json",
+        "script": "script.json",
+        "bible": "bible.json"
+      },
+      "max_turns": 24,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    },
+    {
+      "id": "prompts-draft",
+      "stage": "prompts",
+      "fixtures": {
+        "topic": "topic.json",
+        "synopsis": "synopsis.json",
+        "script": "script.json",
+        "bible": "bible.json",
+        "storyboard": "storyboard.json"
+      },
+      "max_turns": 32,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    }
+  ],
+  "run_dir": "evals/runs/local/ollama-qwen3-8-27b/2026-11-02T23-46-06-982Z-be826205"
+}

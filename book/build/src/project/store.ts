@@ -1,3 +1,4 @@
+import { validateRating, SCORE_LABELS, type Ratings, type Dimension } from "./ratings.js";
 import { assembleShotPrompt, validatePromptReferences } from "../contracts/prompts.js";
 import { randomUUID } from "node:crypto";
 import { appendFileSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
@@ -14,6 +15,7 @@ export interface Project {
   stages: Workflow;
   version_metadata?: Partial<Record<Stage, Record<number, VersionMetadata>>>;
   provenance?: Provenance;
+  ratings?: Ratings;
 }
 
 /** 单进程本地存储；支持业务暂存与残留运行恢复，不提供跨文件事务或多用户权限。 */
@@ -288,6 +290,34 @@ export class ProjectStore {
       writeJson(file, { ...lock, status: "interrupted" });
       this.auditAction(project.id, "interrupted", { stage: lock.stage, run_id: lock.id });
     }
+  }
+
+  saveRating(id: string, stage: Stage, version: number, input: unknown): Project {
+    parseStage(stage);
+    const project = this.load(id);
+    if (!project.stages[stage].versions.includes(version)) throw new Error("评分版本不存在");
+    const value = validateRating(stage, input);
+    const rating = { ...value, at: new Date().toISOString(), actor: "local" as const, source: "human" as const };
+    ((project.ratings ??= {})[stage] ??= {})[version] = rating;
+    this.save(project);
+    this.auditAction(id, "human_rating", { stage, version, rating });
+    return project;
+  }
+
+  exportRatings(id: string) {
+    const project = this.load(id);
+    const rows = STAGES.flatMap(stage => Object.entries(project.ratings?.[stage] ?? {}).map(([version, rating]) => ({
+      stage, version: Number(version), ...rating,
+      review_status: reviewOf(project.stages[stage], Number(version)).status,
+      adopted: project.stages[stage].adopted_version === Number(version),
+      stage_status: project.stages[stage].status,
+    })));
+    const averages: Partial<Record<Dimension, number>> = {};
+    for (const key of Object.keys(SCORE_LABELS) as Dimension[]) {
+      const values = rows.flatMap(r => r.scores[key] === undefined ? [] : [r.scores[key]!]);
+      if (values.length) averages[key] = values.reduce((a, b) => a + b, 0) / values.length;
+    }
+    return { project_id: id, rubric: "human-v1", notice: "人工评分仅供质量审阅，不作为结构签收门；均分覆盖全部已评分版本，非独立样本。", rows, averages };
   }
 
   sessionDir(id: string): string {

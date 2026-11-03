@@ -2,7 +2,9 @@
   "name": "harness-book-build",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.19.0" },
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "scripts": {
     "start": "tsx src/cli.ts",
     "test": "tsx --test src/*.test.ts",
@@ -11,7 +13,8 @@
     "dev:server": "tsx src/server/main.ts",
     "dev:web": "vite --config web/vite.config.ts",
     "build": "vite build --config web/vite.config.ts",
-    "context:compare": "tsx scripts/context-budget.ts"
+    "context:compare": "tsx scripts/context-budget.ts",
+    "eval": "tsx src/eval/run-evals.ts"
   },
   "dependencies": {
     "@earendil-works/pi-ai": "1.4.0",

@@ -1,0 +1,111 @@
+{
+  "shots": [
+    {
+      "shot_id": "S01-01",
+      "scene_id": "S01",
+      "location_id": "L01",
+      "character_ids": [
+        "C01",
+        "C02"
+      ],
+      "prop_ids": [
+        "P01",
+        "P02"
+      ],
+      "shot_size": "全景",
+      "camera": "固定机位，河面位于画面左侧",
+      "action": "程禾排齐留言，麦冬把空白磁片贴到中央，计时器静止。",
+      "duration_s": 30
+    },
+    {
+      "shot_id": "S01-02",
+      "scene_id": "S01",
+      "location_id": "L01",
+      "character_ids": [
+        "C01",
+        "C02"
+      ],
+      "prop_ids": [
+        "P02"
+      ],
+      "shot_size": "近景",
+      "camera": "缓慢推近两人之间的空白格",
+      "action": "程禾伸手又停下，麦冬指向修表间。",
+      "dialogue": "麦冬：这一格有人，只是他还没说话。",
+      "duration_s": 30
+    },
+    {
+      "shot_id": "S02-01",
+      "scene_id": "S02",
+      "location_id": "L02",
+      "character_ids": [
+        "C01",
+        "C02",
+        "C03"
+      ],
+      "prop_ids": [
+        "P01",
+        "P02"
+      ],
+      "shot_size": "中景",
+      "camera": "隔着工作台平视三人",
+      "action": "陆岑转动发条，另外两人等待。",
+      "dialogue": "程禾：计时器停了，我们的留言角也空着一格。",
+      "duration_s": 30
+    },
+    {
+      "shot_id": "S02-02",
+      "scene_id": "S02",
+      "location_id": "L02",
+      "character_ids": [
+        "C03",
+        "C01"
+      ],
+      "prop_ids": [
+        "P01"
+      ],
+      "shot_size": "近景",
+      "camera": "固定双人侧面机位",
+      "action": "陆岑停下手，程禾静静接过计时器。",
+      "dialogue": "陆岑：表可以重新走。可我上次在亭子里说再见，只说到一半。",
+      "duration_s": 30
+    },
+    {
+      "shot_id": "S03-01",
+      "scene_id": "S03",
+      "location_id": "L01",
+      "character_ids": [
+        "C01",
+        "C02",
+        "C03"
+      ],
+      "prop_ids": [
+        "P01",
+        "P02"
+      ],
+      "shot_size": "中景",
+      "camera": "沿长凳轻微横移后停住",
+      "action": "程禾拨好三分钟，麦冬翻转磁片，三人坐定。",
+      "dialogue": "程禾：这一格先不填。三分钟，够你开个头吗？",
+      "duration_s": 30
+    },
+    {
+      "shot_id": "S03-02",
+      "scene_id": "S03",
+      "location_id": "L01",
+      "character_ids": [
+        "C01",
+        "C02",
+        "C03"
+      ],
+      "prop_ids": [
+        "P02"
+      ],
+      "shot_size": "全景",
+      "camera": "固定机位，保留人物周围的空处",
+      "action": "陆岑开口，程禾转头倾听，麦冬按住磁片。风吹进候船亭。",
+      "dialogue": "陆岑：那天也是这样的风。",
+      "duration_s": 30
+    }
+  ]
+}

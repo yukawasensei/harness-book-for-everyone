@@ -1,3 +1,4 @@
+import { RatingPanel } from "./RatingPanel";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Artifacts, Stage } from "../../src/contracts/index.js";
 import type { ProjectDetail, ServerConfig } from "../../src/server/protocol.js";
@@ -237,11 +238,15 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
         busy={!!running || submitting} runReason={blockedReason} error={error} demo={config.mode === "demo"}
         onReview={(operation, note) => action(async () => { await api(`${path}/stages/${stage}/${operation}`, { version, confirmed: operation === "adopt" && state?.adopted_version != null, ...(note === undefined ? {} : { note }) }); })}
         onRevise={() => { if (version !== null) startRun(version); }} />
+      {version !== null && visiblePreview && <RatingPanel key={`${id}:${stage}:${version}`} path={path} stage={stage} version={version}
+        rating={project?.ratings?.[stage]?.[version]} busy={!!running || submitting}
+        onSave={(scores, note) => action(async () => { await api(`${path}/stages/${stage}/rating`, { version, scores, note }); })} />}
       {project?.staging?.[stage] && <p className="notice">存在未汇总暂存：{project.staging[stage]!.count} {stage === "prompts" ? "镜" : "场"}。运行时可选择继续或重新开始。{project.staging[stage]!.revise_from !== null ? `请从 v${project.staging[stage]!.revise_from} 的按意见修改入口继续。` : ""}</p>}
       {summary && <div className={`run-summary${summary.failed ? " failed" : ""}`}>
         <p>{running ? "当前运行" : "最近运行"}：{stageNames[summary.stage]} · {summary.text}{progress ? ` · ${progress}` : ""}</p>
         {displayRun && <p className="muted">运行开始：<time dateTime={displayRun.started_at}>{formatLocalDateTime(displayRun.started_at)}</time></p>}
         {summary.stopReason && <TechnicalDetails><p>运行标记：<code>stop_reason={summary.stopReason}</code></p></TechnicalDetails>}
+        {project?.last_run && !running && project.last_run.duration_ms !== undefined && <p className="muted">本阶段耗时 {(project.last_run.duration_ms / 1000).toFixed(1)} 秒 · token {project.last_run.usage?.totalTokens ?? "未知"} · 估算 USD {project.last_run.usage?.cost.total ?? "未知"}（配置刊例，非账单）</p>}
         <ErrorDetails errors={summary.errors} />
       </div>}
       {stage === "storyboard" && project?.stages.prompts.status === "ready" && <p className="notice">分镜已采用，分镜提示词已解锁（依赖已满足）；可切换到分镜提示词运行。</p>}

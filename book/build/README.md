@@ -1,8 +1,8 @@
 # 第二篇 · 分镜工坊 / Part II · Storyboard Studio
 
-第一篇用小实验讲 harness 的闸门；第二篇把闸门接成一个文本内容生产工具。本包与 `book/harness/` 独立安装：P00 定义产物契约，P01 搭建状态机、版本存储与受限会话骨架，P02 接上本地 Web 的事件与指令，P03 加上选题与梗概的版本审阅和修改运行，P04 用逐场提交与程序拼装管理剧本输出预算，P05 从采用剧本抽取带来源场的设定集并执行覆盖检查，P06 以引用闸门保证分镜与采用上游一致，P07 由模型写单镜部分、程序原样注入固定设定，P08 记录来源、传播待更新状态并支持返工与断点续跑。
+第一篇用小实验讲 harness 的闸门；第二篇把闸门接成一个文本内容生产工具。本包与 `book/harness/` 独立安装：P00 定义产物契约，P01 搭建状态机、版本存储与受限会话骨架，P02 接上本地 Web 的事件与指令，P03 加上选题与梗概的版本审阅和修改运行，P04 用逐场提交与程序拼装管理剧本输出预算，P05 从采用剧本抽取带来源场的设定集并执行覆盖检查，P06 以引用闸门保证分镜与采用上游一致，P07 由模型写单镜部分、程序原样注入固定设定，P08 记录来源、传播待更新状态并支持返工与断点续跑，P09 分开评测确定性结构与人工创作质量。
 
-入口：[P00 · 拆流水线](./chapters/p00.md) → [P01 · 搭骨架](./chapters/p01.md) → [P02 · 接上 Web](./chapters/p02.md) → [P03 · 选题与梗概](./chapters/p03.md) → [P04 · 剧本与输出预算](./chapters/p04.md) → [P05 · 从剧本抽取设定集](./chapters/p05.md) → [P06 · 分镜与引用一致性](./chapters/p06.md) → [P07 · 模型写镜头，程序注入设定](./chapters/p07.md) → [P08 · 版本与返工](./chapters/p08.md)。
+入口：[P00 · 拆流水线](./chapters/p00.md) → [P01 · 搭骨架](./chapters/p01.md) → [P02 · 接上 Web](./chapters/p02.md) → [P03 · 选题与梗概](./chapters/p03.md) → [P04 · 剧本与输出预算](./chapters/p04.md) → [P05 · 从剧本抽取设定集](./chapters/p05.md) → [P06 · 分镜与引用一致性](./chapters/p06.md) → [P07 · 模型写镜头，程序注入设定](./chapters/p07.md) → [P08 · 版本与返工](./chapters/p08.md) → [P09 · 评测与签收](./chapters/p09.md)。
 
 ## 安装与离线验证
 
@@ -125,3 +125,13 @@ API 在既有 adopt 路由之外增加 `POST /api/projects/:id/stages/:stage/dis
 未汇总的场或镜头落盘到 `staging/`；同阶段再次运行可选择继续或重新开始，来源已变化时拒绝继续。服务重启把残留锁标为 interrupted，不自动请求模型。旧来源缺失明确显示“未知来源”。
 
 API：已有运行与采用请求在返工/切换时要求 `confirmed: true`；运行可带 `staging: "resume"` 或 `"restart"`。新增 `POST /api/projects/:id/stages/:stage/confirm-valid`（`confirmed`、必填 `reason`），及提示词阶段的 `reassemble`（`confirmed`）。均受项目运行锁保护。CLI 的 `run` / `adopt` 可附加 `--confirm`，`run` 可选择 `--resume` / `--restart`；这些标记应在人明确审阅后使用。
+
+## 两层评测与评分
+
+`EVAL_FAKE=1 npm run eval -- --repeat 3` 离线跑六个固定上游 case，覆盖拒绝后修正、版本验收、稳定性、按阶段 token／耗时与估算 USD。真实评测用 `MODEL_ID=ollama/qwen3.8:27b NO_PROXY=127.0.0.1,localhost npm run eval`；结果默认只写忽略的 `evals/runs/local/`。单次预计 10–30 分钟，实际取决于硬件与修正次数；该范围是规划估计，不是下面评测的实测时长。单次 case 默认十分钟超时。重复评测加 `-- --repeat 5`。
+
+`UPDATE_BASELINE=1` 只允许真实默认 Qwen、全量、repeat=1，全部通过且无回归才更新 `evals/baseline.json`。当前基线已由验证方真实全量运行生成，该次为 6/6，拒绝率 5.9%；fake 禁止写基线。PASS→FAIL 报 regressed，FAIL→PASS 报 fixed；失败保留、退出码 1，不自动补跑。报告将完成率、拒绝率与结构通过率分开，详见 [P09](./chapters/p09.md)。
+
+验证方的本地 Qwen 记录：参数容错前结构通过 1/6，完成率 16.7%，拒绝率 73.7%（56/76），总 token 575569；容错后全量 6/6，完成率 100%，拒绝率 8.6%（3/35），`coerced_args=10`，总 token 167466。repeat 3 为 18/18，拒绝率 11.1%（12/108），`coerced_args=33`，总 token 349401。本地 Ollama 估算费用记 0。非零解码次数说明 harness 修复了传输表示的兼容性，不代表模型能力提升；prompts 单次约 17k→43k token、重复运行平均约 18k/次，也说明一次通过不等于用量稳定。各次运行与阶段拆分见 P09，不混用基线那次和普通全量的数字。
+
+版本审阅区展开“评分（可选）”，按 [五档锚点](./evals/rubric.md) 填写本阶段指标并保存。评分绑定版本、刷新保留，不改变采用与结构签收；“导出评分汇总”下载逐版本人评及各指标均分。API：`POST /api/projects/:id/stages/:stage/rating`（version、scores、可选 note）；`GET /api/projects/:id/ratings` 导出。未开放默认模型打分请求。

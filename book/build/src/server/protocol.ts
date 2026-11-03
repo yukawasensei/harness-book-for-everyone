@@ -10,7 +10,10 @@ export interface RunInfo {
   started_at: string;
   abort_requested: boolean;
 }
-export type RunResult = RunInfo & Awaited<ReturnType<typeof runStage>>;
+type StageResult = Awaited<ReturnType<typeof runStage>>;
+// 中断恢复与旧会话可能没有用量摘要；缺失不补成 0。
+export type RunOutcome = Pick<StageResult, "stop_reason" | "errors"> & Partial<Omit<StageResult, "stop_reason" | "errors">>;
+export type RunResult = RunInfo & RunOutcome;
 export interface ProjectDetail extends Project {
   running: RunInfo | null;
   last_run: RunResult | null;

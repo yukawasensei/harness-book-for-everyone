@@ -196,3 +196,10 @@ pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
  .rework-choice button { font-size: 12px; padding: 7px 4px; }
  .rework-choice p { font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
  .validity-confirmation { padding-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.rating-panel { margin-top: 16px; padding: 14px; border: 1px solid var(--border, #ddd); border-radius: 8px; }
+.rating-panel summary { cursor: pointer; font-weight: 600; }
+.rating-panel form { display: grid; gap: 12px; }
+.rating-panel label { display: grid; gap: 6px; }
+.rating-panel select { max-width: 100%; }
+.rating-panel textarea { width: 100%; min-height: 70px; }

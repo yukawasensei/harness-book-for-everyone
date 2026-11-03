@@ -5,7 +5,7 @@ export default defineConfig({
   root: fileURLToPath(new URL(".", import.meta.url)),
   server: {
     host: "127.0.0.1", port: 5173, strictPort: true,
-    fs: { strict: true, allow: [fileURLToPath(new URL(".", import.meta.url)), fileURLToPath(new URL("../node_modules", import.meta.url))] },
+    fs: { strict: true, allow: [fileURLToPath(new URL(".", import.meta.url)), fileURLToPath(new URL("../node_modules", import.meta.url)), fileURLToPath(new URL("../src/project/ratings.ts", import.meta.url))] },
     proxy: { "/api": { target: "http://127.0.0.1:3001", changeOrigin: true } },
   },
   preview: { host: "127.0.0.1", port: 5173, strictPort: true },
