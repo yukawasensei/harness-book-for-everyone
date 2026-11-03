@@ -5,19 +5,19 @@ import { Composer } from "./Composer";
 
 const SAMPLE_PROMPTS = [
   {
-    title: "科幻悬疑 · 深空孤舰",
-    desc: "深空货运站接收到一段来自二十年前的求救信号，信号源就在密封货舱内。",
-    prompt: "拍摄一部科幻悬疑短片：深空货运站接收到一段来自二十年前的求救信号，信号源就在密封货舱内。",
+    title: "修表匠",
+    desc: "修表匠在旧怀表里发现一张未寄出的车票，决定替陌生人走完那趟旅程。",
+    prompt: "修表匠在旧怀表里发现一张未寄出的车票，决定替陌生人走完那趟旅程。",
   },
   {
-    title: "温情治愈 · 老钟表店",
-    desc: "退休老店主在关店前最后一位避雨客人身上，认出了早年寄存在店里的怀表与琴谱。",
-    prompt: "拍摄一部温情治愈短片：退休老店主在关店前最后一位避雨客人身上，认出了早年寄存在店里的怀表与琴谱。",
+    title: "停电便利店",
+    desc: "停电的便利店里，夜班店员和一位声称来自明天的顾客核对收银条。",
+    prompt: "停电的便利店里，夜班店员和一位声称来自明天的顾客核对收银条。",
   },
   {
-    title: "中式悬疑 · 雨夜古渡",
-    desc: "暴雨夜的末班渡船载着四位各怀心事的归乡客，渡河途中船灯突然熄灭。",
-    prompt: "拍摄一部中式悬疑短片：暴雨夜的末班渡船载着四位各怀心事的归乡客，渡河途中船灯突然熄灭。",
+    title: "退休气象员",
+    desc: "退休气象员独自守着山顶观测站，在撤站前一天迎来了多年未见的大雪。",
+    prompt: "退休气象员独自守着山顶观测站，在撤站前一天迎来了多年未见的大雪。",
   },
 ];
 
@@ -59,7 +59,7 @@ export function EmptyState({
               await onSend(content);
               setText("");
             }}
-            placeholder="描述你想拍的短片…"
+            placeholder="描述你想拍的短片，例如题材、主角或一个画面…"
             sending={sending}
             errorMessage={errorMessage}
             className="rounded-xl border border-border/80 bg-card p-3 shadow-xs"
@@ -90,7 +90,7 @@ export function EmptyState({
       </div>
 
       <p className="text-muted-foreground text-xs leading-relaxed sm:text-sm">
-        AI 会按 选题→梗概→剧本→设定集→分镜→提示词 逐道交稿，每道等你确认。
+        说一句想法，织影按「故事 → 剧本 → 设定集 → 分镜板」逐道交稿，每一步等你签字确认后再往下走。
       </p>
     </div>
   );

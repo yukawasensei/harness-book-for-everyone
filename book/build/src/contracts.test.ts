@@ -12,15 +12,15 @@ for (const stage of STAGES) {
   });
 }
 
-test("选题时长为正数，不接受数字字符串和纯空白", () => {
+test("故事时长为正数，不接受数字字符串和纯空白", () => {
   for (const target_minutes of [0, -1, "3"]) {
-    assert.throws(() => validateArtifact("topic", { ...sample("topic"), target_minutes }), /schema 不合规/);
+    assert.throws(() => validateArtifact("story", { ...sample("story"), target_minutes }), /schema 不合规/);
   }
-  assert.throws(() => validateArtifact("topic", { ...sample("topic"), title: "  " }), /schema 不合规/);
+  assert.throws(() => validateArtifact("story", { ...sample("story"), title: "  " }), /schema 不合规/);
 });
 
-test("梗概严格包含起承转合四拍", () => {
-  assert.throws(() => validateArtifact("synopsis", { ...sample("synopsis"), beats: ["只有开头"] }), /schema 不合规/);
+test("故事严格包含起承转合四拍", () => {
+  assert.throws(() => validateArtifact("story", { ...sample("story"), beats: ["只有开头"] }), /schema 不合规/);
 });
 
 test("台词必须给角色；action 不能伪装成未知类型", () => {
@@ -40,10 +40,10 @@ test("场、角色、道具、地点与镜头 ID 都有格式约束", () => {
     const bible = sample("bible"); bible[group][0].id = "../outside";
     assert.throws(() => validateArtifact("bible", bible), /schema 不合规/);
   }
-  const board = sample("storyboard"); board.shots[0].shot_id = "S01_01";
-  assert.throws(() => validateArtifact("storyboard", board), /schema 不合规/);
-  const prompts = sample("prompts"); prompts.items[0].injected_ids = ["S01"];
-  assert.throws(() => validateArtifact("prompts", prompts), /schema 不合规/);
+  const board = sample("board"); board.shots[0].shot_id = "S01_01";
+  assert.throws(() => validateArtifact("board", board), /schema 不合规/);
+  const prompts = sample("board"); prompts.shots[0].injected_ids = ["S01"];
+  assert.throws(() => validateArtifact("board", prompts), /schema 不合规/);
 });
 
 test("分镜拒绝错误类型引用、重复引用和非正时长", () => {
@@ -51,13 +51,13 @@ test("分镜拒绝错误类型引用、重复引用和非正时长", () => {
     { location_id: "C01" }, { character_ids: ["C01", "C01"] },
     { prop_ids: ["L01"] }, { duration_s: 0 }, { duration_s: "30" },
   ]) {
-    const board = sample("storyboard"); Object.assign(board.shots[0], change);
-    assert.throws(() => validateArtifact("storyboard", board), /schema 不合规/);
+    const board = sample("board"); Object.assign(board.shots[0], change);
+    assert.throws(() => validateArtifact("board", board), /schema 不合规/);
   }
 });
 
 test("原创样例三场三角色、两道具两地点，引用与原文拼装互相对齐", () => {
-  const script = sample("script"), bible = sample("bible"), board = sample("storyboard"), prompts = sample("prompts");
+  const script = sample("script"), bible = sample("bible"), board = sample("board"), prompts = sample("board");
   assert.equal(script.scenes.length, 3);
   assert.equal(bible.characters.length, 3);
   assert.ok(bible.props.length >= 2 && bible.locations.length >= 2);
@@ -68,19 +68,19 @@ test("原创样例三场三角色、两道具两地点，引用与原文拼装�
   ]);
   assert.equal(descriptions.size, bible.characters.length + bible.props.length + bible.locations.length);
   assert.equal(new Set(board.shots.map(s => s.shot_id)).size, board.shots.length);
-  assert.equal(prompts.items.length, board.shots.length);
+  assert.equal(prompts.shots.length, board.shots.length);
   for (const shot of board.shots) {
     assert.ok(script.scenes.some(s => s.scene_id === shot.scene_id));
     assert.ok(shot.shot_id.startsWith(`${shot.scene_id}-`));
     const ids = [shot.location_id, ...shot.character_ids, ...shot.prop_ids];
-    const item = prompts.items.find(p => p.shot_id === shot.shot_id)!;
+    const item = prompts.shots.find(p => p.shot_id === shot.shot_id)!;
     assert.deepEqual(item.injected_ids, ids);
     for (const id of ids) assert.ok(descriptions.has(id), id);
     for (const id of ids) assert.ok(item.final_prompt.includes(descriptions.get(id)!));
     assert.ok(item.final_prompt.startsWith(`[镜头] ${item.shot_part}\n[场景] `));
     assert.ok(item.final_prompt.endsWith(`[规格] 景别 ${shot.shot_size}，机位 ${shot.camera}，时长 ${shot.duration_s} 秒`));
   }
-  assert.equal(board.shots.reduce((n, shot) => n + shot.duration_s, 0), sample("topic").target_minutes * 60);
+  assert.equal(board.shots.reduce((n, shot) => n + shot.duration_s, 0), sample("story").target_minutes * 60);
 });
 
-test("未知阶段拒绝", () => assert.throws(() => parseStage("../topic"), /未知阶段/));
+test("未知阶段拒绝", () => assert.throws(() => parseStage("../story"), /未知阶段/));

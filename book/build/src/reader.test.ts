@@ -14,6 +14,19 @@ import { appendEvent, type TimelineRow } from "../web/src/features/chat/lib/appe
 
 function errorOf(fn: () => void) { try { fn(); } catch (error) { return (error as Error).message; } throw new Error("应当校验失败"); }
 
+test("故事预览合并七个字段，导航只保留四道工序", async () => {
+  const story = sample("story");
+  const { ArtifactPreview } = await import(new URL("../web/src/features/artifacts/components/ArtifactPreview.tsx", import.meta.url).href);
+  const html = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "story", value: story }));
+  for (const text of [story.title, story.logline, story.genre, story.audience, story.tone, ...story.beats]) assert.ok(html.includes(text), text);
+  assert.match(html, /目标时长：3 分钟/);
+  const { StageNav } = await import(new URL("../web/src/features/artifacts/components/StageNav.tsx", import.meta.url).href);
+  const nav = renderToStaticMarkup(createElement(StageNav, { project: null, stage: "story", running: null, runnableStages: ["story", "script", "bible", "board"], onStageChange: () => {} }));
+  assert.equal((nav.match(/[1-4]\. (?:故事|剧本|设定集|分镜板)/g) ?? []).length, 4);
+  assert.ok(!nav.includes("6. "));
+  assert.match(nav, /四阶段导航/);
+});
+
 test("真实单场错误显示场、行和中文原因；原始工具结果不被改写", () => {
   const scene = { ...sample("script").scenes[0], lines: [
     { kind: "action", text: "等待" }, { kind: "action", text: "坐下" }, { kind: "dialogue", text: "等等" },
@@ -30,17 +43,17 @@ test("真实单场错误显示场、行和中文原因；原始工具结果不�
 
 test("通用翻译覆盖真实 schema 的缺字段、类型、数量、格式、范围和业务规则", () => {
   const translated = (raw: string) => toolErrorText({ content: [{ type: "text", text: raw }] });
-  assert.match(translated(errorOf(() => validateArtifact("topic", {}))), /缺少.*片名/);
-  assert.match(translated(errorOf(() => validateArtifact("topic", { ...sample("topic"), title: 123 }))), /片名.*文字/);
-  assert.match(translated(errorOf(() => validateArtifact("topic", { ...sample("topic"), title: " " }))), /片名.*空白/);
-  assert.match(translated(errorOf(() => validateArtifact("topic", { ...sample("topic"), target_minutes: 0 }))), /目标时长.*大于 0/);
-  assert.match(translated(errorOf(() => validateArtifact("synopsis", { ...sample("synopsis"), beats: [] }))), /叙事拍.*至少.*4/);
-  assert.match(translated(errorOf(() => validateArtifact("synopsis", { ...sample("synopsis"), beats: Array(5).fill("事件") }))), /叙事拍.*最多.*4/);
+  assert.match(translated(errorOf(() => validateArtifact("story", {}))), /缺少.*片名/);
+  assert.match(translated(errorOf(() => validateArtifact("story", { ...sample("story"), title: 123 }))), /片名.*文字/);
+  assert.match(translated(errorOf(() => validateArtifact("story", { ...sample("story"), title: " " }))), /片名.*空白/);
+  assert.match(translated(errorOf(() => validateArtifact("story", { ...sample("story"), target_minutes: 0 }))), /目标时长.*大于 0/);
+  assert.match(translated(errorOf(() => validateArtifact("story", { ...sample("story"), beats: [] }))), /叙事拍.*至少.*4/);
+  assert.match(translated(errorOf(() => validateArtifact("story", { ...sample("story"), beats: Array(5).fill("事件") }))), /叙事拍.*最多.*4/);
   assert.match(translated(errorOf(() => validateScene({ ...sample("script").scenes[0], scene_id: "S1" }))), /场次编号.*S01/);
-  assert.match(translated(errorOf(() => validateArtifact("topic", { ...sample("topic"), extra: true }))), /不允许.*extra/);
-  const board = sample("storyboard");
+  assert.match(translated(errorOf(() => validateArtifact("story", { ...sample("story"), extra: true }))), /不允许.*extra/);
+  const board = sample("board");
   board.shots[0].character_ids = ["C01", "C01"];
-  assert.match(translated(errorOf(() => validateArtifact("storyboard", board))), /角色编号.*重复/);
+  assert.match(translated(errorOf(() => validateArtifact("board", board))), /角色编号.*重复/);
   assert.match(translated(errorOf(() => validateArtifact("script", { scenes: [{ ...sample("script").scenes[0], scene_id: "S02" }] }))), /场次编号需从 S01 连续/);
   assert.match(translated("进行中草稿不存在 S02，不能删除"), /S02.*不存在|不存在.*S02/);
   assert.match(translated("本次剧本已生成 v2，不能重复 finalize 或继续写场"), /已经汇总.*v2/);
@@ -57,9 +70,9 @@ test("剧本按场可读，角色和动作逐行，原始 JSON 默认折叠；�
   assert.match(html, /查看原始 JSON/);
   assert.ok(!html.includes("<details"));
   assert.ok(!html.includes('data-state="open"'));
-  const topic = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "topic", value: sample("topic") }));
-  assert.match(topic, /^<pre/);
-  assert.ok(!topic.includes("scene-card"));
+  const story = renderToStaticMarkup(createElement(ArtifactPreview, { stage: "story", value: sample("story") }));
+  assert.match(story, /^<pre/);
+  assert.ok(!story.includes("scene-card"));
 });
 
 test("SDK 参数校验也翻译为中文，不把 Received arguments 混入原因", () => {
@@ -76,7 +89,7 @@ test("剧本修改范围保存到版本元数据，重新创建存储后及审�
   const f = fixture();
   let session: Awaited<ReturnType<typeof createStageSession>> | undefined;
   try {
-    for (const stage of ["topic", "synopsis"] as const) {
+    for (const stage of ["story"] as const) {
       f.store.writeDraft(f.project.id, stage, sample(stage)); f.store.adopt(f.project.id, stage, 1);
     }
     const original = sample("script");
@@ -116,8 +129,8 @@ test("暂存进度取当前运行成功 write_scene 的 scene_count，覆盖不�
   assert.equal(scriptProgress(running, rows), "已暂存 1 场");
   assert.equal(scriptProgress({ ...running, id: "new" }, rows), "等待暂存进度");
   assert.equal(scriptProgress(null, rows), null);
-  assert.equal(scriptProgress({ ...running, stage: "synopsis" }, rows), null);
-  const current = currentRunDisplay(running, { ...running, stage: "synopsis", stop_reason: "draft_written", errors: [] });
+  assert.equal(scriptProgress({ ...running, stage: "story" }, rows), null);
+  const current = currentRunDisplay(running, { ...running, stage: "story", stop_reason: "draft_written", errors: [] });
   assert.equal(current?.stage, "script");
   assert.equal(current?.text, "运行中");
   assert.equal(current?.stopReason, null);
@@ -159,16 +172,16 @@ test("设定集真实错误显示覆盖缺漏、来源、固定描述与中文�
 test("未开放与已采用阶段的页面引导不再要求运行或审阅", async () => {
   const { artifactGuidance } = await import("../web/src/features/artifacts/lib/presentation.js");
   const { ReviewPanel } = await import(new URL("../web/src/features/artifacts/components/ReviewPanel.tsx", import.meta.url).href);
-  const guidance = artifactGuidance("prompts", false);
-  assert.match(guidance.empty, /分镜提示词暂未开放/);
+  const guidance = artifactGuidance("board", false);
+  assert.match(guidance.empty, /分镜板暂未开放/);
   assert.ok(!/运行后|请先运行|先查看草稿/.test(Object.values(guidance).join("")));
   const html = renderToStaticMarkup(createElement(ReviewPanel, {
-    stage: "prompts", implemented: false, version: null, loaded: false, busy: false,
+    stage: "board", implemented: false, version: null, loaded: false, busy: false,
     demo: true, runReason: "暂未开放", error: "", onReview: async () => true, onRevise: () => {},
   }));
-  assert.match(html, /分镜提示词暂未开放/);
+  assert.match(html, /分镜板暂未开放/);
   assert.ok(!html.includes("请先运行阶段"));
-  const adopted = artifactGuidance("storyboard", true, 2);
+  const adopted = artifactGuidance("board", true, 2);
   assert.match(adopted.footer, /已采用 v2/);
   assert.ok(!/待审阅|先查看草稿|运行后/.test(Object.values(adopted).join("")));
 });
@@ -176,13 +189,20 @@ test("未开放与已采用阶段的页面引导不再要求运行或审阅", as
 test("剧本和分镜场次标题含地点时间，仅重交场高亮且有文字图例", async () => {
   const { ArtifactPreview } = await import(new URL("../web/src/features/artifacts/components/ArtifactPreview.tsx", import.meta.url).href);
   const revision = { revise_from: 1, resubmitted: ["S02"], reused: ["S01", "S03"], removed: [] };
-  for (const stage of ["script", "storyboard"] as const) {
+  for (const stage of ["script", "board"] as const) {
     const props = { stage, value: sample(stage), script: sample("script"), bible: sample("bible"), revision };
     const html = renderToStaticMarkup(createElement(ArtifactPreview, props));
-    for (const scene of sample("script").scenes) assert.ok(html.includes(`${scene.scene_id} · ${scene.heading}`));
-    assert.equal((html.match(/class="[^"]*scene-revised[^"]*"/g) ?? []).length, 1);
+    for (const scene of sample("script").scenes) {
+      assert.ok(html.includes(scene.heading), scene.heading);
+      if (stage === "script") assert.ok(html.includes(`${scene.scene_id} · ${scene.heading}`));
+      else {
+        assert.ok(html.includes(`第 ${Number(scene.scene_id.slice(1))} 场 · ${scene.heading}`));
+        assert.ok(html.includes(scene.scene_id));
+      }
+    }
+    assert.equal((html.match(/class="[^"]*scene-revised[^"]*"/g) ?? []).length, stage === "board" ? 3 : 1);
     assert.match(html, /高亮：本版重交的场次；其余场沿用原稿/);
-    if (stage === "storyboard") assert.match(html, /aria-label="S02 分镜" class="scene-revised"/);
+    if (stage === "board") assert.match(html, /aria-label="S02 分镜"[^>]*scene-revised/);
     else assert.match(html, /class="scene-card scene-revised"><header><h3>S02/);
     const original = renderToStaticMarkup(createElement(ArtifactPreview, { ...props, revision: undefined }));
     assert.ok(!original.includes("scene-revised"));
@@ -192,7 +212,7 @@ test("剧本和分镜场次标题含地点时间，仅重交场高亮且有文�
 
 test("旧错误术语也翻译为出场场次；采用设定引用错误显示名称和编号", async () => {
   const { validateStoryboardReferences } = await import("./contracts/index.js");
-  const board = sample("storyboard"); board.shots[0].character_ids = ["C03"];
+  const board = sample("board"); board.shots[0].character_ids = ["C03"];
   const raw = errorOf(() => validateStoryboardReferences(board, sample("script"), sample("bible")));
   const result = { content: [{ type: "text", text: raw }] };
   assert.match(toolErrorText(result), /陆岑（C03）.*出场场次/);

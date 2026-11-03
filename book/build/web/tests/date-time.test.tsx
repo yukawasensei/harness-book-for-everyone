@@ -30,20 +30,24 @@ test("审计与运行的ISO时间按使用者本地时区显示，不固定服�
 });
 
 test("审阅记录用统一中文时间，保留原始时间戳供机器读取", () => {
-  const date = new Date(2026, 10, 3, 0, 47), state = initialWorkflow().topic;
+  const date = new Date(2026, 10, 3, 0, 47), state = initialWorkflow().story;
   state.versions = [1]; state.reviews = { 1: { status: "adopted", at: date.toISOString() } }; state.adopted_version = 1; state.status = "adopted";
-  const html = renderToStaticMarkup(<ReviewPanel stage="topic" state={state} version={1} loaded busy={false} demo={false} runReason={null} error="" onReview={async () => true} onRevise={() => {}} />);
+  const html = renderToStaticMarkup(<ReviewPanel stage="story" state={state} version={1} loaded busy={false} demo={false} runReason={null} error="" onReview={async () => true} onRevise={() => {}} />);
   assert.ok(html.includes("2026年11月3日 00:47"));
   assert.ok(html.includes(`dateTime="${date.toISOString()}"`));
   assert.ok(!/AM|PM|11\/3\/2026/.test(html));
+  assert.ok(html.includes("采用并开始写剧本"));
+  assert.ok(html.includes("丢弃此版本"));
+  assert.ok(html.includes("当前版本已采用，无需重复确认"));
+  assert.ok(!html.includes("采用此版本"));
 });
 
 test("运行记录保留服务端真实开始时间，展示时使用同一格式化函数", async () => {
   const { appendEvent } = await import("../src/features/chat/lib/append-event.js");
   const started = new Date(2026, 10, 3, 0, 47).toISOString();
-  const rows = appendEvent([], { type: "run_started", run: { id: "time-test", stage: "topic", started_at: started, abort_requested: false } });
-  assert.equal(rows[0].kind, "note");
+  const rows = appendEvent([], { type: "run_started", run: { id: "time-test", stage: "story", started_at: started, abort_requested: false } });
   if (rows[0].kind === "tool") assert.fail("运行开始应为记录");
+  assert.equal(rows[0].kind, "note");
   assert.equal(rows[0].at, started);
   assert.equal(formatLocalDateTime(rows[0].at), "2026年11月3日 00:47");
 });

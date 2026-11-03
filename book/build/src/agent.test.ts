@@ -6,7 +6,7 @@ import { getCurrentSystemPrompt, getCurrentTools } from "@earendil-works/pi-ai";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
 import { Value } from "typebox/value";
 import { createStageSession, createStageTools } from "./agent/session.js";
-import { STAGE_PROMPTS, SYNOPSIS_PROMPT, TOPIC_PROMPT } from "./agent/prompts.js";
+import { STAGE_PROMPTS, STORY_PROMPT } from "./agent/prompts.js";
 import { runStage } from "./agent/run.js";
 import { fakeStream, type Turn } from "./testing/fake-model.js";
 import { fixture, packageRoot, sample } from "./testing/fixtures.js";
@@ -15,7 +15,7 @@ async function setup(script: Turn[]) {
   const f = fixture();
   try {
     const session = await createStageSession({
-      root: packageRoot, store: f.store, projectId: f.project.id, stage: "topic",
+      root: packageRoot, store: f.store, projectId: f.project.id, stage: "story",
       model: { provider: "ollama", id: "qwen3.8:27b" },
     });
     const fake = fakeStream(session.model!, script);
@@ -47,7 +47,7 @@ test("两轮模型上下文系统提示与模板逐字相同，不残留默认 c
   try {
     await f.session.prompt("第一轮"); await f.session.prompt("第二轮");
     for (const context of f.fake.contexts) {
-      assert.equal(getCurrentSystemPrompt(context.messages), TOPIC_PROMPT);
+      assert.equal(getCurrentSystemPrompt(context.messages), STORY_PROMPT);
       assert.equal(context.messages.filter(m => m.role === "system").length, 1);
       assert.ok(!getCurrentSystemPrompt(context.messages).includes(packageRoot));
     }
@@ -59,20 +59,20 @@ test("write_draft 缺字段不落盘且把错误返回模型", async () => {
   try {
     await f.session.prompt("提交");
     assert.equal(existsSync(join(f.store.projectDir(f.project.id), "artifacts")), false);
-    assert.equal(f.store.load(f.project.id).stages.topic.status, "ready");
+    assert.equal(f.store.load(f.project.id).stages.story.status, "ready");
     assert.match(JSON.stringify(f.fake.contexts[1].messages), /schema 不合规/);
   } finally { f.cleanup(); }
 });
 
 test("write_draft 数字字符串不被 SDK 转换成合规草稿", async () => {
   const f = await setup([
-    { call: "write_draft", args: { artifact: { ...sample("topic"), target_minutes: "3" } } }, { text: "收到错误" },
+    { call: "write_draft", args: { artifact: { ...sample("story"), target_minutes: "3" } } }, { text: "收到错误" },
   ]);
   try {
     await f.session.prompt("提交");
-    assert.equal(existsSync(f.store.artifactPath(f.project.id, "topic", 1)), false);
+    assert.equal(existsSync(f.store.artifactPath(f.project.id, "story", 1)), false);
     assert.match(JSON.stringify(f.fake.contexts[1].messages), /schema 不合规/);
-    assert.deepEqual(f.store.load(f.project.id).stages.topic.versions, []);
+    assert.deepEqual(f.store.load(f.project.id).stages.story.versions, []);
   } finally { f.cleanup(); }
 });
 
@@ -80,45 +80,45 @@ test("write_draft 可修正错误后保存 v1，pending_review，不自动采用
   const f = await setup([
     { call: "read_upstream", args: {} },
     { call: "write_draft", args: { artifact: {} } },
-    { call: "write_draft", args: { artifact: sample("topic") } }, { text: "等待人工采用" },
+    { call: "write_draft", args: { artifact: sample("story") } }, { text: "等待人工采用" },
   ]);
   try {
-    const result = await runStage(f.session, f.store, f.project.id, "topic");
+    const result = await runStage(f.session, f.store, f.project.id, "story");
     assert.equal(result.stop_reason, "draft_written");
     assert.equal(result.errors.length, 1);
     const upstreamResult = f.fake.contexts[1].messages.find(m => m.role === "toolResult");
     assert.ok(upstreamResult && JSON.stringify(upstreamResult).includes('"null"'));
-    assert.deepEqual(JSON.parse(readFileSync(f.store.artifactPath(f.project.id, "topic", 1), "utf8")), sample("topic"));
+    assert.deepEqual(JSON.parse(readFileSync(f.store.artifactPath(f.project.id, "story", 1), "utf8")), sample("story"));
     const state = f.store.load(f.project.id).stages;
-    assert.equal(state.topic.status, "pending_review");
-    assert.equal(state.synopsis.status, "locked");
-    f.store.adopt(f.project.id, "topic", 1);
-    assert.equal(f.store.load(f.project.id).stages.synopsis.status, "ready");
+    assert.equal(state.story.status, "pending_review");
+    assert.equal(state.script.status, "locked");
+    f.store.adopt(f.project.id, "story", 1);
+    assert.equal(f.store.load(f.project.id).stages.script.status, "ready");
   } finally { f.cleanup(); }
 });
 
 test("read_upstream 按 stage 读依赖的采用版本，忽略较新的未采用草稿", async () => {
   const f = await setup([{ text: "未运行" }]);
   try {
-    f.store.writeDraft(f.project.id, "topic", sample("topic"));
-    f.store.writeDraft(f.project.id, "topic", { ...sample("topic"), title: "未采用版本" });
-    f.store.adopt(f.project.id, "topic", 1);
-    const tool = createStageTools(f.store, f.project.id, "synopsis").find(t => t.name === "read_upstream")!;
+    f.store.writeDraft(f.project.id, "story", sample("story"));
+    f.store.writeDraft(f.project.id, "story", { ...sample("story"), title: "未采用版本" });
+    f.store.adopt(f.project.id, "story", 1);
+    const tool = createStageTools(f.store, f.project.id, "script").find(t => t.name === "read_upstream")!;
     const context = f.session.extensionRunner!.createToolContext("upstream-test", undefined);
-    const result = await tool.execute("upstream-test", { stage: "topic" }, undefined, undefined, context);
-    assert.deepEqual(JSON.parse((result.content[0] as { type: "text"; text: string }).text), sample("topic"));
+    const result = await tool.execute("upstream-test", { stage: "story" }, undefined, undefined, context);
+    assert.deepEqual(JSON.parse((result.content[0] as { type: "text"; text: string }).text), sample("story"));
   } finally { f.cleanup(); }
 });
 
 test("read_upstream 越界读取先拒绝，不读项目或产物文件", async () => {
   const f = await setup([{ text: "未运行" }]);
   try {
-    const tool = createStageTools(f.store, f.project.id, "storyboard").find(t => t.name === "read_upstream")!;
+    const tool = createStageTools(f.store, f.project.id, "board").find(t => t.name === "read_upstream")!;
     const context = f.session.extensionRunner!.createToolContext("forbidden", undefined);
     let diskReads = 0;
     f.store.load = () => { diskReads += 1; throw new Error("不应读项目文件"); };
     f.store.readAdopted = () => { diskReads += 1; throw new Error("不应读产物文件"); };
-    for (const stage of ["topic", "synopsis", "storyboard", "prompts", "../script"]) {
+    for (const stage of ["topic", "synopsis", "storyboard", "prompts", "board", "../script"]) {
       assert.equal(Value.Check(tool.parameters, { stage }), false);
       await assert.rejects(() => tool.execute("forbidden", { stage }, undefined, undefined, context), /不是.*依赖/);
     }
@@ -127,40 +127,34 @@ test("read_upstream 越界读取先拒绝，不读项目或产物文件", async 
   } finally { f.cleanup(); }
 });
 
-test("storyboard 能分别读取 script 与 bible；prompts 只允许按镜读取", async () => {
+test("board 仅能读取 story/script/bible，不开放旧提示词工具", async () => {
   const f = await setup([{ text: "未运行" }]);
   try {
-    for (const stage of ["topic", "synopsis", "script", "bible"] as const) {
+    for (const stage of ["story", "script", "bible"] as const) {
       f.store.writeDraft(f.project.id, stage, sample(stage)); f.store.adopt(f.project.id, stage, 1);
     }
     const context = f.session.extensionRunner!.createToolContext("dependencies", undefined);
-    const storyboardTool = createStageTools(f.store, f.project.id, "storyboard").find(t => t.name === "read_upstream")!;
-    for (const stage of ["script", "bible"] as const) {
+    const storyboardTool = createStageTools(f.store, f.project.id, "board").find(t => t.name === "read_upstream")!;
+    for (const stage of ["story", "script", "bible"] as const) {
       assert.equal(Value.Check(storyboardTool.parameters, { stage }), true);
       const result = await storyboardTool.execute("dependencies", { stage }, undefined, undefined, context);
       assert.deepEqual(JSON.parse((result.content[0] as { text: string }).text), sample(stage));
     }
-    f.store.writeDraft(f.project.id, "storyboard", sample("storyboard")); f.store.adopt(f.project.id, "storyboard", 1);
-    const tools = createStageTools(f.store, f.project.id, "prompts");
-    assert.ok(!tools.some(t => t.name === "read_upstream"));
-    const tool = tools.find(t => t.name === "read_shot")!;
-    const result = await tool.execute("shot", { shot_id: "S01-01" }, undefined, undefined, context);
-    const value = JSON.parse((result.content[0] as { text: string }).text);
-    assert.equal(value.shot_id, "S01-01");
-    assert.deepEqual(value.names.characters, ["程禾", "麦冬"]);
-    for (const c of sample("bible").characters) assert.ok(!JSON.stringify(value).includes(c.appearance));
+    const tools = createStageTools(f.store, f.project.id, "board");
+    assert.deepEqual(tools.map(t => t.name).sort(), ["finalize_draft", "read_upstream", "remove_scene_shots", "write_scene_shots"]);
+    assert.ok(!tools.some(t => ["list_shots", "read_shot", "write_shot_prompt"].includes(t.name)));
   } finally { f.cleanup(); }
 });
 
-test("topic 无依赖时空参数返回 null，指定阶段则向模型返回错误且不读盘", async () => {
-  const f = await setup([{ call: "read_upstream", args: { stage: "topic" } }, { text: "知道了" }]);
+test("story 无依赖时空参数返回 null，指定阶段则向模型返回错误且不读盘", async () => {
+  const f = await setup([{ call: "read_upstream", args: { stage: "story" } }, { text: "知道了" }]);
   try {
-    const tool = createStageTools(f.store, f.project.id, "topic").find(t => t.name === "read_upstream")!;
-    const context = f.session.extensionRunner!.createToolContext("topic-read", undefined);
+    const tool = createStageTools(f.store, f.project.id, "story").find(t => t.name === "read_upstream")!;
+    const context = f.session.extensionRunner!.createToolContext("story-read", undefined);
     let diskReads = 0;
     f.store.load = () => { diskReads += 1; throw new Error("不应读项目文件"); };
     f.store.readAdopted = () => { diskReads += 1; throw new Error("不应读产物文件"); };
-    const result = await tool.execute("topic-read", {}, undefined, undefined, context);
+    const result = await tool.execute("story-read", {}, undefined, undefined, context);
     assert.equal((result.content[0] as { text: string }).text, "null");
     await f.session.prompt("尝试读取");
     const error = f.fake.contexts[1].messages.find(m => m.role === "toolResult");
@@ -170,9 +164,9 @@ test("topic 无依赖时空参数返回 null，指定阶段则向模型返回错
 });
 
 test("SessionManager 文件落在项目 sessions 中且可重开，包含运行审计字段", async () => {
-  const f = await setup([{ call: "write_draft", args: { artifact: sample("topic") } }, { text: "完成草稿" }]);
+  const f = await setup([{ call: "write_draft", args: { artifact: sample("story") } }, { text: "完成草稿" }]);
   try {
-    await runStage(f.session, f.store, f.project.id, "topic");
+    await runStage(f.session, f.store, f.project.id, "story");
     const dir = f.store.sessionDir(f.project.id), file = f.session.sessionManager.getSessionFile()!;
     assert.ok(file.startsWith(`${dir}/`));
     assert.equal(readdirSync(dir).length, 1);
@@ -184,7 +178,7 @@ test("SessionManager 文件落在项目 sessions 中且可重开，包含运行�
     assert.ok(end && end.type === "custom");
     const metadata = start.data as Record<string, unknown>;
     assert.equal(metadata.model, "ollama/qwen3.8:27b");
-    assert.equal(metadata.system_prompt, TOPIC_PROMPT);
+    assert.equal(metadata.system_prompt, STORY_PROMPT);
     assert.deepEqual(metadata.tools, ["read_upstream", "write_draft"]);
     assert.equal(typeof metadata.prompt, "string");
     assert.equal(typeof metadata.context_notes, "string");
@@ -199,20 +193,20 @@ test("SessionManager 文件落在项目 sessions 中且可重开，包含运行�
 test("模型只回复文本不算交付；记录 no_draft", async () => {
   const f = await setup([{ text: "我已经完成了" }]);
   try {
-    const result = await runStage(f.session, f.store, f.project.id, "topic");
+    const result = await runStage(f.session, f.store, f.project.id, "story");
     assert.equal(result.stop_reason, "no_draft");
-    assert.equal(f.store.load(f.project.id).stages.topic.status, "ready");
+    assert.equal(f.store.load(f.project.id).stages.story.status, "ready");
   } finally { f.cleanup(); }
 });
 
 test("补充要求进入实际用户提示和会话审计，不替换阶段系统提示", async () => {
   const f = await setup([{ text: "收到" }]);
   try {
-    await runStage(f.session, f.store, f.project.id, "topic", "只用两位角色，发生在雨天");
+    await runStage(f.session, f.store, f.project.id, "story", "只用两位角色，发生在雨天");
     const messages = f.fake.contexts[0].messages;
     const user = messages.find(message => message.role === "user");
     assert.match(JSON.stringify(user), /补充要求：.*只用两位角色，发生在雨天/s);
-    assert.equal(getCurrentSystemPrompt(messages), TOPIC_PROMPT);
+    assert.equal(getCurrentSystemPrompt(messages), STORY_PROMPT);
     const start = f.session.sessionManager.getEntries().find(e => e.type === "custom" && e.customType === "stage_run_start");
     assert.ok(start && start.type === "custom");
     assert.match((start.data as { prompt: string }).prompt, /只用两位角色，发生在雨天/);
@@ -222,42 +216,41 @@ test("补充要求进入实际用户提示和会话审计，不替换阶段系�
 test("反复提交错误草稿在八轮停止，不生成版本", async () => {
   const f = await setup(Array.from({ length: 10 }, () => ({ call: "write_draft", args: { artifact: {} } })));
   try {
-    const result = await runStage(f.session, f.store, f.project.id, "topic");
+    const result = await runStage(f.session, f.store, f.project.id, "story");
     assert.equal(result.stop_reason, "max_turns");
     assert.equal(f.fake.contexts.length, 8);
     assert.equal(result.errors.length, 8);
-    assert.equal(existsSync(f.store.artifactPath(f.project.id, "topic", 1)), false);
+    assert.equal(existsSync(f.store.artifactPath(f.project.id, "story", 1)), false);
   } finally { f.cleanup(); }
 });
 
 test("创建会话也受状态机约束，依赖齐备后提示词可运行", async () => {
   const f = fixture(); try {
-    const options = { root: packageRoot, store: f.store, projectId: f.project.id, stage: "synopsis" as const };
-    await assert.rejects(() => createStageSession(options), /topic 尚未采用/);
-    f.store.writeDraft(f.project.id, "topic", sample("topic")); f.store.adopt(f.project.id, "topic", 1);
-    f.store.writeDraft(f.project.id, "synopsis", sample("synopsis")); f.store.adopt(f.project.id, "synopsis", 1);
+    const options = { root: packageRoot, store: f.store, projectId: f.project.id, stage: "script" as const };
+    await assert.rejects(() => createStageSession(options), /story 尚未采用/);
+    f.store.writeDraft(f.project.id, "story", sample("story")); f.store.adopt(f.project.id, "story", 1);
     f.store.writeDraft(f.project.id, "script", sample("script")); f.store.adopt(f.project.id, "script", 1);
-    await assert.rejects(() => createStageSession({ ...options, stage: "storyboard" }), /bible 尚未采用/);
+    await assert.rejects(() => createStageSession({ ...options, stage: "board" }), /bible 尚未采用/);
     assert.equal(existsSync(join(f.store.projectDir(f.project.id), "sessions")), false);
     f.store.writeDraft(f.project.id, "bible", sample("bible")); f.store.adopt(f.project.id, "bible", 1);
-    const storyboard = await createStageSession({ ...options, stage: "storyboard" });
+    const storyboard = await createStageSession({ ...options, stage: "board" });
     storyboard.dispose();
-    f.store.writeDraft(f.project.id, "storyboard", sample("storyboard")); f.store.adopt(f.project.id, "storyboard", 1);
-    const prompts = await createStageSession({ ...options, stage: "prompts" });
-    assert.ok(STAGE_PROMPTS.prompts);
-    assert.deepEqual(prompts.getActiveToolNames().sort(), ["finalize_draft", "list_shots", "read_shot", "write_shot_prompt"]);
+    f.store.writeDraft(f.project.id, "board", sample("board")); f.store.adopt(f.project.id, "board", 1);
+    const prompts = await createStageSession({ ...options, stage: "board" });
+    assert.ok(STAGE_PROMPTS.board);
+    assert.deepEqual(prompts.getActiveToolNames().sort(), ["finalize_draft", "read_upstream", "remove_scene_shots", "write_scene_shots"]);
     prompts.dispose();
   } finally { f.cleanup(); }
 });
 
 test("修改运行把原版本 JSON 与意见逐字放进实际提示和审计，新版本仍待审", async () => {
-  const f = await setup([{ call: "write_draft", args: { artifact: { ...sample("topic"), title: "修改后的片名" } } }, { text: "完成" }]);
+  const f = await setup([{ call: "write_draft", args: { artifact: { ...sample("story"), title: "修改后的片名" } } }, { text: "完成" }]);
   try {
-    f.store.writeDraft(f.project.id, "topic", sample("topic"));
+    f.store.writeDraft(f.project.id, "story", sample("story"));
     const note = '  请保留片名中的“风”，\n把冲突集中在一次告别。  ';
-    f.store.requestChanges(f.project.id, "topic", 1, note);
-    const original = readFileSync(f.store.artifactPath(f.project.id, "topic", 1), "utf8");
-    const result = await runStage(f.session, f.store, f.project.id, "topic", "保持克制", undefined, 1);
+    f.store.requestChanges(f.project.id, "story", 1, note);
+    const original = readFileSync(f.store.artifactPath(f.project.id, "story", 1), "utf8");
+    const result = await runStage(f.session, f.store, f.project.id, "story", "保持克制", undefined, 1);
     assert.equal(result.stop_reason, "draft_written");
     const user = f.fake.contexts[0].messages.find(m => m.role === "user");
     assert.ok(user?.role === "user" && Array.isArray(user.content));
@@ -268,34 +261,28 @@ test("修改运行把原版本 JSON 与意见逐字放进实际提示和审计�
     const start = f.session.sessionManager.getEntries().find(e => e.type === "custom" && e.customType === "stage_run_start");
     assert.ok(start?.type === "custom");
     assert.equal((start.data as { prompt: string }).prompt, text);
-    const state = f.store.load(f.project.id).stages.topic;
+    const state = f.store.load(f.project.id).stages.story;
     assert.deepEqual(state.versions, [1, 2]);
     assert.equal(state.reviews?.[1].status, "changes_requested");
     assert.equal(state.reviews?.[2].status, "pending");
-    assert.equal(readFileSync(f.store.artifactPath(f.project.id, "topic", 1), "utf8"), original);
+    assert.equal(readFileSync(f.store.artifactPath(f.project.id, "story", 1), "utf8"), original);
   } finally { f.cleanup(); }
 });
 
-test("梗概实际上下文只见梗概提示与两工具，并从采用选题读取再提交", async () => {
-  const f = fixture();
-  let session: Awaited<ReturnType<typeof createStageSession>> | undefined;
+test("完整故事实际上下文含四拍契约与两工具，一次采用解锁剧本", async () => {
+  const f = await setup([
+    { call: "read_upstream", args: {} },
+    { call: "write_draft", args: { artifact: sample("story") } }, { text: "待审阅" },
+  ]);
   try {
-    f.store.writeDraft(f.project.id, "topic", sample("topic")); f.store.adopt(f.project.id, "topic", 1);
-    session = await createStageSession({ root: packageRoot, store: f.store, projectId: f.project.id, stage: "synopsis", model: { provider: "ollama", id: "qwen3.8:27b" } });
-    const fake = fakeStream(session.model!, [
-      { call: "read_upstream", args: { stage: "topic" } },
-      { call: "write_draft", args: { artifact: sample("synopsis") } }, { text: "待审阅" },
-    ]);
-    session.agent.streamFunction = fake.fn;
-    assert.equal((await runStage(session, f.store, f.project.id, "synopsis")).stop_reason, "draft_written");
-    for (const context of fake.contexts) {
-      assert.equal(getCurrentSystemPrompt(context.messages), SYNOPSIS_PROMPT);
+    assert.equal((await runStage(f.session, f.store, f.project.id, "story")).stop_reason, "draft_written");
+    for (const context of f.fake.contexts) {
+      assert.equal(getCurrentSystemPrompt(context.messages), STORY_PROMPT);
       assert.deepEqual(getCurrentTools(context.messages).map(t => t.name).sort(), ["read_upstream", "write_draft"]);
     }
-    const upstream = fake.contexts[1].messages.find(m => m.role === "toolResult");
-    assert.ok(upstream?.role === "toolResult" && upstream.content[0]?.type === "text");
-    assert.deepEqual(JSON.parse(upstream.content[0].text), sample("topic"));
-    assert.deepEqual(f.store.readVersion(f.project.id, "synopsis", 1), sample("synopsis"));
+    assert.deepEqual(f.store.readVersion(f.project.id, "story", 1), sample("story"));
     assert.equal(f.store.load(f.project.id).stages.script.status, "locked");
-  } finally { session?.dispose(); f.cleanup(); }
+    f.store.adopt(f.project.id, "story", 1);
+    assert.equal(f.store.load(f.project.id).stages.script.status, "ready");
+  } finally { f.cleanup(); }
 });

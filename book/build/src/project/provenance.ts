@@ -7,6 +7,8 @@ export interface Source {
   original_based_on?: Basis;
   validity_confirmation?: { reason: string; at: string };
   generated_by?: "reassemble";
+  assembly_template?: string;
+  reassembled_from?: number;
 }
 export type Provenance = Partial<Record<Stage, Record<number, Source>>>;
 export function sameBasis(a: Basis, b: Basis) {
@@ -19,11 +21,18 @@ export function refreshStale(states: Workflow, sources: Provenance, changed: Sta
   const affected = new Set<Stage>([changed]);
   for (const stage of STAGES) {
     if (DEPENDENCIES[stage].some(s => affected.has(s))) affected.add(stage);
-    const state = states[stage], version = state.adopted_version;
-    if (version === null || !affected.has(stage)) continue;
-    const basis = sources[stage]?.[version]?.based_on;
-    const stale = DEPENDENCIES[stage].some(s => states[s].status !== "adopted" || !basis || basis[s] !== states[s].adopted_version);
-    state.status = stale ? "stale" : "adopted";
+    const state = states[stage];
+    if (!affected.has(stage)) continue;
+    // 分镜板还需检查最新稿；保留已采用版本原有的失效判定。
+    const versions = [state.adopted_version, ...(stage === "board" ? [state.versions.at(-1)] : [])]
+      .filter((version): version is number => version !== null && version !== undefined);
+    if (!versions.length) continue;
+    const stale = versions.some(version => {
+      const basis = sources[stage]?.[version]?.based_on;
+      return DEPENDENCIES[stage].some(s => states[s].status !== "adopted" || !basis || basis[s] !== states[s].adopted_version);
+    });
+    state.status = stale ? "stale" : state.adopted_version !== null ? "adopted"
+      : state.versions.some(v => state.reviews?.[v]?.status === "pending") ? "pending_review" : "ready";
   }
 }
 export interface BibleChange { id: string; name: string; fields: string[] }

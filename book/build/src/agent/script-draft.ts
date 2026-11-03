@@ -9,9 +9,9 @@ export class ScriptDraft extends SceneDraft<Scene> {
       seed: version => store.readVersion(projectId, "script", version).scenes,
       artifact: scenes => ({ scenes }),
       warnings: scenes => {
-        const beats = store.readAdopted(projectId, "synopsis").beats;
+        const beats = store.readAdopted(projectId, "story").beats;
         return scenes.length === beats.length ? [] : [
-          `警告：剧本 ${scenes.length} 场，梗概 ${beats.length} 拍；叙事拍与场景不必一一对应，请人工检查是否覆盖故事转折。`,
+          `警告：剧本 ${scenes.length} 场，故事 ${beats.length} 拍；叙事拍与场景不必一一对应，请人工检查是否覆盖故事转折。`,
         ];
       },
     });

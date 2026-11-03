@@ -32,7 +32,7 @@ test("项目列表跳过文件、无项目文件的目录、不合规 ID 和坏�
 
 test("未开放模板使用独立导航状态，不管依赖是否解锁", () => {
   for (const status of ["locked", "ready", "pending_review"] as const) {
-    assert.deepEqual(stageBadge(status, "prompts", null, false), { text: "暂未开放", className: "unavailable" });
+    assert.deepEqual(stageBadge(status, "board", null, false), { text: "暂未开放", className: "unavailable" });
   }
   assert.equal(stageBadge("ready", "bible", null, true).text, "可运行");
 });
@@ -40,11 +40,11 @@ test("未开放模板使用独立导航状态，不管依赖是否解锁", () =>
 test("各阶段提示与工具结果只显示中文阶段、审阅状态", () => {
   for (const stage of STAGES) {
     const visible = readerMessage(`不能运行 ${stage}：依赖阶段 script 尚未采用版本`);
-    assert.ok(!/\b(topic|synopsis|script|bible|storyboard|prompts)\b/.test(visible));
+    assert.ok(!/\b(story|script|bible|storyboard|prompts)\b/.test(visible));
     assert.match(visible, /剧本 尚未采用版本/);
   }
-  assert.ok(stagePrompt("prompts"));
-  assert.equal(readerMessage("已保存 prompts v1；status=pending_review"), "已保存 分镜提示词 v1；待审阅");
+  assert.ok(stagePrompt("board"));
+  assert.equal(readerMessage("已保存 board v1；status=pending_review"), "已保存 分镜板 v1；待审阅");
   assert.equal(readerMessage("已保存 bible v1；status=pending_review，等待人工采用"), "已保存 设定集 v1；待审阅，等待人工采用");
 });
 
@@ -61,11 +61,13 @@ test("阶段记忆按项目保存，刷新和项目切换恢复各自阶段；�
   const access = () => ({ getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); } });
   rememberSelectedStage("a", "bible", access); rememberSelectedStage("b", "script", access);
   assert.equal(restoreSelectedStage("a", access), "bible"); assert.equal(restoreSelectedStage("b", access), "script");
-  assert.equal(restoreSelectedStage("new", access), "topic");
-  for (const key of values.keys()) values.set(key, "unknown");
-  assert.equal(restoreSelectedStage("a", access), "topic");
+  assert.equal(restoreSelectedStage("new", access), "story");
+  for (const legacy of ["unknown", "topic", "synopsis"]) {
+    for (const key of values.keys()) values.set(key, legacy);
+    assert.equal(restoreSelectedStage("a", access), "story");
+  }
   const blocked = () => { throw new Error("不可用"); };
-  assert.equal(restoreSelectedStage("a", blocked), "topic");
+  assert.equal(restoreSelectedStage("a", blocked), "story");
   assert.doesNotThrow(() => rememberSelectedStage("a", "script", blocked));
 });
 

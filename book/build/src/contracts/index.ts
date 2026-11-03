@@ -1,7 +1,7 @@
 import { Type, type Static } from "typebox";
 import { Value } from "typebox/value";
 
-export const STAGES = ["topic", "synopsis", "script", "bible", "storyboard", "prompts"] as const;
+export const STAGES = ["story", "script", "bible", "board"] as const;
 export type Stage = typeof STAGES[number];
 
 const text = () => Type.String({ minLength: 1, pattern: "\\S" });
@@ -12,16 +12,18 @@ const shotId = () => Type.String({ pattern: "^S[0-9]{2}-[0-9]{2}$" });
 const settingId = () => Type.String({ pattern: "^[CPL][0-9]{2}$" });
 const ids = (prefix: string) => Type.Array(id(prefix), { uniqueItems: true });
 
-export const TopicSchema = Type.Object({
+/** 故事一次提交、一次审阅；版本与采用状态属于项目元数据。 */
+export const StorySchema = Type.Object({
   title: text(), logline: text(), genre: text(), audience: text(),
   target_minutes: Type.Number({ exclusiveMinimum: 0 }),
+  beats: Type.Array(text(), { minItems: 4, maxItems: 4 }), tone: text(),
 }, closed);
+export type Story = Static<typeof StorySchema>;
 
-export const SynopsisSchema = Type.Object({
-  title: text(), logline: text(),
-  beats: Type.Array(text(), { minItems: 4, maxItems: 4 }),
-  tone: text(),
-}, closed);
+export function validateStory(value: unknown): asserts value is Story {
+  const errors = Value.Errors(StorySchema, value);
+  if (errors.length) throw new Error(`story schema 不合规：${errors.map(e => `${e.instancePath || "/"} ${e.message}`).join("; ")}`);
+}
 
 const LineSchema = Type.Union([
   Type.Object({ kind: Type.Literal("action"), text: text() }, closed),
@@ -70,6 +72,7 @@ export const BibleSchema = Type.Object({
   props: Type.Array(Type.Object({ id: bibleId("P"), name: text(), description: text(), appears_in: appearsIn() }, closed)),
   locations: Type.Array(Type.Object({ id: bibleId("L"), name: text(), description: text(), appears_in: appearsIn() }, closed), { minItems: 1 }),
 }, closed);
+export type Bible = Static<typeof BibleSchema>;
 
 export const ShotSchema = Type.Object({
   shot_id: shotId(), scene_id: sceneId(), location_id: id("L"),
@@ -79,16 +82,12 @@ export const ShotSchema = Type.Object({
   duration_s: Type.Number({ exclusiveMinimum: 0 }),
 }, closed);
 export type Shot = Static<typeof ShotSchema>;
-export const SceneShotsSchema = Type.Object({ scene_id: sceneId(), shots: Type.Array(ShotSchema, { minItems: 1 }) }, closed);
-export type SceneShots = Static<typeof SceneShotsSchema>;
-export const StoryboardSchema = Type.Object({ shots: Type.Array(ShotSchema, { minItems: 1 }) }, closed);
-
 /** 字符串台词必须逐行标注说话人；不猜测无标注文字的归属。 */
 export function dialogueSpeakers(dialogue: string): string[] {
   return dialogue.split(/\r?\n/).map(line => line.match(/^\s*([^：:\n]+)[：:]\s*\S/)?.[1].trim() ?? "");
 }
 
-export function validateStoryboardReferences(board: Artifacts["storyboard"], script: Artifacts["script"], bible: Artifacts["bible"], complete = true): void {
+export function validateStoryboardReferences(board: { shots: Shot[] }, script: Artifacts["script"], bible: Artifacts["bible"], complete = true): void {
   const issues: string[] = [];
   const counts = new Map<string, number>();
   for (const shot of board.shots) {
@@ -119,35 +118,53 @@ export function validateStoryboardReferences(board: Artifacts["storyboard"], scr
 
 /** 与目标相差超过 20% 提醒人审，不阻止创作版本保存。 */
 export const STORYBOARD_DURATION_TOLERANCE = 0.2;
-export function storyboardWarnings(board: Artifacts["storyboard"], topic: Artifacts["topic"]): string[] {
+export function storyboardWarnings(board: { shots: Shot[] }, story: Artifacts["story"]): string[] {
   const total = board.shots.reduce((sum, shot) => sum + shot.duration_s, 0);
-  const target = topic.target_minutes * 60;
+  const target = story.target_minutes * 60;
   return Math.abs(total - target) > target * STORYBOARD_DURATION_TOLERANCE
-    ? [`警告：分镜合计 ${total} 秒，选题目标 ${target} 秒，偏差超过 20%；请人工检查节奏与目标时长。`] : [];
-}
-
-export function validateSceneShots(value: unknown, script: Artifacts["script"], bible: Artifacts["bible"]): asserts value is SceneShots {
-  const errors = Value.Errors(SceneShotsSchema, value);
-  if (errors.length) throw new Error(`storyboard schema 不合规：${errors.map(e => `${e.instancePath || "/"} ${e.message}`).join("; ")}`);
-  const group = value as SceneShots;
-  if (group.shots.some(shot => shot.scene_id !== group.scene_id)) throw new Error(`${group.scene_id} 提交中混入其他场镜头；请按场分别提交`);
-  validateStoryboardReferences({ shots: group.shots }, script, bible, false);
+    ? [`警告：分镜合计 ${total} 秒，故事目标 ${target} 秒，偏差超过 20%；请人工检查节奏与目标时长。`] : [];
 }
 
 export const ShotPromptInputSchema = Type.Object({ shot_id: shotId(), shot_part: text() }, closed);
 export type ShotPromptInput = Static<typeof ShotPromptInputSchema>;
 
-export const PromptsSchema = Type.Object({
-  items: Type.Array(Type.Object({
-    shot_id: shotId(), shot_part: text(),
-    injected_ids: Type.Array(settingId(), { minItems: 1, uniqueItems: true }),
-    final_prompt: text(),
-  }, closed), { minItems: 1 }),
+/** 与阶段键无关的单镜拼装结果。 */
+export const ShotPromptSchema = Type.Object({
+  ...ShotPromptInputSchema.properties,
+  injected_ids: Type.Array(settingId(), { minItems: 1, uniqueItems: true }),
+  final_prompt: text(),
 }, closed);
+export type ShotPrompt = Static<typeof ShotPromptSchema>;
+export const BOARD_ASSEMBLY_TEMPLATE = "shot-v1" as const;
+export const BoardShotInputSchema = Type.Object({
+  ...ShotSchema.properties,
+  // 长度由 validateShotPart 按 trim 后的 Unicode 码点统一检查。
+  shot_part: text(),
+}, closed);
+export type BoardShotInput = Static<typeof BoardShotInputSchema>;
+export const BoardSceneInputSchema = Type.Object({
+  scene_id: sceneId(), shots: Type.Array(BoardShotInputSchema, { minItems: 1 }),
+}, closed);
+export type BoardSceneInput = Static<typeof BoardSceneInputSchema>;
+export const BoardInputSchema = Type.Object({
+  shots: Type.Array(BoardShotInputSchema, { minItems: 1 }),
+}, closed);
+export type BoardInput = Static<typeof BoardInputSchema>;
+export const BoardShotSchema = Type.Object({
+  ...BoardShotInputSchema.properties, ...ShotPromptSchema.properties,
+}, closed);
+export type BoardShot = Static<typeof BoardShotSchema>;
+export const BoardSchema = Type.Object({
+  assembly_template: Type.Literal(BOARD_ASSEMBLY_TEMPLATE),
+  shots: Type.Array(BoardShotSchema, { minItems: 1 }),
+}, closed);
+export type Board = Static<typeof BoardSchema>;
+
+export { assembleBoard, validateBoard, validateBoardSceneInput } from "./board.js";
 
 export const schemas = {
-  topic: TopicSchema, synopsis: SynopsisSchema, script: ScriptSchema,
-  bible: BibleSchema, storyboard: StoryboardSchema, prompts: PromptsSchema,
+  story: StorySchema, script: ScriptSchema,
+  bible: BibleSchema, board: BoardSchema,
 } as const;
 export type Artifacts = { [S in Stage]: Static<typeof schemas[S]> };
 
@@ -201,17 +218,10 @@ export const SceneChangesSchema = Type.Object({
   removed: Type.Array(sceneId(), { uniqueItems: true }),
 }, closed);
 export type SceneChanges = Static<typeof SceneChangesSchema>;
-export const ShotChangesSchema = Type.Object({
-  revise_from: Type.Union([Type.Integer({ minimum: 1 }), Type.Null()]),
-  resubmitted: Type.Array(shotId(), { uniqueItems: true }),
-  reused: Type.Array(shotId(), { uniqueItems: true }),
-  removed: Type.Array(shotId(), { uniqueItems: true }),
-}, closed);
-export type ShotChanges = Static<typeof ShotChangesSchema>;
-export interface VersionMetadata { revision: SceneChanges | ShotChanges }
+export interface VersionMetadata { revision: SceneChanges }
 
 export function validateVersionMetadata(value: VersionMetadata): void {
-  if (!Value.Check(Type.Object({ revision: Type.Union([SceneChangesSchema, ShotChangesSchema]) }, closed), value)) throw new Error("版本修改记录不合规");
+  if (!Value.Check(Type.Object({ revision: SceneChangesSchema }, closed), value)) throw new Error("版本修改记录不合规");
 }
 
 export function parseStage(value: string): Stage {

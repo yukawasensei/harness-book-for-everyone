@@ -8,7 +8,6 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
   EmptyState,
-  PlanCard,
   UserMessage,
   AssistantText,
   ToolCallCard,
@@ -17,18 +16,12 @@ import {
   RunStatusBar,
   Composer,
 } from "@/features/chat";
-
-const MOCK_PROJECT = {
-  running: { id: "run-2", stage: "script" as const, started_at: new Date().toISOString(), abort_requested: false },
-  stages: {
-    topic: { status: "adopted" as const, versions: [1], adopted_version: 1 },
-    synopsis: { status: "adopted" as const, versions: [1], adopted_version: 1 },
-    script: { status: "pending_review" as const, versions: [1], adopted_version: null },
-    bible: { status: "stale" as const, versions: [], adopted_version: null },
-    storyboard: { status: "locked" as const, versions: [], adopted_version: null },
-    prompts: { status: "locked" as const, versions: [], adopted_version: null },
-  },
-};
+import {
+  BoardPreview,
+  MOCK_BOARD,
+  MOCK_BIBLE,
+  MOCK_SCRIPT,
+} from "@/features/artifacts";
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className="text-sm font-semibold">{children}</h2>;
@@ -80,13 +73,6 @@ export function DesignPreview() {
       <Separator />
 
       <section className="space-y-4">
-        <SectionTitle>制作计划</SectionTitle>
-        <PlanCard project={MOCK_PROJECT} />
-      </section>
-
-      <Separator />
-
-      <section className="space-y-4">
         <SectionTitle>空状态</SectionTitle>
         <Card className="p-2">
           <EmptyState onSelectPrompt={text => setComposerVal(text)} />
@@ -99,7 +85,7 @@ export function DesignPreview() {
         <SectionTitle>对话消息</SectionTitle>
         <div className="space-y-3 rounded-lg border p-4 bg-muted/10">
           <UserMessage text="想拍一部科幻短片，深空货运站接收到求救信号。" at={new Date().toISOString()} />
-          <AssistantText text="收到需求。接下来我们将先进行【选题】构思，完成后交稿给您审阅。" at={new Date().toISOString()} />
+          <AssistantText text="收到需求。接下来我们将先进行【故事】构思，完成后交稿给您审阅。" at={new Date().toISOString()} />
           <AssistantText text="正在构思三组不同的故事切入点…" streaming />
         </div>
       </section>
@@ -109,7 +95,7 @@ export function DesignPreview() {
       <section className="space-y-4">
         <SectionTitle>工具调用</SectionTitle>
         <div className="grid gap-3 sm:grid-cols-3">
-          <ToolCallCard name="write_draft" label="生成草稿" status="success" args_summary="stage: topic, version: 1" />
+          <ToolCallCard name="write_draft" label="生成草稿" status="success" args_summary="stage: story, version: 1" />
           <ToolCallCard name="inspect_artifacts" label="检查产物" status="running" args={{ stage: "script" }} />
           <ToolCallCard name="validate" label="校验草稿" status="error" error="依赖的设定集尚未采用" />
         </div>
@@ -120,10 +106,10 @@ export function DesignPreview() {
       <section className="space-y-4">
         <SectionTitle>审阅卡</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2">
-          <ReviewCard stage="script" version={1} onViewArtifact={() => {}} onAdopt={() => {}} onDiscard={() => {}} onRequestChanges={() => {}} />
-          <ReviewCard stage="topic" version={1} decision="adopted" />
-          <ReviewCard stage="synopsis" version={2} decision="changes_requested" note="把第二场改得更紧张一些" />
-          <ReviewCard stage="synopsis" version={1} decision="discarded" />
+          <ReviewCard stage="script" version={1} itemCount={3} onViewArtifact={() => {}} />
+          <ReviewCard stage="story" version={1} decision="adopted" onViewArtifact={() => {}} />
+          <ReviewCard stage="story" version={2} decision="changes_requested" note="把第二场改得更紧张一些" onViewArtifact={() => {}} />
+          <ReviewCard stage="story" version={1} decision="discarded" onViewArtifact={() => {}} />
         </div>
       </section>
 
@@ -132,10 +118,10 @@ export function DesignPreview() {
       <section className="space-y-4">
         <SectionTitle>系统提示与运行状态</SectionTitle>
         <div className="grid gap-3 sm:grid-cols-2">
-          <SystemNotice type="quota" title="请求频率提示" message="今日模型调用已达配额（429），请稍候重试。" />
+          <SystemNotice type="quota" title="请求频率提示" message="今日可用生成次数已用完，明日零点恢复。你仍可查看、导出已有产物，或对分镜板执行重新拼装。" />
           <SystemNotice type="stale" title="上游已更新" message="剧本已有新版本，设定集需要重新生成以保持一致。" />
           <SystemNotice type="error" title="运行失败" message="模型服务响应超时，请重试。" />
-          <SystemNotice type="info" title="自动推进已开启" message="审阅通过后将自动开始下一道工序。" />
+          <SystemNotice type="info" title="连接已恢复" message="连接已恢复，已同步最新进度。" />
         </div>
         <RunStatusBar stage="script" onAbort={() => {}} />
       </section>
@@ -156,6 +142,34 @@ export function DesignPreview() {
             <Composer value="" onChange={() => {}} onSend={() => {}} running placeholder="正在运行…" errorMessage="已有任务正在运行中（冲突）" onAbort={() => {}} />
           </CardContent>
         </Card>
+      </section>
+      <Separator />
+
+      <section className="space-y-4">
+        <SectionTitle>分镜板预览（常规与待更新状态）</SectionTitle>
+        <div className="space-y-6">
+          <Card className="p-4 space-y-3">
+            <h3 className="text-xs font-semibold text-foreground">常规采用稿（按场分组、蓝绿提示词、复制与导出）</h3>
+            <BoardPreview
+              board={MOCK_BOARD}
+              bible={MOCK_BIBLE}
+              script={MOCK_SCRIPT}
+              version={1}
+            />
+          </Card>
+
+          <Card className="p-4 space-y-3">
+            <h3 className="text-xs font-semibold text-foreground">待更新状态（黄色横幅与零模型重新拼装）</h3>
+            <BoardPreview
+              board={MOCK_BOARD}
+              bible={MOCK_BIBLE}
+              script={MOCK_SCRIPT}
+              version={1}
+              isStale={true}
+              onReassemble={() => {}}
+            />
+          </Card>
+        </div>
       </section>
     </div>
   );

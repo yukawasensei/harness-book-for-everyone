@@ -9,7 +9,7 @@ export function Composer({
   onChange,
   onSend,
   onAbort,
-  placeholder = "描述你想拍的短片…",
+  placeholder = "描述你想拍的短片，例如题材、主角或一个画面…",
   running,
   sending,
   errorMessage,

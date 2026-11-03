@@ -1,5 +1,5 @@
 export {
-  api, ApiError, authorizationHeaders, getAccessToken, setAccessToken, submitRun,
+  api, apiText, ApiError, authorizationHeaders, getAccessToken, setAccessToken, submitRun,
 } from "./client.js";
 export { endpoints } from "./endpoints.js";
 export { queryKeys } from "./query-keys.js";

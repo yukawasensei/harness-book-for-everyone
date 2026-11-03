@@ -8,8 +8,8 @@ import { fixture, sample, packageRoot } from "./testing/fixtures.js";
 import { createLocalServer } from "./server/index.js";
 import { createDemoSession } from "./server/demo.js";
 import { ScriptDraft } from "./agent/script-draft.js";
-import { StoryboardDraft } from "./agent/storyboard-draft.js";
-import { PromptDraft } from "./agent/prompt-draft.js";
+import { BoardDraft } from "./agent/board-draft.js";
+import { boardInput } from "./contracts/board.js";
 import { readerMessage } from "../web/src/features/artifacts/lib/presentation.js";
 import { appendEvent } from "../web/src/features/chat/lib/append-event.js";
 import type { ProjectDetail } from "./server/protocol.js";
@@ -33,27 +33,30 @@ test("每个依赖的 stale 禁用原因均与尚未采用区分，读取与重�
   }
   const f = fixture(); try {
     complete(f); changed(f);
-    assert.throws(() => f.store.readAdopted(f.project.id, "storyboard"), /待更新/);
-    assert.match(readerMessage(f.store.reassembleReason(f.project.id)!), /上游.*分镜.*待更新/);
+    assert.throws(() => f.store.readAdopted(f.project.id, "board"), /待更新/);
+    assert.equal(f.store.reassembleReason(f.project.id), null);
   } finally { f.cleanup(); }
 });
 test("确认理由与程序拼装来源随版本持久化，影响条目返回实际名称和编号", async () => {
   const f = fixture(); try {
     complete(f); changed(f);
     assert.equal(f.store.bibleImpact(f.project.id).changes[0].name, "程禾");
-    f.store.confirmValid(f.project.id, "storyboard", "仅衣服颜色变化，镜头不变", true);
-    f.store.reassemblePrompts(f.project.id, true);
+    f.store.reassembleBoard(f.project.id, true);
+    f.store.adopt(f.project.id, "board", 2, true);
+    const bible = f.store.readAdopted(f.project.id, "bible"); bible.characters[0].personality += "安静。";
+    f.store.writeDraft(f.project.id, "bible", bible); f.store.adopt(f.project.id, "bible", 3, true);
+    f.store.confirmValid(f.project.id, "board", "性格补充，镜头不变", true);
     const project = f.store.load(f.project.id);
-    assert.equal(project.provenance?.storyboard?.[1].validity_confirmation?.reason, "仅衣服颜色变化，镜头不变");
-    assert.equal(project.provenance?.prompts?.[2].generated_by, "reassemble");
+    assert.equal(project.provenance?.board?.[2].validity_confirmation?.reason, "性格补充，镜头不变");
+    assert.equal(project.provenance?.board?.[2].generated_by, "reassemble");
     const { ProvenancePanel } = await import(new URL("../web/src/features/artifacts/components/ReworkPanel.tsx", import.meta.url).href);
-    const html = renderToStaticMarkup(createElement(ProvenancePanel, { project: project as ProjectDetail, stage: "storyboard", version: 1 }));
-    assert.match(html, /有效理由：仅衣服颜色变化，镜头不变/);
+    const html = renderToStaticMarkup(createElement(ProvenancePanel, { project: project as ProjectDetail, stage: "board", version: 2 }));
+    assert.match(html, /有效理由：性格补充，镜头不变/);
   } finally { f.cleanup(); }
 });
 test("程序拼装版本不显示假模型预设修改告知；影响清单显示名称加编号", async () => {
   const { ReviewPanel } = await import(new URL("../web/src/features/artifacts/components/ReviewPanel.tsx", import.meta.url).href);
-  const props = { stage: "prompts" as const, state: { status: "stale" as const, versions: [1, 2], adopted_version: 1 }, version: 2,
+  const props = { stage: "board" as const, state: { status: "stale" as const, versions: [1, 2], adopted_version: 1 }, version: 2,
     loaded: true, busy: false, demo: true, runReason: null, error: "", onReview: async () => true, onRevise: () => {} };
   const html = renderToStaticMarkup(createElement(ReviewPanel, { ...props, programAssembled: true }));
   assert.match(html, /由程序拼装，未调用模型/); assert.ok(!html.includes("离线演示的修改结果为预设内容"));
@@ -62,7 +65,7 @@ test("程序拼装版本不显示假模型预设修改告知；影响清单显�
     complete(f); changed(f);
     const { ProvenancePanel } = await import(new URL("../web/src/features/artifacts/components/ReworkPanel.tsx", import.meta.url).href);
     const project = { ...f.store.load(f.project.id), bible_impact: f.store.bibleImpact(f.project.id) } as ProjectDetail;
-    assert.match(renderToStaticMarkup(createElement(ProvenancePanel, { project, stage: "storyboard", version: 1 })), /程禾（C01）/);
+    assert.match(renderToStaticMarkup(createElement(ProvenancePanel, { project, stage: "board", version: 1 })), /程禾（C01）/);
   } finally { f.cleanup(); }
 });
 test("重启中断提示独立于当前阶段采用状态，包含阶段和运行时间", async () => {
@@ -83,14 +86,13 @@ test("全部采用后的运行提示为完成态；三种处理有各自说明�
   } finally { f.cleanup(); }
 });
 test("离线续跑从下一场或下一镜开始：恢复提示先于模型事件，已暂存内容不重交", async () => {
-  for (const stage of ["script", "storyboard", "prompts"] as const) {
+  for (const stage of ["script", "board"] as const) {
     const f = fixture(); let app; const controller = new AbortController(); let pumping: Promise<void> | undefined;
     try {
       for (const upstream of STAGES.slice(0, STAGES.indexOf(stage))) { f.store.writeDraft(f.project.id, upstream, sample(upstream)); f.store.adopt(f.project.id, upstream, 1); }
       const id = f.project.id;
       if (stage === "script") { const d = new ScriptDraft(f.store, id); d.reset(); d.write({ ...sample("script").scenes[0], summary: "保留暂存场摘要" }); }
-      if (stage === "storyboard") { const d = new StoryboardDraft(f.store, id); d.reset(); d.write({ scene_id: "S01", shots: sample("storyboard").shots.filter(s => s.scene_id === "S01") }); }
-      if (stage === "prompts") { const d = new PromptDraft(f.store, id); d.reset(); d.write({ shot_id: "S01-01", shot_part: "程禾静静站在画面左侧，构图留白，保留暂存的镜头动作。" }); }
+      if (stage === "board") { const d = new BoardDraft(f.store, id); d.reset(); d.write({ scene_id: "S01", shots: boardInput(sample("board")).shots.filter(s => s.scene_id === "S01").map(s => ({ ...s, shot_part: s.shot_part + "保留暂存的镜头动作。" })) }); }
       f.store.saveRunLock(id, { id: "orphan", stage, started_at: "2026-11-03T01:02:03.000Z", abort_requested: false });
       app = createLocalServer({ root: packageRoot, store: f.store, demo: true, sessionFactory: createDemoSession });
       const base = await app.listen(0), path = `${base}/api/projects/${id}`;
@@ -112,15 +114,15 @@ test("离线续跑从下一场或下一镜开始：恢复提示先于模型事�
       assert.ok(events.some(e => e.type === "run_ended"));
       const restored = events.findIndex(e => e.type === "staging_restored");
       assert.ok(restored >= 0 && restored < events.findIndex(e => e.type === "tool_execution_start"));
-      assert.deepEqual(events[restored].ids, [stage === "prompts" ? "S01-01" : "S01"]);
-      const rows = appendEvent([], { type: "staging_restored", stage, run_id: "resumed", ids: events[restored].ids!, unit: stage === "prompts" ? "镜" : "场" });
+      assert.deepEqual(events[restored].ids, ["S01"]);
+      const rows = appendEvent([], { type: "staging_restored", stage, run_id: "resumed", ids: events[restored].ids!, unit: "场" });
       assert.equal(rows[0].kind, "note");
-      assert.ok("text" in rows[0] && rows[0].text === `已从暂存恢复 1 ${stage === "prompts" ? "镜：S01-01" : "场：S01"}`);
+      assert.ok("text" in rows[0] && rows[0].text === `已从暂存恢复 1 场：S01`);
       const submitted = events.filter(e => e.type === "tool_execution_start" && (e.args?.scene || e.args?.shot_id)).map(e => e.args?.scene?.scene_id ?? e.args?.shot_id);
-      assert.ok(!submitted.includes(stage === "prompts" ? "S01-01" : "S01"), JSON.stringify(submitted));
+      assert.ok(!submitted.includes("S01"), JSON.stringify(submitted));
       assert.equal(f.store.load(id).stages[stage].versions.length, 1);
       if (stage === "script") assert.equal(f.store.readVersion(id, stage, 1).scenes[0].summary, "保留暂存场摘要");
-      if (stage === "prompts") assert.match(f.store.readVersion(id, stage, 1).items[0].shot_part, /保留暂存/);
+      if (stage === "board") assert.match(f.store.readVersion(id, stage, 1).shots[0].shot_part, /保留暂存/);
     } finally { controller.abort(); await pumping; if (app) await app.close(); f.cleanup(); }
   }
 });

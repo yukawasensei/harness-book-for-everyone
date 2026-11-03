@@ -1,5 +1,5 @@
 import type { Stage } from '../contracts/index.js';
-export const SCORE_LABELS = { appeal: '选题吸引力', structure: '结构完整', character: '角色辨识度', filmability: '镜头可拍性', usability: '提示词可用性' } as const;
+export const SCORE_LABELS = { appeal: '故事吸引力', structure: '结构完整', character: '角色辨识度', filmability: '镜头可拍性', usability: '提示词可用性' } as const;
 export const SCORE_ANCHORS = {
   appeal: ['缺少主题或冲突', '主题可辨但冲突弱', '主题与冲突清楚', '冲突具体且有悬念', '独特冲突与目标受众高度契合'],
   structure: ['因果断裂，无法理解', '有起止但关键转折缺失', '起因转折结局可理解', '转折由人物选择推动', '各段互相呼应，删减会损伤表达'],
@@ -9,8 +9,8 @@ export const SCORE_ANCHORS = {
 } as const;
 export type Dimension = keyof typeof SCORE_LABELS;
 export const STAGE_DIMENSIONS: Record<Stage, Dimension[]> = {
-  topic: ['appeal'], synopsis: ['appeal', 'structure'], script: ['structure', 'character'],
-  bible: ['character'], storyboard: ['structure', 'filmability'], prompts: ['usability'],
+  story: ['appeal', 'structure'], script: ['structure', 'character'],
+  bible: ['character'], board: ['structure', 'filmability', 'usability'],
 };
 export interface Rating { scores: Partial<Record<Dimension, number>>; note: string; at: string; actor: string; source: 'human' }
 export type Ratings = Partial<Record<Stage, Record<number, Rating>>>;

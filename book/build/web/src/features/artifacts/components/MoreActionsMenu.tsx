@@ -1,4 +1,4 @@
-import { MoreHorizontal, Star, RefreshCw, CheckCircle, Layers } from "lucide-react";
+import { MoreHorizontal, Star, RefreshCw, CheckCircle, Layers, Download } from "lucide-react";
 import type { Stage } from "../../../../../src/contracts/index.js";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +22,7 @@ export function MoreActionsMenu({
   onRun,
   onConfirmValid,
   onReassemble,
+  onExport,
 }: {
   busy?: boolean;
   hasVersion: boolean;
@@ -34,10 +35,11 @@ export function MoreActionsMenu({
   onRun: () => void;
   onConfirmValid: () => void;
   onReassemble: () => void;
+  onExport: () => void;
 }) {
   const busyReason = busy ? "项目正在运行或提交操作，请稍候。" : null;
   const runDisabled = Boolean(busyReason ?? runReason);
-  const reassembleDisabled = stage !== "prompts" || Boolean(busyReason ?? reassembleReason);
+  const reassembleDisabled = stage !== "board" || Boolean(busyReason ?? reassembleReason);
 
   return (
     <DropdownMenu>
@@ -55,6 +57,12 @@ export function MoreActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuLabel className="text-xs">操作</DropdownMenuLabel>
+        {stage === "board" && (
+          <DropdownMenuItem disabled={!hasVersion || busy} onClick={onExport} className="gap-2 text-xs">
+            <Download className="size-3.5 shrink-0" />
+            <span>导出 Markdown</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           disabled={!hasVersion || busy}
           onClick={onOpenRating}
@@ -86,7 +94,7 @@ export function MoreActionsMenu({
               <CheckCircle className="size-3.5 shrink-0" />
               <span>确认仍然有效</span>
             </DropdownMenuItem>
-            {stage === "prompts" && (
+            {stage === "board" && (
               <DropdownMenuItem
                 disabled={reassembleDisabled}
                 onClick={onReassemble}

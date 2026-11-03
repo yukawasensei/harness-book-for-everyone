@@ -11,7 +11,7 @@ import { fixture, packageRoot, sample } from "./testing/fixtures.js";
 
 function setup() {
   const f = fixture();
-  for (const stage of ["topic", "synopsis", "script"] as const) {
+  for (const stage of ["story", "script"] as const) {
     f.store.writeDraft(f.project.id, stage, sample(stage)); f.store.adopt(f.project.id, stage, 1);
   }
   return f;
@@ -33,7 +33,7 @@ test("设定集缺台词角色时拒绝，指出名称与出场场次，不形�
 test("aliases 匹配称呼变体，只检查采用剧本而非最新候选；采用前后分镜锁定与解锁", () => {
   const f = fixture();
   try {
-    for (const stage of ["topic", "synopsis"] as const) {
+    for (const stage of ["story"] as const) {
       f.store.writeDraft(f.project.id, stage, sample(stage)); f.store.adopt(f.project.id, stage, 1);
     }
     const script = sample("script");
@@ -47,8 +47,8 @@ test("aliases 匹配称呼变体，只检查采用剧本而非最新候选；采
     const bible = sample("bible"); bible.characters[2].aliases = ["修表师"];
     assert.equal(f.store.writeDraft(f.project.id, "bible", bible), 1);
     assert.equal(f.store.load(f.project.id).stages.bible.reviews?.[1].status, "pending");
-    assert.equal(f.store.load(f.project.id).stages.storyboard.status, "locked");
-    assert.equal(f.store.adopt(f.project.id, "bible", 1).stages.storyboard.status, "ready");
+    assert.equal(f.store.load(f.project.id).stages.board.status, "locked");
+    assert.equal(f.store.adopt(f.project.id, "bible", 1).stages.board.status, "ready");
   } finally { f.cleanup(); }
 });
 for (const group of ["characters", "props", "locations"] as const) {
@@ -96,7 +96,7 @@ test("旧设定集缺来源明确拒绝读取与采用，不猜测迁移，原�
     assert.throws(() => f.store.adopt(f.project.id, "bible", 1), /出场场次.*appears_in.*重新抽取/);
     assert.equal(readFileSync(path, "utf8"), raw);
     assert.equal(readFileSync(join(f.store.projectDir(f.project.id), "project.json"), "utf8"), before);
-    assert.equal(f.store.load(f.project.id).stages.storyboard.status, "locked");
+    assert.equal(f.store.load(f.project.id).stages.board.status, "locked");
     assert.equal(f.store.writeDraft(f.project.id, "bible", sample("bible")), 2);
   } finally { f.cleanup(); }
 });
@@ -108,7 +108,7 @@ test("采用与读取复核覆盖，损坏版本无法绕过写入边界", () =>
     writeFileSync(f.store.artifactPath(f.project.id, "bible", 1), JSON.stringify(damaged));
     assert.throws(() => f.store.adopt(f.project.id, "bible", 1), /覆盖检查.*陆岑/s);
     assert.throws(() => f.store.readVersion(f.project.id, "bible", 1), /覆盖检查.*陆岑/s);
-    assert.equal(f.store.load(f.project.id).stages.storyboard.status, "locked");
+    assert.equal(f.store.load(f.project.id).stages.board.status, "locked");
   } finally { f.cleanup(); }
 });
 test("设定集会话白名单、提示、拒绝后补全及运行审计", async () => {

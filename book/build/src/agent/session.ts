@@ -5,28 +5,22 @@ import {
   createAgentSession, defineTool, DefaultResourceLoader, ModelRuntime,
   SessionManager, SettingsManager, type ExtensionFactory, type AgentSession,
 } from "@earendil-works/pi-coding-agent";
-import { parseStage, schemas, SceneSchema, SceneShotsSchema, type Stage } from "../contracts/index.js";
+import { parseStage, schemas, SceneSchema, BoardSceneInputSchema, type Stage } from "../contracts/index.js";
 import { ProjectStore } from "../project/store.js";
 import { assertRunnable, DEPENDENCIES } from "../workflow/index.js";
 import { configuredModel } from "./model.js";
 import { stagePrompt } from "./prompts.js";
 import { ScriptDraft } from "./script-draft.js";
-import { PromptDraft } from "./prompt-draft.js";
-import { createPromptTools } from "./prompt-tools.js";
-import { StoryboardDraft } from "./storyboard-draft.js";
+import { BoardDraft } from "./board-draft.js";
 
 const argumentStats = new WeakMap<AgentSession, ArgumentStats>();
 export const sessionArgumentStats = (session: AgentSession) => argumentStats.get(session);
 
-const sceneDrafts = new WeakMap<AgentSession, ScriptDraft | StoryboardDraft>();
-const promptDrafts = new WeakMap<AgentSession, PromptDraft>();
-export const sessionPromptDraft = (session: AgentSession) => promptDrafts.get(session);
+const sceneDrafts = new WeakMap<AgentSession, ScriptDraft | BoardDraft>();
 export const sessionSceneDraft = (session: AgentSession) => sceneDrafts.get(session);
 
-export function createStageTools(store: ProjectStore, projectId: string, stage: Stage, draft: ScriptDraft | StoryboardDraft | PromptDraft = stage === "prompts" ? new PromptDraft(store, projectId) : stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId), stats: ArgumentStats = { coerced_args: 0 }) {
+export function createStageTools(store: ProjectStore, projectId: string, stage: Stage, draft: ScriptDraft | BoardDraft = stage === "board" ? new BoardDraft(store, projectId) : new ScriptDraft(store, projectId), stats: ArgumentStats = { coerced_args: 0 }) {
   parseStage(stage);
-  if (stage === "prompts") return createPromptTools(store, projectId, draft as PromptDraft);
-  if (draft instanceof PromptDraft) throw new Error("提示词暂存区只能用于提示词阶段");
   const dependencies = DEPENDENCIES[stage];
   const readParameters = dependencies.length === 0
     ? Type.Object({}, { additionalProperties: false })
@@ -34,7 +28,7 @@ export function createStageTools(store: ProjectStore, projectId: string, stage: 
   const readTool =
     defineTool<typeof readParameters, { stage: Stage | null }>({
       name: "read_upstream", label: "读上游 / Read upstream",
-      description: `按 stage 读取本阶段依赖的人工采用版本；允许：${dependencies.join(", ") || "无（topic 用空参数返回 null）"}。不接受文件路径或版本号。`,
+      description: `按 stage 读取本阶段依赖的人工采用版本；允许：${dependencies.join(", ") || "无（story 用空参数返回 null）"}。不接受文件路径或版本号。`,
       parameters: readParameters,
       async execute(_callId, params) {
         const requested = "stage" in params ? params.stage : undefined;
@@ -51,13 +45,13 @@ export function createStageTools(store: ProjectStore, projectId: string, stage: 
         return { content: [{ type: "text", text: JSON.stringify(artifact) }], details: { stage: dependency } };
       },
     });
-  if (stage === "script" || stage === "storyboard") return [readTool,
+  if (stage === "script" || stage === "board") return [readTool,
     defineTool({
       name: stage === "script" ? "write_scene" : "write_scene_shots", label: stage === "script" ? "提交单场 / Write scene" : "提交单场镜头 / Write scene shots",
-      description: `提交一场到本次运行的进行中草稿；同 scene_id 可覆盖。不会生成版本。单场契约：${JSON.stringify(stage === "script" ? SceneSchema : SceneShotsSchema)}`,
+      description: `提交一场到本次运行的进行中草稿；同 scene_id 可覆盖。不会生成版本。单场契约：${JSON.stringify(stage === "script" ? SceneSchema : BoardSceneInputSchema)}`,
       parameters: Type.Object({ scene: Type.Unknown() }, { additionalProperties: false }),
       async execute(_callId, params) {
-        const scene = decodeToolArgument(params.scene, stage === "script" ? SceneSchema : SceneShotsSchema, "scene", stage === "script" ? "scene" : "scene_shots", stats);
+        const scene = decodeToolArgument(params.scene, stage === "script" ? SceneSchema : BoardSceneInputSchema, "scene", stage === "script" ? "scene" : "scene_shots", stats);
         const details = draft.write(scene);
         return { content: [{ type: "text" as const, text: `已暂存 ${details.scene_id}；共 ${details.scene_count} 场，尚未生成版本。` }], details };
       },
@@ -139,7 +133,7 @@ export async function createStageSession(options: StageSessionOptions) {
     extensionFactories: [{ name: "stage-system-prompt", factory: replacePrompt }],
   });
   await resourceLoader.reload();
-  const draft: ScriptDraft | StoryboardDraft | PromptDraft = stage === "prompts" ? new PromptDraft(store, projectId) : stage === "storyboard" ? new StoryboardDraft(store, projectId) : new ScriptDraft(store, projectId);
+  const draft: ScriptDraft | BoardDraft = stage === "board" ? new BoardDraft(store, projectId) : new ScriptDraft(store, projectId);
   const stats: ArgumentStats = { coerced_args: 0 };
   const tools = createStageTools(store, projectId, stage, draft, stats);
   const { session } = await createAgentSession({
@@ -149,7 +143,6 @@ export async function createStageSession(options: StageSessionOptions) {
     sessionManager: SessionManager.create(root, store.sessionDir(projectId)),
   });
   argumentStats.set(session, stats);
-  if (draft instanceof PromptDraft) promptDrafts.set(session, draft);
-  else if (stage === "script" || stage === "storyboard") sceneDrafts.set(session, draft);
+  if (stage === "script" || stage === "board") sceneDrafts.set(session, draft);
   return session;
 }

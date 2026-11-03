@@ -57,10 +57,10 @@ export function useProjectWorkspace(id: string, config: ServerConfig) {
 
   const items: TimelineItem[] = timelineQuery.data?.items ?? [];
   const placeholder = project?.running
-    ? "正在运行…"
+    ? "正在生成草稿，请稍候…"
     : Object.values(project?.stages ?? {}).some(s => s.status === "pending_review")
-      ? "对这一版提修改意见，例如：把第二场改得更紧张"
-      : "描述你想拍的短片…";
+      ? "直接输入修改意见，例如：把第二场的对话改得更紧凑…"
+      : "描述你想拍的短片，例如题材、主角或一个画面…";
 
   async function send(text: string) {
     setError("");

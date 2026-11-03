@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export function BibleImpactNotice({ project, stage }: { project: ProjectDetail; stage: Stage }) {
   const impact = project.bible_impact;
-  const hasImpact = Boolean(impact && (stage === "bible" || stage === "storyboard" || stage === "prompts"));
+  const hasImpact = Boolean(impact && (stage === "bible" || stage === "board"));
   const [open, setOpen] = useState(() => Boolean(impact && impact.changes.length > 0));
   if (!hasImpact || !impact) return null;
 
@@ -41,7 +41,6 @@ export function BibleImpactNotice({ project, stage }: { project: ProjectDetail; 
               ))}
             </ul>
             <p>受影响镜头：{impact.shots.join("、") || "无"}</p>
-            <p>受影响提示词：{impact.prompts.join("、") || "无"}</p>
           </>
         ) : (
           <p>没有设定条目变化。</p>

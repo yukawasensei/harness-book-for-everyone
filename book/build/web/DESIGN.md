@@ -40,13 +40,13 @@ button、card、badge、dialog、alert-dialog、dropdown-menu、tabs、tooltip�
 路径：`features/chat` 时间线卡片；`features/artifacts` 右栏产物；`features/sessions` 会话列表。跨 feature 只经对方 `index.ts`。
 
 1. **EmptyState（空状态）**：居中引导；标题「你想拍一部什么样的短片？」；内嵌 Composer；三张示例（深空孤舰、老钟表店、雨夜古渡）；底注六阶段交稿说明。
-2. **PlanCard（计划卡）**：可折叠「制作计划」；六工序纵向清单；状态：已采用 / 进行中·待审阅 / 待更新 / 未开始；徽标 `已采用数/6`。
-3. **ReviewCard（审阅卡）**：时间线内审阅；采用 / 丢弃 / 要求修改（展开意见框）；可跳转查看产物。
+2. **PlanCard（计划卡，已废弃删除）**：v2 全面重构为四道工序（故事 → 剧本 → 设定集 → 分镜板），工序进度与状态统一收敛至顶部/右栏 StageNav 与对话流交稿卡，废弃旧版六工序纵向计划卡。
+3. **ReviewCard（交稿卡）**：时间线内交稿摘要 +「查看并审阅」；签字只在右栏 ReviewPanel。
 4. **ToolCallCard（工具调用卡）**：工具中文名；running / success / error；折叠参数与结果。
 5. **SystemNotice（系统提示卡）**：error / quota / stale / info 四型；可选操作按钮。
 6. **RunStatusBar（运行状态条）**：「正在写{阶段}…」+ 可选「中断」。
-7. **StageNav（阶段导航）**：六阶段纵列；状态点（success / primary / warning / 灰）；标注当前与「下一步」。
-8. **ArtifactPreview（产物预览）**：按阶段渲染；强制换行防横向滚动；提示词用 model/injected 语义色；设定与技术详情用 Collapsible。
+7. **StageNav（阶段导航）**：四阶段纵列；状态点（success / primary / warning / 灰）；标注当前与「下一步」。
+8. **ArtifactPreview（产物预览）与 BoardPreview（分镜板）**：按阶段结构化渲染；强制换行防横向滚动。分镜板按场分组，展示场次小标题（场号、地点、时间）、镜号、景别、运镜、动作与画面、对白与声音、时长、设定引用名称与等宽 ID；画面提示词分蓝色镜头描写（model）与绿色设定注入（injected），配图例与单镜复制；顶部支持 Markdown 导出；待更新状态下提供黄色横幅与零模型重新拼装。
 9. **RunSummaryCard（运行摘要）**：当前/最近运行文案、开始时间、耗时与用量、错误明细。
 
 相关配套（非上列九卡）：SessionList、Composer、VersionPicker、MoreActionsMenu、ReviewPanel、RatingDialog / RatingPanel。

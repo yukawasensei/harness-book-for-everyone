@@ -1,3 +1,4 @@
+import { boardInput } from "../contracts/board.js";
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { STAGES, type Stage } from '../contracts/index.js';
@@ -16,17 +17,14 @@ function fakeTurns(root: string, stage: Stage): Turn[] {
     ...artifact.scenes.map((scene: any) => ({ call: 'write_scene', args: { scene } })),
     { call: 'finalize_draft', args: {} }, { text: '完成，等待人审' },
   ];
-  if (stage === 'storyboard') return [
+  if (stage === 'board') {
+    const artifactInput = boardInput(artifact);
+    return [
     { call: 'write_scene_shots', args: { scene: {} } },
-    ...[...new Set<string>(artifact.shots.map((s: any) => s.scene_id))].map(scene_id => ({ call: 'write_scene_shots', args: { scene: { scene_id, shots: artifact.shots.filter((s: any) => s.scene_id === scene_id) } } })),
+    ...[...new Set<string>(artifactInput.shots.map((s: any) => s.scene_id))].map(scene_id => ({ call: 'write_scene_shots', args: { scene: { scene_id, shots: artifactInput.shots.filter((s: any) => s.scene_id === scene_id) } } })),
     { call: 'finalize_draft', args: {} }, { text: '完成，等待人审' },
   ];
-  if (stage === 'prompts') return [
-    { call: 'list_shots', args: {} },
-    { call: 'write_shot_prompt', args: { shot_id: 'S99-99', shot_part: '错误引用用于验证拒绝与修正' } },
-    ...artifact.items.flatMap((item: any) => [{ call: 'read_shot', args: { shot_id: item.shot_id } }, { call: 'write_shot_prompt', args: { shot_id: item.shot_id, shot_part: item.shot_part } }]),
-    { call: 'finalize_draft', args: {} }, { text: '完成，等待人审' },
-  ];
+  }
   return [{ call: 'write_draft', args: { artifact: {} } }, { call: 'write_draft', args: { artifact } }, { text: '完成，等待人审' }];
 }
 export async function evaluateCase(root: string, outputRoot: string, spec: EvalCase, fake: boolean, options: { turns?: Turn[]; timeoutMs?: number; waitForAbort?: boolean } = {}): Promise<Result> {

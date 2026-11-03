@@ -12,19 +12,17 @@ export interface StageState {
 export type Workflow = Record<Stage, StageState>;
 
 export const DEPENDENCIES: Readonly<Record<Stage, readonly Stage[]>> = {
-  topic: [],
-  synopsis: ["topic"],
-  script: ["synopsis"],
+  story: [],
+  script: ["story"],
   bible: ["script"],
-  storyboard: ["script", "bible"],
-  prompts: ["storyboard", "bible"],
+  board: ["story", "script", "bible"],
 };
 
 export function initialWorkflow(): Workflow {
   const blank = (status: StageStatus = "locked"): StageState => ({ status, versions: [], adopted_version: null });
   return {
-    topic: blank("ready"), synopsis: blank(), script: blank(),
-    bible: blank(), storyboard: blank(), prompts: blank(),
+    story: blank("ready"), script: blank(),
+    bible: blank(), board: blank(),
   };
 }
 

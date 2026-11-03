@@ -1,0 +1,339 @@
+{
+  "pipeline_version": "reelloom-4stage-v1",
+  "model": "ollama/qwen3.8:27b",
+  "total": 4,
+  "passCount": 4,
+  "cases": [
+    {
+      "id": "story-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "story-draft",
+          "stage": "story",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 4,
+          "max_turns": 8,
+          "duration_ms": 112835,
+          "tool_calls": 3,
+          "rejected_calls": 1,
+          "coerced_args": 1,
+          "errors": [
+            "{\"content\":[{\"type\":\"text\",\"text\":\"参数 artifact：期望 对象(object)，实际 字符串(string)，但不是合法 JSON；请检查双引号、逗号和括号；正确示例（此处的值）：{}。保留其余必填字段。\"}],\"details\":{}}"
+          ],
+          "project": "projects/d588ed1a-e7e8-4fe8-9b62-6ea7c2904ddd",
+          "usage": {
+            "input": 2201,
+            "output": 2760,
+            "cacheRead": 7187,
+            "cacheWrite": 0,
+            "totalTokens": 12148,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    },
+    {
+      "id": "script-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "script-draft",
+          "stage": "script",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 7,
+          "max_turns": 20,
+          "duration_ms": 71358,
+          "tool_calls": 6,
+          "rejected_calls": 0,
+          "coerced_args": 4,
+          "errors": [],
+          "project": "projects/7cbf5d2e-9b4d-4a04-ae47-396a4fd0badb",
+          "usage": {
+            "input": 2811,
+            "output": 2427,
+            "cacheRead": 17865,
+            "cacheWrite": 0,
+            "totalTokens": 23103,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "scene_changes": {
+            "revise_from": null,
+            "resubmitted": [
+              "S01",
+              "S02",
+              "S03",
+              "S04"
+            ],
+            "reused": [],
+            "removed": []
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    },
+    {
+      "id": "bible-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "bible-draft",
+          "stage": "bible",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 3,
+          "max_turns": 8,
+          "duration_ms": 93733,
+          "tool_calls": 2,
+          "rejected_calls": 0,
+          "coerced_args": 1,
+          "errors": [],
+          "project": "projects/e39ed2f1-52c3-41e1-91f8-3d284dbd92c5",
+          "usage": {
+            "input": 6690,
+            "output": 4481,
+            "cacheRead": 4316,
+            "cacheWrite": 0,
+            "totalTokens": 15487,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    },
+    {
+      "id": "board-draft",
+      "pass": true,
+      "pass_rate": 1,
+      "attempts": [
+        {
+          "id": "board-draft",
+          "stage": "board",
+          "pass": true,
+          "completed": true,
+          "version": 1,
+          "stop_reason": "draft_written",
+          "turns": 5,
+          "max_turns": 24,
+          "duration_ms": 136609,
+          "tool_calls": 8,
+          "rejected_calls": 2,
+          "coerced_args": 5,
+          "errors": [
+            "{\"content\":[{\"type\":\"text\",\"text\":\"S02-04 提到“陆岑”，该角色 陆岑 不在本镜角色引用中；请移除镜头外角色，或回到分镜修正引用\"}],\"details\":{}}",
+            "{\"content\":[{\"type\":\"text\",\"text\":\"S03-02 提到“陆岑”，该角色 陆岑 不在本镜角色引用中；请移除镜头外角色，或回到分镜修正引用\"}],\"details\":{}}"
+          ],
+          "project": "projects/9987f7d7-0ed4-4e0f-951a-bfa82e5867de",
+          "usage": {
+            "input": 7935,
+            "output": 7178,
+            "cacheRead": 24337,
+            "cacheWrite": 0,
+            "totalTokens": 39450,
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0,
+              "total": 0
+            }
+          },
+          "scene_changes": {
+            "revise_from": null,
+            "resubmitted": [
+              "S01",
+              "S02",
+              "S03"
+            ],
+            "reused": [],
+            "removed": []
+          },
+          "attempt": 1
+        }
+      ],
+      "stop_reasons": {
+        "draft_written": 1
+      }
+    }
+  ],
+  "by_stage": {
+    "story": {
+      "attempts": 1,
+      "duration_ms": 112835,
+      "coerced_args": 1,
+      "usage": {
+        "input": 2201,
+        "output": 2760,
+        "cacheRead": 7187,
+        "cacheWrite": 0,
+        "totalTokens": 12148,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    "script": {
+      "attempts": 1,
+      "duration_ms": 71358,
+      "coerced_args": 4,
+      "usage": {
+        "input": 2811,
+        "output": 2427,
+        "cacheRead": 17865,
+        "cacheWrite": 0,
+        "totalTokens": 23103,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    "bible": {
+      "attempts": 1,
+      "duration_ms": 93733,
+      "coerced_args": 1,
+      "usage": {
+        "input": 6690,
+        "output": 4481,
+        "cacheRead": 4316,
+        "cacheWrite": 0,
+        "totalTokens": 15487,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    "board": {
+      "attempts": 1,
+      "duration_ms": 136609,
+      "coerced_args": 5,
+      "usage": {
+        "input": 7935,
+        "output": 7178,
+        "cacheRead": 24337,
+        "cacheWrite": 0,
+        "totalTokens": 39450,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    }
+  },
+  "completion_rate": 1,
+  "coerced_args": 11,
+  "coerced_args_unknown": 0,
+  "tool_calls": 19,
+  "rejected_calls": 3,
+  "rejection_rate": 0.15789473684210525,
+  "usage": {
+    "input": 19637,
+    "output": 16846,
+    "cacheRead": 53705,
+    "cacheWrite": 0,
+    "totalTokens": 90188,
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0
+    }
+  },
+  "repeat": 1,
+  "fake": false,
+  "timeout_ms": 600000,
+  "case_specs": [
+    {
+      "id": "story-draft",
+      "stage": "story",
+      "fixtures": {},
+      "max_turns": 8,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    },
+    {
+      "id": "script-draft",
+      "stage": "script",
+      "fixtures": {
+        "story": "story.json"
+      },
+      "max_turns": 20,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    },
+    {
+      "id": "bible-draft",
+      "stage": "bible",
+      "fixtures": {
+        "story": "story.json",
+        "script": "script.json"
+      },
+      "max_turns": 8,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    },
+    {
+      "id": "board-draft",
+      "stage": "board",
+      "fixtures": {
+        "story": "story.json",
+        "script": "script.json",
+        "bible": "bible.json"
+      },
+      "max_turns": 24,
+      "instructions": "创作原创短片《留给风的一格》，围绕旧候船亭留言角与等待展开。保持采用上游中的人物、场次与编号。"
+    }
+  ],
+  "run_dir": "evals/runs/local/ollama-qwen3-8-27b/2026-11-03T13-24-18-357Z-ade15417"
+}

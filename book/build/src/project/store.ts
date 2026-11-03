@@ -1,19 +1,20 @@
+import { PROJECT_FORMAT, ProjectFormatUnsupported, validateProjectFormat } from "./format.js";
 import { assertId, containedPath, tenantRoot } from "./paths.js";
 import { validateRating, SCORE_LABELS, type Ratings, type Dimension } from "./ratings.js";
-import { assembleShotPrompt, validatePromptReferences } from "../contracts/prompts.js";
+import { assembleBoard, boardInput, validateBoard } from "../contracts/board.js";
 import { randomUUID } from "node:crypto";
 import { appendFileSync, closeSync, existsSync, fstatSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { STAGES, parseStage, validateArtifact, validateBibleCoverage, validateStoryboardReferences, validateVersionMetadata, type Artifacts, type Stage, type VersionMetadata } from "../contracts/index.js";
+import { STAGES, parseStage, validateArtifact, validateBibleCoverage, validateVersionMetadata, type Artifacts, type Stage, type VersionMetadata } from "../contracts/index.js";
 import { adoptDraft, assertAdopted, assertRunnable, initialWorkflow, recordDraft, reviewDraft, reviewOf, type Workflow } from "../workflow/index.js";
 import { compareBible, currentBasis, refreshStale, sameBasis, type Basis, type Provenance, type Source } from "./provenance.js";
 import { readOptional, writeJson, type Checkpoint } from "./checkpoints.js";
 import type { RunInfo, TimelineItem } from "../server/protocol.js";
 
 export interface Project {
+  format_version: typeof PROJECT_FORMAT;
   id: string;
   title: string;
-  autopilot?: boolean;
   stages: Workflow;
   version_metadata?: Partial<Record<Stage, Record<number, VersionMetadata>>>;
   provenance?: Provenance;
@@ -42,7 +43,7 @@ export class ProjectStore {
 
   create(title: string): Project {
     if (!title.trim()) throw new Error("项目标题不能为空");
-    const project: Project = { id: randomUUID(), title: title.trim(), autopilot: true, stages: initialWorkflow() };
+    const project: Project = { format_version: PROJECT_FORMAT, id: randomUUID(), title: title.trim(), stages: initialWorkflow() };
     mkdirSync(this.projectDir(project.id), { recursive: true });
     this.save(project);
     return project;
@@ -72,7 +73,11 @@ export class ProjectStore {
         const project = this.load(entry.name); // 复用 ID 与 project.json 检查。
         if (project.id !== entry.name) throw new Error("项目 ID 与目录不一致");
         projects.push(project);
-      } catch {
+      } catch (error) {
+        if (error instanceof ProjectFormatUnsupported) {
+          console.warn(`跳过不兼容项目条目 ${JSON.stringify(entry.name)}：PROJECT_FORMAT_UNSUPPORTED`);
+          continue;
+        }
         // 不输出异常原文或文件内容；名称转义，保证每个跳过项仅记一行。
         console.warn(`跳过无效项目条目 ${JSON.stringify(entry.name)}：不是可读取的项目目录`);
       }
@@ -83,10 +88,11 @@ export class ProjectStore {
   load(id: string): Project {
     const file = this.path(id, "project.json");
     try {
-      const project = JSON.parse(readFileSync(file, "utf8")) as Project;
+      const project: unknown = JSON.parse(readFileSync(file, "utf8"));
+      validateProjectFormat(project);
       if (project.id !== id) throw new Error("项目 ID 与目录不一致");
-      // 旧项目继续保留原来的手动推进；新建项目显式存 true。
-      project.autopilot ??= false;
+      // 同格式项目曾保存的设置不再影响策略，也不进入 DTO 或后续保存。
+      Reflect.deleteProperty(project, "autopilot");
       for (const state of Object.values(project.stages)) {
         for (const version of state.versions) (state.reviews ??= {})[version] ??= reviewOf(state, version);
       }
@@ -103,14 +109,6 @@ export class ProjectStore {
     const temp = this.path(project.id, "project.json.tmp");
     writeFileSync(temp, `${JSON.stringify(project, null, 2)}\n`, { mode: 0o600 });
     renameSync(temp, target);
-  }
-
-  setAutopilot(id: string, autopilot: boolean): Project {
-    const project = this.load(id);
-    project.autopilot = autopilot;
-    this.save(project);
-    this.auditAction(id, "autopilot_changed", { autopilot });
-    return project;
   }
 
   readConversation(id: string): TimelineItem[] | null {
@@ -192,7 +190,7 @@ export class ProjectStore {
     return this.path(id, "artifacts", stage, `v${version}.json`);
   }
 
-  writeDraft<S extends Stage>(id: string, stage: S, artifact: unknown, generatedBy?: Source["generated_by"]): number {
+  writeDraft<S extends Stage>(id: string, stage: S, artifact: unknown, generatedBy?: Source["generated_by"], reassembledFrom?: number): number {
     parseStage(stage);
     const project = this.load(id);
     assertRunnable(project.stages, stage);
@@ -204,7 +202,8 @@ export class ProjectStore {
     recordDraft(project.stages, stage, version);
     const sources: Provenance = project.provenance ??= {};
     const stageSources: Record<number, Source> = sources[stage] ??= {};
-    stageSources[version] = { based_on: currentBasis(project.stages, stage), ...(generatedBy ? { generated_by: generatedBy } : {}) };
+    stageSources[version] = { based_on: currentBasis(project.stages, stage), ...(stage === "board" ? { assembly_template: (artifact as Artifacts["board"]).assembly_template } : {}), ...(generatedBy ? { generated_by: generatedBy, reassembled_from: reassembledFrom } : {}) };
+    if (stage === "board") refreshStale(project.stages, sources, stage);
     this.save(project);
     return version;
   }
@@ -251,6 +250,7 @@ export class ProjectStore {
     parseStage(stage);
     const project = this.load(id);
     reviewDraft(project.stages, stage, version, status, note);
+    if (stage === "board") refreshStale(project.stages, project.provenance ?? {}, stage);
     this.save(project);
     this.audit(project, stage, version);
     return project;
@@ -269,8 +269,8 @@ export class ProjectStore {
     if (review.status !== "changes_requested" || !review.note?.trim()) {
       throw new Error(`不能按意见修改 ${stage} v${version}：必须是有修改意见的 changes_requested 版本`);
     }
-    const original_json = readFileSync(this.artifactPath(id, stage, version), "utf8");
-    this.readVersion(id, stage, version);
+    const artifact = this.readVersion(id, stage, version);
+    const original_json = stage === "board" ? JSON.stringify(boardInput(artifact as Artifacts["board"]), null, 2) : readFileSync(this.artifactPath(id, stage, version), "utf8");
     return { original_json, note: review.note };
   }
 
@@ -286,6 +286,10 @@ export class ProjectStore {
     if (!this.load(id).stages[stage].versions.includes(version)) throw new Error(`草稿版本不存在：${stage} v${version}`);
     const artifact: unknown = JSON.parse(readFileSync(file, "utf8"));
     const source = this.load(id).provenance?.[stage]?.[version];
+    if (stage === "board") {
+      validateArtifact(stage, artifact);
+      if (!source || source.assembly_template !== (artifact as Artifacts["board"]).assembly_template) throw new Error("分镜板来源记录或拼装模板身份缺失/不一致");
+    }
     // 历史版本按原始来源校验；人工确认仅更新有效性声明，不改历史内容。
     if (source) this.validate(id, stage, artifact, source.original_based_on ?? source.based_on);
     else validateArtifact(stage, artifact);
@@ -301,8 +305,7 @@ export class ProjectStore {
       }
       return this.readAdopted(id, dependency);
     };
-    if (stage === "prompts") validatePromptReferences(artifact as Artifacts["prompts"], read("storyboard"), read("bible"));
-    if (stage === "storyboard") validateStoryboardReferences(artifact as Artifacts["storyboard"], read("script"), read("bible"));
+    if (stage === "board") { read("story"); validateBoard(artifact, read("script"), read("bible")); }
     if (stage === "bible") validateBibleCoverage(artifact as Artifacts["bible"], read("script"));
   }
 
@@ -329,15 +332,13 @@ export class ProjectStore {
 
   bibleImpact(id: string) {
     const project = this.load(id), current = project.stages.bible.adopted_version;
-    const adopted = project.stages.storyboard.adopted_version;
-    const source = adopted === null ? undefined : project.provenance?.storyboard?.[adopted]?.based_on.bible;
-    if (current === null || source === undefined) return { unknown: true, from: null, to: current, changes: [], shots: [], prompts: [] };
+    const version = project.stages.board.versions.at(-1);
+    const source = version === undefined ? undefined : project.provenance?.board?.[version]?.based_on.bible;
+    if (current === null || source === undefined) return { unknown: true, from: null, to: current, changes: [], shots: [] };
     const changes = compareBible(this.readVersion(id, "bible", source), this.readVersion(id, "bible", current));
     const ids = new Set(changes.map(c => c.id));
-    const shots = this.readVersion(id, "storyboard", adopted!).shots.filter(s => [s.location_id, ...s.character_ids, ...s.prop_ids].some(i => ids.has(i))).map(s => s.shot_id);
-    const pv = project.stages.prompts.adopted_version;
-    const prompts = pv === null ? [] : this.readVersion(id, "prompts", pv).items.filter(i => i.injected_ids.some(id => ids.has(id))).map(i => i.shot_id);
-    return { unknown: false, from: source, to: current, changes, shots, prompts };
+    const shots = this.readVersion(id, "board", version!).shots.filter(s => [s.location_id, ...s.character_ids, ...s.prop_ids].some(i => ids.has(i))).map(s => s.shot_id);
+    return { unknown: false, from: source, to: current, changes, shots };
   }
 
   reassembleReason(id: string): string | null {
@@ -349,23 +350,25 @@ export class ProjectStore {
   }
 
   private reassemblyInput(id: string) {
-    const project = this.load(id), version = project.stages.prompts.adopted_version;
-    assertRunnable(project.stages, "prompts");
-    if (version === null || project.stages.prompts.status !== "stale") throw new Error("重新拼装需要待更新的采用提示词");
-    const basis = project.provenance?.prompts?.[version]?.based_on;
-    if (!basis?.bible || basis.storyboard !== project.stages.storyboard.adopted_version) throw new Error("来源未知或分镜版本变化，请重新运行提示词");
+    const project = this.load(id), version = project.stages.board.versions.at(-1);
+    assertRunnable(project.stages, "board");
+    if (version === undefined || project.stages.board.status !== "stale") throw new Error("重新拼装需要待更新的最新分镜板");
+    const source = project.provenance?.board?.[version];
+    const basis = source?.original_based_on ?? source?.based_on;
+    if (!basis?.bible || basis.script !== project.stages.script.adopted_version || basis.story !== project.stages.story.adopted_version) throw new Error("来源未知或故事/剧本版本变化，请重新运行分镜板");
+    const original = this.readVersion(id, "board", version);
     const bible = this.readAdopted(id, "bible");
     const changes = compareBible(this.readVersion(id, "bible", basis.bible), bible);
     if (!changes.length || changes.some(c => c.fields.some(f => !["appearance", "description"].includes(f)))) throw new Error("仅固定描述（appearance/description）变化时可重新拼装");
-    return { bible, board: this.readAdopted(id, "storyboard"), original: this.readVersion(id, "prompts", version) };
+    return { bible, original, version };
   }
 
-  reassemblePrompts(id: string, confirmed = false) {
+  reassembleBoard(id: string, confirmed = false) {
     if (!confirmed) throw new Error("重新拼装需要二次确认");
-    const { bible, board, original } = this.reassemblyInput(id);
-    const parts = new Map(original.items.map(i => [i.shot_id, i.shot_part]));
-    const version = this.writeDraft(id, "prompts", { items: board.shots.map(s => assembleShotPrompt(s, bible, parts.get(s.shot_id)!)) }, "reassemble");
-    this.auditAction(id, "reassemble", { stage: "prompts", version, model_calls: 0 });
+    const { bible, original, version: sourceVersion } = this.reassemblyInput(id);
+    const board = assembleBoard(boardInput(original), this.readAdopted(id, "script"), bible);
+    const version = this.writeDraft(id, "board", board, "reassemble", sourceVersion);
+    this.auditAction(id, "reassemble", { stage: "board", version, reassembled_from: sourceVersion, model_calls: 0 });
     return version;
   }
 
@@ -379,7 +382,7 @@ export class ProjectStore {
     const saved = this.readStaging(id, stage);
     if (!saved || saved.snapshot.finalized_version !== null) throw new Error("没有可继续的暂存");
     if (!sameBasis(saved.based_on, currentBasis(this.load(id).stages, stage))) throw new Error("暂存来源已变化，请重新开始");
-    const source = (saved.snapshot.scene_changes ?? saved.snapshot.shot_changes)?.revise_from ?? null;
+    const source = saved.snapshot.scene_changes?.revise_from ?? null;
     if (source !== (reviseFrom ?? null)) throw new Error("暂存修改来源不同，请重新开始或选择原修改版本");
     return saved;
   }

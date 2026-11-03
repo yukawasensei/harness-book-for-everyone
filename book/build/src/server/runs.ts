@@ -13,7 +13,7 @@ import type { MessageResponse, ProjectDetail, RunInfo, RunResult, RunOutcome } f
 import type { ResumeChoice } from "../project/checkpoints.js";
 import { ProjectTimeline } from "./timeline.js";
 
-const stageNames: Record<Stage, string> = { topic: "选题", synopsis: "梗概", script: "剧本", bible: "设定集", storyboard: "分镜", prompts: "提示词" };
+const stageNames: Record<Stage, string> = { story: "故事", script: "剧本", bible: "设定集", board: "分镜板" };
 function pendingVersion(state: ReturnType<ProjectStore["load"]>["stages"][Stage]) {
   return [...state.versions].reverse().find(v => v > (state.adopted_version ?? 0) && reviewOf(state, v).status === "pending");
 }
@@ -50,8 +50,8 @@ export class StageRuns {
     const staging = Object.fromEntries(STAGES.map(stage => {
       const saved = this.store.readStaging(id, stage);
       return [stage, saved?.snapshot.finalized_version === null ? {
-        count: (saved.snapshot.scenes ?? saved.snapshot.items ?? []).length,
-        revise_from: (saved.snapshot.scene_changes ?? saved.snapshot.shot_changes)?.revise_from ?? null,
+        count: (saved.snapshot.scenes ?? []).length,
+        revise_from: saved.snapshot.scene_changes?.revise_from ?? null,
         based_on: saved.based_on,
       } : null];
     })) as ProjectDetail["staging"];
@@ -108,11 +108,13 @@ export class StageRuns {
   }
 
   async autoAdvance(id: string, adoptedStage: Stage) {
-    if (!this.store.load(id).autopilot || this.active.has(id) || this.closing) return;
+    if (this.active.has(id) || this.closing) return;
+    const project = this.store.load(id);
     // 有任何待审稿时仍需人先签字；一次采用最多启动一道。
-    if (Object.values(this.store.load(id).stages).some(state => pendingVersion(state) !== undefined)) return;
-    const stage = this.nextStage(id);
-    if (!stage) return;
+    if (Object.values(project.stages).some(state => pendingVersion(state) !== undefined)) return;
+    const stage = STAGES[STAGES.indexOf(adoptedStage) + 1];
+    // 历史换版后的 stale 下游必须显式返工，不跳过下一道去扫描别处。
+    if (!stage || project.stages[stage].status !== "ready" || project.stages[stage].adopted_version !== null) return;
     try {
       await this.start(id, stage, "", undefined, { autoAfter: adoptedStage });
     } catch (error) {
@@ -128,7 +130,7 @@ export class StageRuns {
     validation(() => {
       assertRunnable(this.store.load(id).stages, stage); stagePrompt(stage);
       if (this.store.load(id).stages[stage].adopted_version !== null && !options.confirmed) throw new Error("已采用阶段再次运行需要二次确认");
-      const saved = ["script", "storyboard", "prompts"].includes(stage) ? this.store.readStaging(id, stage) : null;
+      const saved = ["script", "board"].includes(stage) ? this.store.readStaging(id, stage) : null;
       if (saved?.snapshot.finalized_version === null && !options.staging) throw new Error("存在暂存，请选择从暂存继续或重新开始");
       if (options.staging === "resume") this.store.assertStagingCurrent(id, stage, reviseFrom);
       if (reviseFrom !== undefined) this.store.revisionContext(id, stage, reviseFrom);
@@ -198,8 +200,8 @@ export class StageRuns {
     this.events.publish(id, { type: "run_started", run: run.info });
     if (options.staging === "resume") {
       const saved = this.store.assertStagingCurrent(id, stage, reviseFrom);
-      const ids = saved.snapshot.items?.map(item => item.shot_id) ?? saved.snapshot.scenes?.map(scene => scene.scene_id) ?? [];
-      this.events.publish(id, { type: "staging_restored", stage, run_id: run.info.id, ids, unit: stage === "prompts" ? "镜" : "场" });
+      const ids = saved.snapshot.scenes?.map(scene => scene.scene_id) ?? [];
+      this.events.publish(id, { type: "staging_restored", stage, run_id: run.info.id, ids, unit: "场" });
     }
     this.notify(id);
     void this.execute(id, session, run, instructions, unsubscribe, reviseFrom, options, release).catch(() => {

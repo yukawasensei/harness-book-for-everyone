@@ -18,7 +18,7 @@ const hosting: HostingOptions = { mode: "hosted", tokens, maxConcurrent: 1, dail
 const factory: SessionFactory = async options => {
   const session = await createStageSession({ ...options, root: packageRoot });
   session.agent.streamFunction = fakeStream(session.model!, [
-    { call: "write_draft", args: { artifact: sample("topic") }, text: `服务路径 ${options.store.sessionDir(options.projectId)}` }, { text: "请审阅" },
+    { call: "write_draft", args: { artifact: sample("story") }, text: `服务路径 ${options.store.sessionDir(options.projectId)}` }, { text: "请审阅" },
   ]).fn;
   return session;
 };
@@ -62,11 +62,11 @@ test("两个租户列表、读写、评分、运行、中断、SSE 与原始会�
   for (const [user, own, other] of [["alice", a, b], ["bob", b, a]] as const) {
     const list = await (await f.request("/api/projects", user)).json() as ProjectDetail[];
     assert.deepEqual(list.map(p => p.id), [own.id]);
-    for (const suffix of ["", "/events", "/ratings", "/stages/topic/versions/1", "/sessions"]) {
+    for (const suffix of ["", "/events", "/ratings", "/stages/story/versions/1", "/sessions"]) {
       const response = await f.request(`/api/projects/${other.id}${suffix}`, user);
       assert.equal(response.status, 404, suffix); assert.equal((await response.json()).error, "项目不存在");
     }
-    for (const suffix of ["abort", "stages/topic/run", "stages/topic/adopt", "stages/topic/discard", "stages/topic/request-changes", "stages/topic/confirm-valid", "stages/prompts/reassemble", "stages/topic/rating"]) {
+    for (const suffix of ["abort", "stages/story/run", "stages/story/adopt", "stages/story/discard", "stages/story/request-changes", "stages/story/confirm-valid", "stages/board/reassemble", "stages/story/rating"]) {
       assert.equal((await f.request(`/api/projects/${other.id}/${suffix}`, user, { version: 1 })).status, 404, suffix);
     }
     assert.equal((await f.request(`/api/projects/${own.id}/sessions/raw.jsonl`, user)).status, 404);
@@ -98,8 +98,8 @@ test("真实路径检查阻止项目、嵌套文件、暂存临时文件与用�
   symlinkSync(join(other.projectDir(b.id), "project.json"), join(store.projectDir(a.id), "staging", "script.json.tmp"));
   assert.throws(() => store.saveStaging(a.id, "script", { finalized_version: null }), /越界/);
   mkdirSync(join(store.projectDir(a.id), "artifacts"));
-  symlinkSync(other.projectDir(b.id), join(store.projectDir(a.id), "artifacts", "topic"));
-  assert.throws(() => store.writeDraft(a.id, "topic", sample("topic")), /越界/);
+  symlinkSync(other.projectDir(b.id), join(store.projectDir(a.id), "artifacts", "story"));
+  assert.throws(() => store.writeDraft(a.id, "story", sample("story")), /越界/);
   symlinkSync(join(other.projectDir(b.id), "missing"), join(store.projectDir(a.id), "sessions"));
   assert.throws(() => store.sessionDir(a.id), /无效|越界/);
   renameSync(store.root, store.root + "-original");
@@ -113,19 +113,19 @@ test("每用户并发在会话初始化期间预占；其他租户独立，中�
   const gate = new Promise<void>(resolve => { ready = resolve; });
   const f = await setup(t, hosting, async options => { if (options.store.userId === "alice") await gate; return factory(options); });
   const a = await f.create(), a2 = await f.create(), b = await f.create("bob");
-  const start = f.request(`/api/projects/${a.id}/stages/topic/run`, "alice", {});
+  const start = f.request(`/api/projects/${a.id}/stages/story/run`, "alice", {});
   try {
     for (let attempt = 0; attempt < 100; attempt++) {
       if ((await (await f.request("/api/quota")).json()).active === 1) break;
       await setTimeout(10);
     }
-    const response = await f.request(`/api/projects/${a2.id}/stages/topic/run`, "alice", {});
+    const response = await f.request(`/api/projects/${a2.id}/stages/story/run`, "alice", {});
     assert.equal(response.status, 429); assert.match((await response.json()).error, /并发/);
-    assert.equal((await f.request(`/api/projects/${b.id}/stages/topic/run`, "bob", {})).status, 202);
+    assert.equal((await f.request(`/api/projects/${b.id}/stages/story/run`, "bob", {})).status, 202);
     assert.equal((await f.request(`/api/projects/${a.id}/abort`, "alice", {})).status, 202);
   } finally { ready(); await start; }
   await ended(f, a.id);
-  assert.equal((await f.request(`/api/projects/${a2.id}/stages/topic/run`, "alice", {})).status, 202);
+  assert.equal((await f.request(`/api/projects/${a2.id}/stages/story/run`, "alice", {})).status, 202);
   await ended(f, a2.id);
   const audit = readFileSync(join(f.dir, "projects/alice/quota-audit.jsonl"), "utf8");
   assert.match(audit, /quota_denied/); assert.ok(!audit.includes(tokens.alice));
@@ -134,29 +134,29 @@ test("每用户并发在会话初始化期间预占；其他租户独立，中�
 test("每日配额跨项目共享、落盘且重启保留；分阶段复用 usage；UTC 换日恢复", async t => {
   const config = { ...hosting, dailyRuns: 1 };
   const f = await setup(t, config), a = await f.create(), a2 = await f.create();
-  assert.equal((await f.request(`/api/projects/${a.id}/stages/topic/run`, "alice", {})).status, 202);
+  assert.equal((await f.request(`/api/projects/${a.id}/stages/story/run`, "alice", {})).status, 202);
   const result = await ended(f, a.id);
-  const response = await f.request(`/api/projects/${a2.id}/stages/topic/run`, "alice", {});
+  const response = await f.request(`/api/projects/${a2.id}/stages/story/run`, "alice", {});
   assert.equal(response.status, 429); assert.match((await response.json()).error, /今日/);
   const quota = new TenantQuota(f.dir, "alice", config);
   assert.equal(quota.snapshot().runs, 1);
-  assert.equal(quota.snapshot().stages.topic?.tokens, result.last_run?.usage?.totalTokens);
-  assert.throws(() => quota.reserve(a2.id, "topic"), /今日/);
+  assert.equal(quota.snapshot().stages.story?.tokens, result.last_run?.usage?.totalTokens);
+  assert.throws(() => quota.reserve(a2.id, "story"), /今日/);
   const second = createLocalServer({ root: f.dir, hosting: config, sessionFactory: factory });
   const base = await second.listen(0);
   try {
-    assert.equal((await fetch(`${base}/api/projects/${a2.id}/stages/topic/run`, { method: "POST", headers: { Authorization: `Bearer ${tokens.alice}`, "Content-Type": "application/json" }, body: "{}" })).status, 429);
+    assert.equal((await fetch(`${base}/api/projects/${a2.id}/stages/story/run`, { method: "POST", headers: { Authorization: `Bearer ${tokens.alice}`, "Content-Type": "application/json" }, body: "{}" })).status, 429);
   } finally { await second.close(); }
   writeFileSync(join(f.dir, "projects/alice/quota.json"), JSON.stringify({ day: "2000-01-01", runs: 900, stages: {} }));
   assert.equal(quota.snapshot().runs, 0);
-  const release = quota.reserve(a2.id, "topic"); release();
-  assert.equal(quota.snapshot().stages.topic?.usage_unknown, 1);
+  const release = quota.reserve(a2.id, "story"); release();
+  assert.equal(quota.snapshot().stages.story?.usage_unknown, 1);
 });
 
 test("会话初始化失败也计日次数、释放并发并保留真实失败状态", async t => {
   const f = await setup(t, hosting, async () => { throw new Error("初始化失败，路径 /srv/private/session.jsonl"); });
   const a = await f.create();
-  const r = await f.request(`/api/projects/${a.id}/stages/topic/run`, "alice", {});
+  const r = await f.request(`/api/projects/${a.id}/stages/story/run`, "alice", {});
   assert.equal(r.status, 422); assert.ok(!(await r.text()).includes("/srv/"));
   const quota = await (await f.request("/api/quota")).json();
   assert.equal(quota.active, 0); assert.equal(quota.runs, 1);
@@ -171,13 +171,13 @@ test("REST/SSE 对服务器路径脱敏，原始会话留在服务端，审阅 a
   let frames = "";
   const reading = (async () => { const decoder = new TextDecoder(); try { for (;;) { const r = await reader.read(); if (r.done) break; frames += decoder.decode(r.value); } } catch { if (!controller.signal.aborted) throw new Error("SSE 读取失败"); } })();
   try {
-    assert.equal((await f.request(`/api/projects/${a.id}/stages/topic/run`, "alice", {})).status, 202);
+    assert.equal((await f.request(`/api/projects/${a.id}/stages/story/run`, "alice", {})).status, 202);
     await ended(f, a.id);
-    assert.equal((await f.request(`/api/projects/${a.id}/stages/topic/adopt`, "alice", { version: 1 })).status, 200);
+    assert.equal((await f.request(`/api/projects/${a.id}/stages/story/adopt`, "alice", { version: 1 })).status, 200);
     for (let attempt = 0; !frames.includes('"run_ended"') && attempt < 100; attempt++) await setTimeout(10);
     assert.match(frames, /run_ended/); assert.ok(!frames.includes(f.dir)); assert.match(frames, /已隐藏/);
     assert.match(readFileSync(join(f.dir, "projects/alice", a.id, "audit.jsonl"), "utf8"), /"actor":"alice"/);
-    const reviewed = await f.request(`/api/projects/${a.id}/stages/topic/request-changes`, "alice", { version: 1, note: "请检查 /srv/private/session.jsonl 的草稿" });
+    const reviewed = await f.request(`/api/projects/${a.id}/stages/story/request-changes`, "alice", { version: 1, note: "请检查 /srv/private/session.jsonl 的草稿" });
     assert.equal(reviewed.status, 200);
     const payload = await reviewed.text(); assert.ok(!payload.includes("/srv/") && payload.includes("路径已隐藏"));
     assert.match(readFileSync(join(f.dir, "projects/alice", a.id, "audit.jsonl"), "utf8"), /\/srv\/private/);
@@ -253,4 +253,27 @@ test("网页 hosted SSE 使用请求头鉴权，正确拼接跨字节和跨块�
   for (let attempt = 0; frames.length !== 2 && attempt < 100; attempt++) await setTimeout(10);
   assert.deepEqual(frames, [{ id: "1", text: "中文事件" }, { id: "2", text: "完成" }]);
   assert.equal(requests, 1);
+});
+
+test("hosted 分镜板重拼装不消耗模型配额、不建会话，仍需确认及人工采用", async t => {
+  let calls = 0;
+  const config = { ...hosting, dailyRuns: 1 };
+  const f = await setup(t, config, async () => { calls++; throw new Error("重拼装不应创建模型会话"); });
+  const p = await f.create(), store = new ProjectStore(f.dir, "alice");
+  for (const stage of ["story", "script", "bible", "board"] as const) { store.writeDraft(p.id, stage, sample(stage)); store.adopt(p.id, stage, 1); }
+  const bible = sample("bible"); bible.characters[0].appearance = bible.characters[0].appearance.replace("浅灰", "深灰");
+  store.writeDraft(p.id, "bible", bible); store.adopt(p.id, "bible", 2, true);
+  const quota = new TenantQuota(f.dir, "alice", config); quota.reserve(p.id, "board")();
+  const quotaFile = join(f.dir, "projects/alice/quota.json"), before = readFileSync(quotaFile, "utf8");
+  const route = `/api/projects/${p.id}/stages/board`;
+  assert.equal((await f.request(`${route}/run`, "alice", { confirmed: true })).status, 429);
+  assert.equal((await f.request(`${route}/reassemble`, "alice", {})).status, 422);
+  assert.equal((await f.request(`${route}/reassemble`, "alice", { confirmed: true })).status, 200);
+  assert.equal(calls, 0); assert.equal(readFileSync(quotaFile, "utf8"), before);
+  assert.equal(store.load(p.id).stages.board.adopted_version, 1);
+  assert.equal(store.load(p.id).stages.board.reviews?.[2].status, "pending");
+  assert.equal((await f.request(`${route}/adopt`, "alice", { version: 2 })).status, 422);
+  assert.equal((await f.request(`${route}/adopt`, "alice", { version: 2, confirmed: true })).status, 200);
+  assert.equal(store.load(p.id).stages.board.status, "adopted");
+  assert.equal(calls, 0); assert.equal(readFileSync(quotaFile, "utf8"), before);
 });

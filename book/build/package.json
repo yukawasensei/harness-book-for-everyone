@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "tsx src/cli.ts",
-    "test": "tsx --tsconfig ./web/tsconfig.json --import ./scripts/register-web-aliases.mjs --test src/*.test.ts",
+    "test": "tsx --tsconfig ./web/tsconfig.json --import ./scripts/register-web-aliases.mjs --test src/*.test.ts web/tests/*.test.tsx",
     "lint": "eslint web/src",
     "typecheck": "tsc --noEmit && tsc -p web/tsconfig.json --noEmit",
     "dev": "node scripts/dev.mjs",

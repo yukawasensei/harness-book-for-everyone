@@ -3,11 +3,9 @@ import type { ProjectDetail } from "../../../../../src/server/protocol.js";
 import type { Stage } from "../../../../../src/contracts/index.js";
 import { stageNames } from "@/features/artifacts";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { useAutopilot } from "../hooks/use-autopilot";
 
-const STAGE_ORDER: Stage[] = ["topic", "synopsis", "script", "bible", "storyboard", "prompts"];
+const STAGE_ORDER: Stage[] = ["story", "script", "bible", "board"];
 
 function progressLabel(project: ProjectDetail): string {
   if (project.running) return `${stageNames[project.running.stage]} · 运行中`;
@@ -40,9 +38,6 @@ export function SessionList({
   onCreate: () => void;
   creating?: boolean;
 }) {
-  const autopilot = useAutopilot(selectedId);
-  const currentProject = projects.find(p => p.id === selectedId);
-
   const sorted = [...projects].sort((a, b) => {
     const diff = projectActivityTime(b) - projectActivityTime(a);
     if (diff !== 0) return diff;
@@ -57,23 +52,6 @@ export function SessionList({
           <Plus className="size-3.5" /> 新任务
         </Button>
       </div>
-
-      {currentProject && (
-        <div className="border-border/60 flex items-center justify-between border-b px-3 py-2 text-xs">
-          <span className="text-muted-foreground font-medium">自动推进</span>
-          <div className="flex items-center gap-2">
-            <span className="text-muted-foreground text-[11px]">
-              {currentProject.autopilot ? "开启" : "关闭"}
-            </span>
-            <Switch
-              checked={!!currentProject.autopilot}
-              disabled={autopilot.isPending}
-              onCheckedChange={checked => autopilot.mutate(checked)}
-              aria-label="自动推进开关"
-            />
-          </div>
-        </div>
-      )}
 
       <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2" aria-label="项目列表">
         {!sorted.length && (

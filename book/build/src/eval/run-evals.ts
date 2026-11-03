@@ -3,7 +3,7 @@ import { dirname, join, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { configuredModel, DEFAULT_MODEL, scrubSecrets } from '../agent/model.js';
-import { baselineAllowed, compare, formatReport, loadCases, parseRepeat, summarize, type Result, type Summary } from './report.js';
+import { BASELINE_FILE, assertBaseline, baselineAllowed, compare, formatReport, loadCases, parseRepeat, summarize, type Result, type Summary } from './report.js';
 import { evaluateCase } from './evaluate.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -18,8 +18,9 @@ async function main() {
   const cases = loadCases(root);
   const timeoutMs = Number(process.env.EVAL_TIMEOUT_MS ?? 600_000);
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1) throw new Error('EVAL_TIMEOUT_MS 必须为正整数');
-  const baselinePath = join(root, 'evals/baseline.json');
+  const baselinePath = join(root, BASELINE_FILE);
   const previous: Summary | undefined = model === DEFAULT_MODEL && existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, 'utf8')) : undefined;
+  if (previous !== undefined) assertBaseline(previous, cases);
   const dir = join(root, 'evals/runs/local', model.replace(/[^a-zA-Z0-9_-]/g, '-'), `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID().slice(0, 8)}`);
   mkdirSync(dir, { recursive: true });
   const results: Result[] = [];
@@ -31,16 +32,18 @@ async function main() {
     // 每次落盘，失败保留且不补跑。
     writeFileSync(join(dir, 'summary.json'), scrubSecrets(JSON.stringify({ ...summarize(model, results), repeat, fake, timeout_ms: timeoutMs, case_specs: cases, run_dir: relative(root, dir) }, null, 2)) + '\n');
   }
-  const current = { ...summarize(model, results), repeat, fake, case_specs: cases, run_dir: relative(root, dir) }, changes = compare(previous, current), report = formatReport(current, changes);
+  const current = { ...summarize(model, results), repeat, fake, timeout_ms: timeoutMs, case_specs: cases, run_dir: relative(root, dir) }, changes = compare(previous, current), report = formatReport(current, changes, previous !== undefined);
   writeFileSync(join(dir, 'report.md'), report);
   console.log(report);
   console.log(`结果：${resolve(dir).slice(root.length + 1)}/`);
   const passed = current.passCount === current.total && !changes.some(c => ['regressed', 'removed'].includes(c.kind));
   process.exitCode = passed ? 0 : 1;
   if (update && passed) {
+    assertBaseline(current, cases);
+    mkdirSync(dirname(baselinePath), { recursive: true });
     writeFileSync(`${baselinePath}.tmp`, scrubSecrets(JSON.stringify(current, null, 2)) + '\n');
     renameSync(`${baselinePath}.tmp`, baselinePath);
-    console.log('已更新 evals/baseline.json；需人工审阅后提交。');
+    console.log(`已更新 ${BASELINE_FILE}；需人工审阅后提交。`);
   }
 }
 main().catch(error => { console.error(scrubSecrets(String(error))); process.exitCode = 1; });

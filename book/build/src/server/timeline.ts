@@ -8,7 +8,7 @@ type NewItem = TimelineItem extends infer Item ? Item extends TimelineItem ? Omi
 const labels: Record<string, string> = {
   read_upstream: "读取上游产物", write_draft: "提交草稿", write_scene: "提交单场剧本",
   remove_scene: "删除场次", write_scene_shots: "提交单场分镜", remove_scene_shots: "删除单场分镜",
-  finalize_draft: "汇总草稿", list_shots: "列出镜头", read_shot: "读取镜头", write_shot_prompt: "提交镜头提示词",
+  finalize_draft: "汇总草稿",
 };
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};

@@ -10,12 +10,10 @@ export const TOOL_ARG_LABELS: Record<string, string> = {
 };
 
 const STAGE_VALUE_LABELS: Record<string, string> = {
-  topic: "选题",
-  synopsis: "梗概",
+  story: "故事",
   script: "剧本",
   bible: "设定集",
-  storyboard: "分镜脚本",
-  prompts: "分镜提示词",
+  board: "分镜脚本",
 };
 
 export type FormattedToolArgLine = { label: string; value: string };
@@ -40,7 +38,7 @@ function parseRecord(input: unknown): Record<string, unknown> | null {
       return parsed as Record<string, unknown>;
     }
   } catch {
-    // 兼容 "stage: topic, version: 1" 一类摘要
+    // 兼容 "stage: story, version: 1" 一类摘要
   }
   const pairs: Record<string, unknown> = {};
   for (const part of trimmed.split(/,\s*/)) {

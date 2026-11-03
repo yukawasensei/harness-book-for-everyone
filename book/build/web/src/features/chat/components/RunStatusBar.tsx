@@ -28,7 +28,7 @@ export function RunStatusBar({
     >
       <div className="flex items-center gap-2 text-primary font-medium">
         <Loader2 className="size-3.5 animate-spin shrink-0" />
-        <span>正在写{stageName}…</span>
+        <span>正在编写{stageName}…</span>
       </div>
       {onAbort && (
         <Button

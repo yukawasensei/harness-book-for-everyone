@@ -40,7 +40,7 @@ export function useArtifactPreview(id: string, project: ProjectDetail | null, st
   const adoptedScript = project?.stages.script.adopted_version;
   useEffect(() => {
     setBible(null); setScript(null);
-    if (stage !== "storyboard" || !adoptedBible || !adoptedScript) return;
+    if (stage !== "board" || !adoptedBible || !adoptedScript) return;
     const controller = new AbortController();
     void Promise.all([
       api<Artifacts["bible"]>(`${path}/stages/bible/versions/${adoptedBible}`, undefined, controller.signal),

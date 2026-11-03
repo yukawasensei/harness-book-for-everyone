@@ -11,7 +11,7 @@ src/
   components/ui/       shadcn 原语（无业务）
   components/common/   BrandMark、TechnicalDetails
   features/
-    sessions/          会话列表、项目选择、自动推进
+    sessions/          会话列表、项目选择
     chat/              时间线、Composer、空状态与各类消息卡
     artifacts/         阶段导航、产物预览、审阅/返工/评分
     auth/              TokenGate、配置

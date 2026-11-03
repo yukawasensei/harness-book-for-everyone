@@ -4,7 +4,7 @@ import type { Artifacts, SceneChanges, Stage } from "../../../../../src/contract
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { PromptPreview } from "./PromptPreview";
+import { BoardPreview } from "./board";
 import { BibleRoleContext } from "./BibleRoleContext";
 
 const wrap = "min-w-0 max-w-full break-words break-all";
@@ -25,12 +25,26 @@ export function ArtifactPreview({
   bible,
   script: adoptedScript,
   revision,
+  projectId,
+  version,
+  isStale,
+  onReassemble,
+  reassembleDisabled,
+  reassembleReason,
+  onExport,
 }: {
   stage: Stage;
   value: unknown;
   bible?: Artifacts["bible"] | null;
   script?: Artifacts["script"] | null;
   revision?: SceneChanges;
+  projectId?: string;
+  version?: number | null;
+  isStale?: boolean;
+  onReassemble?: () => void;
+  reassembleDisabled?: boolean;
+  reassembleReason?: string | null;
+  onExport?: () => void;
 }) {
   const changed = new Set(revision?.revise_from ? revision.resubmitted : []);
   const legend = revision?.revise_from ? (
@@ -39,50 +53,22 @@ export function ArtifactPreview({
     </p>
   ) : null;
 
-  if (stage === "prompts") {
-    return <PromptPreview value={value as Artifacts["prompts"]} revision={revision} footer={<ArtifactData value={value} />} />;
-  }
-
-  if (stage === "storyboard") {
-    const board = value as Artifacts["storyboard"];
-    const reference = (id: string) => {
-      const entry = [...(bible?.characters ?? []), ...(bible?.props ?? []), ...(bible?.locations ?? [])].find(e => e.id === id);
-      return entry ? `${entry.name}（${id}）` : id;
-    };
-    const heading = (scene: string) => adoptedScript?.scenes.find(e => e.scene_id === scene)?.heading
-      ?? reference(board.shots.find(shot => shot.scene_id === scene)!.location_id);
-
+  if (stage === "board") {
     return (
-      <div className={body}>
-        {legend}
-        {!bible && <p className="text-muted-foreground">设定集名称尚未加载，暂以编号显示引用。</p>}
-        <p className="text-muted-foreground font-medium">共 {board.shots.length} 镜 · 合计 {board.shots.reduce((s, shot) => s + shot.duration_s, 0)} 秒</p>
-        {[...new Set(board.shots.map(shot => shot.scene_id))].map(scene => (
-          <section key={scene} aria-label={`${scene} 分镜`} className={changed.has(scene) ? "scene-revised" : undefined}>
-            <div className={cn("space-y-2 rounded-lg border p-3", wrap, changed.has(scene) && "border-primary/40 bg-accent/20")}>
-              <div className="flex items-start justify-between gap-2">
-                <h3 className={cn("font-semibold text-sm text-foreground", wrap)}>{scene} · {heading(scene)}</h3>
-                {changed.has(scene) && <Badge variant="secondary" className="shrink-0 text-[10px]">本版重交</Badge>}
-              </div>
-              <div className="grid gap-2">
-                {board.shots.filter(shot => shot.scene_id === scene).map(shot => (
-                  <article key={shot.shot_id} className={cn("rounded-md border border-border/80 bg-card p-2.5 space-y-1", wrap)}>
-                    <header className="flex items-start justify-between gap-2 text-foreground">
-                      <span className={cn("font-bold break-all", wrap)}>{shot.shot_id}</span>
-                      <span className={cn("text-muted-foreground shrink-0", wrap)}>{shot.shot_size} · {shot.duration_s} 秒</span>
-                    </header>
-                    <p className={wrap}><span className="text-muted-foreground font-medium mr-1.5">机位</span>{shot.camera}</p>
-                    <p className={wrap}><span className="text-muted-foreground font-medium mr-1.5">动作</span>{shot.action}</p>
-                    {shot.dialogue && <p className={cn("text-primary", wrap)}><span className="text-muted-foreground font-medium mr-1.5">台词</span>{shot.dialogue}</p>}
-                    <p className={cn("text-muted-foreground text-[11px]", wrap)}>场景：{reference(shot.location_id)} · 角色：{shot.character_ids.map(reference).join("、") || "无"} · 道具：{shot.prop_ids.map(reference).join("、") || "无"}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </section>
-        ))}
-        <ArtifactData value={value} />
-      </div>
+      <BoardPreview
+        board={value as Artifacts["board"]}
+        bible={bible}
+        script={adoptedScript}
+        revision={revision}
+        isStale={isStale}
+        projectId={projectId}
+        version={version}
+        onReassemble={onReassemble}
+        reassembleDisabled={reassembleDisabled}
+        reassembleReason={reassembleReason}
+        onExport={onExport}
+        footer={<ArtifactData value={value} />}
+      />
     );
   }
 
@@ -119,21 +105,11 @@ export function ArtifactPreview({
     );
   }
 
-  if (stage === "topic") {
-    const topic = value as Artifacts["topic"];
+  if (stage === "story") {
+    const story = value as Artifacts["story"];
     return (
       <>
-        <pre className={cn("font-sans text-xs whitespace-pre-wrap", wrap)}>{`片名：${topic.title}\n\n一句话冲突：${topic.logline}\n\n类型：${topic.genre}\n受众：${topic.audience}\n目标时长：${topic.target_minutes} 分钟`}</pre>
-        <ArtifactData value={value} />
-      </>
-    );
-  }
-
-  if (stage === "synopsis") {
-    const syn = value as Artifacts["synopsis"];
-    return (
-      <>
-        <pre className={cn("font-sans text-xs whitespace-pre-wrap", wrap)}>{`片名：${syn.title}\n\n一句话冲突：${syn.logline}\n\n${syn.beats.map((beat, i) => formatSynopsisBeat(beat, i)).join("\n\n")}\n\n基调：${syn.tone}`}</pre>
+        <pre className={cn("font-sans text-xs whitespace-pre-wrap", wrap)}>{`片名：${story.title}\n\n一句话冲突：${story.logline}\n\n类型：${story.genre}\n受众：${story.audience}\n目标时长：${story.target_minutes} 分钟\n\n${story.beats.map((beat, i) => formatSynopsisBeat(beat, i)).join("\n\n")}\n\n基调：${story.tone}`}</pre>
         <ArtifactData value={value} />
       </>
     );

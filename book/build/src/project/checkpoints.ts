@@ -1,17 +1,15 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import type { SceneChanges, ShotChanges, Scene, SceneShots, ShotPromptInput } from "../contracts/index.js";
+import type { SceneChanges, Scene, BoardSceneInput } from "../contracts/index.js";
 import type { Basis } from "./provenance.js";
 
 export type ResumeChoice = "resume" | "restart";
 export interface Checkpoint {
   based_on: Basis;
   snapshot: {
-    scenes?: (Scene | SceneShots)[];
-    items?: ShotPromptInput[];
+    scenes?: (Scene | BoardSceneInput)[];
     finalized_version: number | null;
     scene_changes?: SceneChanges;
-    shot_changes?: ShotChanges;
   };
 }
 export function readOptional<T>(path: string): T | null {

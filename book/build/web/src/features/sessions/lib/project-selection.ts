@@ -21,8 +21,8 @@ export function restoreSelectedStage(id: string, access: StorageAccess = browser
   try {
     const saved = access().getItem(`${selectionKey}.stage.${id}`);
     if (STAGES.includes(saved as Stage)) return saved as Stage;
-  } catch { /* 存储不可用时从选题开始。 */ }
-  return "topic";
+  } catch { /* 存储不可用时从故事开始。 */ }
+  return "story";
 }
 
 export function rememberSelectedStage(id: string, stage: Stage, access: StorageAccess = browserStorage): void {

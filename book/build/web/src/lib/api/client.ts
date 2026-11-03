@@ -14,12 +14,12 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T>(
+async function request(
   path: string,
   data?: unknown,
   signal?: AbortSignal,
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE",
-): Promise<T> {
+): Promise<Response> {
   const verb = method ?? (data === undefined ? "GET" : "POST");
   const headers: Record<string, string> = {
     ...authorizationHeaders(),
@@ -31,10 +31,20 @@ export async function api<T>(
     ...(data === undefined || verb === "GET" ? {} : { body: JSON.stringify(data) }),
     signal,
   });
-  const result = await response.json();
   if (response.status === 401) throw new ApiError(401, headers.Authorization ? "令牌无效或已失效" : "未填写访问令牌");
-  if (!response.ok) throw new ApiError(response.status, result.error);
-  return result as T;
+  if (!response.ok) {
+    const result = await response.json();
+    throw new ApiError(response.status, result.error);
+  }
+  return response;
+}
+
+export async function api<T>(...args: Parameters<typeof request>): Promise<T> {
+  return (await request(...args)).json() as Promise<T>;
+}
+
+export async function apiText(path: string): Promise<string> {
+  return (await request(path)).text();
 }
 
 /** 仅收到服务端接收结果后，才向对话追加本次运行要求。 */

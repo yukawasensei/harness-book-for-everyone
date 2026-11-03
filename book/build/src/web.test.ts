@@ -5,6 +5,7 @@ import { connectProject, mergeTimelineItems, type EventConnection, type Connecti
 import { appendEvent } from "../web/src/features/chat/lib/append-event.js";
 import { formatToolArgs, TOOL_ARG_LABELS } from "../web/src/features/chat/lib/format-tool-args.js";
 import { missingEventsNotice, nextActionStage, projectHasProgress, runSummary, toolErrorText, toolResultText, stageBadge, stageNames, stageStatusHelp, readerMessage, runRequestText, DEMO_CHANGE_NOTE, DEMO_SCRIPT_CHANGE_NOTE, demoChangeNote, demoRevisionNotice, reviewLabels } from "../web/src/features/artifacts/lib/presentation.js";
+import { progressChip, processStatusLabel } from "../web/src/features/artifacts/lib/process-status.js";
 import { rememberSelectedProject, restoreSelectedProject } from "../web/src/features/sessions/lib/project-selection.js";
 import type { ProjectDetail, ProjectEvent, RunResult, TimelineItem } from "./server/protocol.js";
 import { assertRunnable, initialWorkflow } from "./workflow/index.js";
@@ -12,9 +13,29 @@ import { createLocalServer } from "./server/index.js";
 import { stagePrompt } from "./agent/prompts.js";
 import { fixture, packageRoot, sample } from "./testing/fixtures.js";
 
+test("分镜板文本导出保留原文、指定历史版本及鉴权，并沿用JSON错误提示", async t => {
+  const { endpoints, ApiError, setAccessToken } = await import("../web/src/lib/api/index.js");
+  t.after(() => setAccessToken(""));
+  const text = "# 分镜板 v3\n\n```text\n提示词原文\n```\n";
+  const mock = t.mock.method(globalThis, "fetch", async (url: string | URL | Request, options?: RequestInit) => {
+    assert.equal(url, "/api/projects/project%20id/stages/board/versions/3/export?format=markdown");
+    assert.equal(options?.method, "GET");
+    assert.equal((options?.headers as Record<string, string>).Authorization, "Bearer public-export-test-token");
+    return new Response(text, { headers: { "Content-Type": "text/markdown" } });
+  });
+  setAccessToken("public-export-test-token");
+  assert.equal(await endpoints.projects.exportBoard("project id", 3), text);
+  mock.mock.mockImplementation(async () => new Response(JSON.stringify({ error: "版本不可用" }), { status: 422 }));
+  await assert.rejects(endpoints.projects.exportBoard("project id", 3), error => error instanceof ApiError && error.status === 422 && error.message === "版本不可用");
+  mock.mock.mockImplementation(async () => new Response("{}", { status: 401 }));
+  await assert.rejects(endpoints.projects.exportBoard("project id", 3), /令牌无效或已失效/);
+  setAccessToken("");
+  await assert.rejects(endpoints.projects.exportBoard("project id", 3), /未填写访问令牌/);
+});
+
 const snapshot = (): ProjectDetail => ({
-  id: "test-project", title: "离线网页测试", updated_at: "2026-01-01T00:00:00.000Z", stages: initialWorkflow(), running: null, last_run: null,
-  run_blocked_reasons: { topic: null, synopsis: "依赖未采用", script: "依赖未采用", bible: "依赖未采用", storyboard: "依赖未采用", prompts: "依赖未采用" },
+  format_version: 2 as const, id: "test-project", title: "离线网页测试", updated_at: "2026-01-01T00:00:00.000Z", stages: initialWorkflow(), running: null, last_run: null,
+  run_blocked_reasons: { story: null, script: "依赖未采用", bible: "依赖未采用", board: "依赖未采用" },
 });
 function event(source: EventConnection, id: number, data: ProjectEvent) {
   source.onmessage?.(new MessageEvent("message", { data: JSON.stringify(data), lastEventId: String(id) }));
@@ -25,10 +46,10 @@ test("页面 SSE 出错后实际读取详情轮询；重连快照恢复实时状
   const connections: Connection[] = [], states: ProjectDetail[] = [];
   let reads = 0, closed = false;
   const adopted = snapshot();
-  adopted.stages.topic.status = "adopted";
-  adopted.stages.topic.versions = [1];
-  adopted.stages.topic.adopted_version = 1;
-  adopted.stages.synopsis.status = "ready";
+  adopted.stages.story.status = "adopted";
+  adopted.stages.story.versions = [1];
+  adopted.stages.story.adopted_version = 1;
+  adopted.stages.script.status = "ready";
   const feed = connectProject("test-project", {
     state: project => states.push(project), connection: connection => connections.push(connection),
     event: () => {}, error: message => assert.fail(message),
@@ -41,7 +62,7 @@ test("页面 SSE 出错后实际读取详情轮询；重连快照恢复实时状
     source.onerror?.(new Event("error"));
     await setTimeout(35);
     assert.ok(reads >= 3);
-    assert.equal(states.at(-1)?.stages.synopsis.status, "ready");
+    assert.equal(states.at(-1)?.stages.script.status, "ready");
     // 模拟服务重启后从 1 编号，不能永远忽略新连接。
     event(source, 1, { type: "project_state", project: adopted });
     const before = reads;
@@ -99,7 +120,7 @@ test("晚到的轮询不覆盖 SSE 新快照；重复事件不重复追加；关
 });
 
 test("页面合并流式文本、更新工具成功/错误；缺失结束事件保持未知而非伪成功", () => {
-  const context = { stage: "topic" as const, run_id: "run-one" };
+  const context = { stage: "story" as const, run_id: "run-one" };
   let rows = appendEvent([], { ...context, type: "message_update", assistantMessageEvent: { type: "text_delta", delta: "开始", contentIndex: 0 } });
   rows = appendEvent(rows, { ...context, type: "message_update", assistantMessageEvent: { type: "text_delta", delta: "创作", contentIndex: 0 } });
   assert.deepEqual(rows[0], { kind: "text", id: "run-one:text:0", text: "开始创作" });
@@ -115,9 +136,9 @@ test("页面合并流式文本、更新工具成功/错误；缺失结束事件�
 });
 
 test("成功写草稿的运行记录显示拒绝次数摘要，原始错误只保留在详情", () => {
-  const raw = JSON.stringify({ content: [{ type: "text", text: "topic schema 不合规：缺少 title" }] });
+  const raw = JSON.stringify({ content: [{ type: "text", text: "story schema 不合规：缺少 title" }] });
   const rows = appendEvent([], { type: "run_ended", run: {
-    id: "run-retried", stage: "topic", started_at: "2026-11-02T00:00:00Z", abort_requested: false,
+    id: "run-retried", stage: "story", started_at: "2026-11-02T00:00:00Z", abort_requested: false,
     stop_reason: "draft_written", errors: [raw],
   } });
   const row = rows[0];
@@ -128,7 +149,7 @@ test("成功写草稿的运行记录显示拒绝次数摘要，原始错误只�
 });
 
 const completed = (errors: string[] = []): RunResult => ({
-  id: "run-before-refresh", stage: "topic", started_at: "2026-11-02T00:00:00Z", abort_requested: false,
+  id: "run-before-refresh", stage: "story", started_at: "2026-11-02T00:00:00Z", abort_requested: false,
   stop_reason: "draft_written", errors,
 });
 
@@ -142,7 +163,7 @@ test("最近运行成功后保持正常色摘要；失败仍有失败状态，�
 
 test("工具错误从 content.text 提取多段可读拒绝原因，不输出原始 JSON；缺失时给可读回退", () => {
   const result = { content: [
-    { type: "text", text: "topic schema 不合规：缺少 title" },
+    { type: "text", text: "story schema 不合规：缺少 title" },
     { type: "image", data: "忽略非文本块" },
     { type: "text", text: "target_minutes 必须为正数" },
     { type: "text", text: 123 }, null,
@@ -191,12 +212,12 @@ test("刷新或服务重启后的已有运行给缺失事件说明；新项目�
   assert.match(missingEventsNotice(project, [])!, /刷新前的实时事件未保存.*会话记录/);
   const rows = appendEvent([], { type: "run_ended", run: project.last_run });
   assert.equal(missingEventsNotice(project, rows), null);
-  project.running = { id: "active-before-refresh", stage: "topic", started_at: "2026-11-02T00:00:00Z", abort_requested: false };
+  project.running = { id: "active-before-refresh", stage: "story", started_at: "2026-11-02T00:00:00Z", abort_requested: false };
   project.last_run = null;
   assert.ok(missingEventsNotice(project, []));
   assert.equal(missingEventsNotice(project, appendEvent([], { type: "run_started", run: project.running })), null);
   project.running = null;
-  project.stages.topic.versions = [1];
+  project.stages.story.versions = [1];
   assert.ok(missingEventsNotice(project, []));
 });
 
@@ -207,20 +228,16 @@ test("禁用原因来自真实依赖状态；已采用阶段可进入返工", as
     const base = await app.listen(0);
     const read = async () => (await fetch(`${base}/api/projects/${f.project.id}`)).json() as Promise<ProjectDetail>;
     let project = await read();
-    assert.equal(project.run_blocked_reasons.topic, null);
-    assert.throws(() => assertRunnable(project.stages, "synopsis"), error => {
-      assert.equal(project.run_blocked_reasons.synopsis, (error as Error).message); return true;
+    assert.equal(project.run_blocked_reasons.story, null);
+    assert.throws(() => assertRunnable(project.stages, "script"), error => {
+      assert.equal(project.run_blocked_reasons.script, (error as Error).message); return true;
     });
-    f.store.writeDraft(f.project.id, "topic", sample("topic"));
-    assert.equal((await read()).run_blocked_reasons.topic, null);
-    f.store.adopt(f.project.id, "topic", 1);
+    f.store.writeDraft(f.project.id, "story", sample("story"));
+    assert.equal((await read()).run_blocked_reasons.story, null);
+    f.store.adopt(f.project.id, "story", 1);
     project = await read();
-    assert.doesNotThrow(() => assertRunnable(project.stages, "topic"));
-    assert.equal(project.run_blocked_reasons.topic, null);
-    assert.equal(project.run_blocked_reasons.synopsis, null);
-    f.store.writeDraft(f.project.id, "synopsis", sample("synopsis"));
-    f.store.adopt(f.project.id, "synopsis", 1);
-    project = await read();
+    assert.doesNotThrow(() => assertRunnable(project.stages, "story"));
+    assert.equal(project.run_blocked_reasons.story, null);
     assert.equal(project.run_blocked_reasons.script, null);
     f.store.writeDraft(f.project.id, "script", sample("script"));
     f.store.adopt(f.project.id, "script", 1);
@@ -229,56 +246,72 @@ test("禁用原因来自真实依赖状态；已采用阶段可进入返工", as
     f.store.writeDraft(f.project.id, "bible", sample("bible"));
     f.store.adopt(f.project.id, "bible", 1);
     project = await read();
-    assert.equal(project.run_blocked_reasons.storyboard, null);
-    f.store.writeDraft(f.project.id, "storyboard", sample("storyboard"));
-    f.store.adopt(f.project.id, "storyboard", 1);
+    assert.equal(project.run_blocked_reasons.board, null);
+    f.store.writeDraft(f.project.id, "board", sample("board"));
+    f.store.adopt(f.project.id, "board", 1);
     project = await read();
-    assert.ok(stagePrompt("prompts"));
-    assert.equal(project.run_blocked_reasons.prompts, null);
+    assert.ok(stagePrompt("board"));
+    assert.equal(project.run_blocked_reasons.board, null);
   } finally { await app.close(); f.cleanup(); }
 });
 
 
 test("阶段与版本统一待审阅，运行徽标跟随实际运行阶段", () => {
-  assert.equal(stageBadge("pending_review", "topic", null).text, "待审阅");
-  assert.equal(stageBadge("pending_review", "topic", null).text, reviewLabels.pending);
-  assert.deepEqual(stageBadge("pending_review", "topic", { ...completed(), stage: "topic" }), { text: "运行中", className: "running" });
-  assert.equal(stageBadge("locked", "synopsis", { ...completed(), stage: "topic" }).text, "锁定");
+  assert.equal(stageBadge("pending_review", "story", null).text, "待审阅");
+  assert.equal(stageBadge("pending_review", "story", null).text, reviewLabels.pending);
+  assert.deepEqual(stageBadge("pending_review", "story", { ...completed(), stage: "story" }), { text: "运行中", className: "running" });
+  assert.equal(stageBadge("locked", "script", { ...completed(), stage: "story" }).text, "锁定");
 });
 
-test("状态词有大白话说明；无进度时引导下一步为选题", () => {
+test("工序条状态用文案稿说法；窄屏进度标签形如 2/4 剧本 · 待审阅", () => {
+  const project = snapshot();
+  assert.equal(processStatusLabel(project, "story"), "未开始");
+  project.stages.story.status = "adopted";
+  project.stages.story.versions = [1];
+  project.stages.story.adopted_version = 1;
+  project.stages.script.status = "pending_review";
+  project.stages.script.versions = [1];
+  assert.equal(processStatusLabel(project, "story"), "已采用");
+  assert.equal(processStatusLabel(project, "script"), "待审阅");
+  assert.equal(progressChip(project).text, "2/4 剧本 · 待审阅");
+  project.running = { id: "r1", stage: "script", started_at: "2026-01-01T00:00:00.000Z", abort_requested: false };
+  assert.equal(processStatusLabel(project, "script"), "进行中");
+  assert.equal(progressChip(project).text, "2/4 剧本 · 进行中");
+});
+
+test("状态词有大白话说明；无进度时引导下一步为故事", () => {
   assert.match(stageStatusHelp("锁定") ?? "", /上一道还没采用/);
   assert.match(stageStatusHelp("可运行") ?? "", /可以开始运行/);
   assert.match(stageStatusHelp("待审阅") ?? "", /采用/);
   assert.equal(stageStatusHelp("不存在的状态"), null);
   const fresh = snapshot();
   assert.equal(projectHasProgress(fresh), false);
-  assert.equal(nextActionStage(fresh, ["topic", "synopsis", "script", "bible", "storyboard", "prompts"]), "topic");
-  fresh.stages.topic.versions = [1];
-  fresh.stages.topic.status = "pending_review";
+  assert.equal(nextActionStage(fresh, ["story", "script", "bible", "board"]), "story");
+  fresh.stages.story.versions = [1];
+  fresh.stages.story.status = "pending_review";
   assert.equal(projectHasProgress(fresh), true);
-  assert.equal(nextActionStage(fresh, ["topic", "synopsis", "script", "bible", "storyboard", "prompts"]), "topic");
+  assert.equal(nextActionStage(fresh, ["story", "script", "bible", "board"]), "story");
   assert.equal(
     Object.values(stageNames).join(" → "),
-    "选题 → 梗概 → 剧本 → 设定集 → 分镜脚本 → 分镜提示词",
+    "故事 → 剧本 → 设定集 → 分镜板",
   );
 });
 
 test("采用阶段可返工，待更新徽标中文显示；修改消息逐字显示意见", () => {
   const states = initialWorkflow();
-  states.topic.status = "adopted";
+  states.story.status = "adopted";
   let reason = "";
-  try { assertRunnable(states, "topic"); } catch (error) { reason = (error as Error).message; }
+  try { assertRunnable(states, "story"); } catch (error) { reason = (error as Error).message; }
   const visible = readerMessage(reason);
   assert.ok(!/P[0-9]|留到/.test(visible));
   assert.equal(visible, "");
-  assert.equal(stageBadge("stale", "storyboard", null).text, "待更新");
+  assert.equal(stageBadge("stale", "board", null).text, "待更新");
   assert.ok(!readerMessage("已采用版本不可丢弃或要求修改；返工留到 P8").includes("P8"));
   const note = "  把孩子换成一位老站长。\n保留空白格。  ";
-  const message = runRequestText("topic", "额外要求", { version: 1, note });
+  const message = runRequestText("story", "额外要求", { version: 1, note });
   assert.ok(message.includes(note));
   assert.ok(message.includes("额外要求"));
-  assert.match(message, /选题 v1/);
+  assert.match(message, /故事 v1/);
 });
 
 
@@ -290,7 +323,7 @@ test("演示预填意见；自定义意见提示预设结果，真实模式不�
 });
 
 test("剧本演示预填仅改 S02 的意见；汇总结果可读显示原版本与重交、沿用场号", () => {
-  assert.equal(demoChangeNote("topic"), DEMO_CHANGE_NOTE);
+  assert.equal(demoChangeNote("story"), DEMO_CHANGE_NOTE);
   assert.equal(demoChangeNote("script"), DEMO_SCRIPT_CHANGE_NOTE);
   assert.match(DEMO_SCRIPT_CHANGE_NOTE, /只修改 S02/);
   assert.equal(demoRevisionNotice(true, DEMO_SCRIPT_CHANGE_NOTE, "script"), null);
@@ -303,15 +336,15 @@ test("运行提交被 429 拒绝时不追加运行消息，202 后才追加一�
   const { submitRun, ApiError } = await import("../web/src/lib/api/index.js");
   const rows: string[] = [];
   const fetchMock = t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ error: "已达到今日运行次数上限" }), { status: 429 }));
-  await assert.rejects(submitRun("/api/projects/example/stages/topic/run", {}, () => rows.push("运行选题")), error => error instanceof ApiError && error.status === 429);
+  await assert.rejects(submitRun("/api/projects/example/stages/story/run", {}, () => rows.push("运行故事")), error => error instanceof ApiError && error.status === 429);
   assert.equal(rows.length, 0);
   let respond!: (response: Response) => void;
   fetchMock.mock.mockImplementation(() => new Promise<Response>(resolve => { respond = resolve; }));
-  const pending = submitRun("/api/projects/example/stages/topic/run", {}, () => rows.push("运行选题"));
+  const pending = submitRun("/api/projects/example/stages/story/run", {}, () => rows.push("运行故事"));
   assert.equal(rows.length, 0);
   respond(new Response("{}", { status: 202 }));
   await pending;
-  assert.deepEqual(rows, ["运行选题"]);
+  assert.deepEqual(rows, ["运行故事"]);
 });
 
 test("401 区分未填写与失效令牌，按该次请求实际发送的身份判断", async t => {
@@ -347,8 +380,8 @@ test("工具参数摘要映射中文标签；未知键进入技术详情", () =>
   assert.ok(!JSON.stringify(shot.lines).includes("shot_id"));
   assert.ok(!JSON.stringify(shot.lines).includes("shot_part"));
 
-  const staged = formatToolArgs('{"stage":"topic"}');
-  assert.deepEqual(staged.lines, [{ label: "阶段", value: "选题" }]);
+  const staged = formatToolArgs('{"stage":"story"}');
+  assert.deepEqual(staged.lines, [{ label: "阶段", value: "故事" }]);
   assert.equal(staged.technical, null);
 
   const mixed = formatToolArgs({ shot_id: "S01-01", debug_token: "raw", foo: 1 });

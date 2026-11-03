@@ -9,6 +9,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DISCARD_ACTION_HINT,
+  REQUEST_CHANGES_HINT,
+  reviewDisableReasons,
+} from "../lib/review-copy.js";
+
+/** 已采用版本按意见修改时，替代二次「确认运行」的一行提醒。 */
+export const ADOPTED_REVISE_HINT = "改完以后，后面依赖它的工序会变成待更新。";
 
 export function ReviewDialog({
   open,
@@ -21,6 +29,7 @@ export function ReviewDialog({
   demo,
   exampleNote,
   editedDemoNotice,
+  showDownstreamHint = false,
   adoptReason,
   reason,
   discardReason,
@@ -37,6 +46,8 @@ export function ReviewDialog({
   demo: boolean;
   exampleNote: string;
   editedDemoNotice?: string | null;
+  /** 已采用版本要求修改时，在按钮上方提示下游会待更新。 */
+  showDownstreamHint?: boolean;
   adoptReason: string | null;
   reason: string | null;
   discardReason: string | null;
@@ -44,6 +55,8 @@ export function ReviewDialog({
   onSubmit: (e: FormEvent) => void;
 }) {
   if (!open) return null;
+
+  const emptyNote = open === "changes" && !note.trim();
 
   return (
     <Dialog open onOpenChange={val => { if (!val) onCancel(); }}>
@@ -54,10 +67,10 @@ export function ReviewDialog({
           </DialogTitle>
           <DialogDescription className="text-xs">
             {open === "changes"
-              ? "说明希望保留什么、具体改哪里；确认后保留原稿，点击「按意见修改」启动运行。"
+              ? REQUEST_CHANGES_HINT
               : open === "adopt"
                 ? `将采用版本从 v${adoptedVersion} 切换为 v${version}，下游将被标记待更新。`
-                : `版本将保留可追溯，但之后不能采用。确定丢弃 v${version} 吗？`}
+                : DISCARD_ACTION_HINT}
           </DialogDescription>
         </DialogHeader>
 
@@ -71,17 +84,22 @@ export function ReviewDialog({
                 value={note}
                 onChange={e => onNoteChange(e.target.value)}
                 disabled={busy}
-                placeholder="说明希望保留什么、具体改哪里"
+                placeholder={REQUEST_CHANGES_HINT}
                 rows={4}
                 className="resize-none text-xs"
               />
               {demo && <p className="text-muted-foreground text-[11px]">演示示例：{exampleNote}</p>}
               {editedDemoNotice && <p className="text-muted-foreground text-[11px]">{editedDemoNotice}</p>}
+              {emptyNote && <p className="text-muted-foreground text-[11px]">{reviewDisableReasons.emptyNote}</p>}
               {reason && <p className="text-muted-foreground text-[11px]">{reason}</p>}
             </div>
           )}
 
           {error && <p role="alert" className="text-destructive text-xs">{error}</p>}
+
+          {open === "changes" && showDownstreamHint && (
+            <p className="text-muted-foreground text-[11px]">{ADOPTED_REVISE_HINT}</p>
+          )}
 
           <DialogFooter className="gap-2">
             <Button type="button" size="sm" variant="outline" disabled={busy} onClick={onCancel} className="text-xs">
@@ -92,9 +110,10 @@ export function ReviewDialog({
               size="sm"
               variant={open === "discard" ? "destructive" : "default"}
               disabled={busy || (open === "adopt" ? Boolean(adoptReason) : open === "discard" ? Boolean(discardReason) : Boolean(reason) || !note.trim())}
+              title={open === "changes" && !note.trim() ? reviewDisableReasons.emptyNote : undefined}
               className="text-xs"
             >
-              {open === "adopt" ? "确认切换采用" : open === "discard" ? "确认丢弃" : "确认修改意见"}
+              {open === "adopt" ? "确认切换采用" : open === "discard" ? "确认丢弃" : "按意见修改"}
             </Button>
           </DialogFooter>
         </form>

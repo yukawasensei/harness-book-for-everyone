@@ -10,7 +10,7 @@ export function PromptPreview({
   revision,
   footer,
 }: {
-  value: Artifacts["prompts"];
+  value: Artifacts["board"];
   revision?: SceneChanges;
   footer?: React.ReactNode;
 }) {
@@ -31,31 +31,31 @@ export function PromptPreview({
   return (
     <div className="space-y-3 text-xs break-words min-w-0 max-w-full">
       <p className="text-muted-foreground">
-        共 {value.items.length} 镜 · 蓝色为模型创作，绿色为程序注入。请核对动作与固定设定是否冲突。
+        共 {value.shots.length} 镜 · 蓝色为模型创作，绿色为程序注入。请核对动作与固定设定是否冲突。
       </p>
       {revision?.revise_from && (
         <p className="bg-primary/10 text-primary rounded-md px-2.5 py-1 text-xs">
-          高亮：本版重交的镜头；其余镜头沿用原稿。
+          高亮：本版重交的场次；其余场次沿用原稿。
         </p>
       )}
       <div className="grid gap-3">
-        {value.items.map(item => {
+        {value.shots.map(item => {
           const injectedPart = item.final_prompt.slice(`[镜头] ${item.shot_part}\n`.length);
           const isCopied = copiedId === item.shot_id;
           return (
             <article
               key={item.shot_id}
               aria-label={`${item.shot_id} 提示词`}
-              className={changed.has(item.shot_id) ? "prompt-card scene-revised" : "prompt-card"}
+              className={changed.has(item.scene_id) ? "prompt-card scene-revised" : "prompt-card"}
             >
               <div className={cn(
                 "rounded-lg border border-border/80 bg-card p-3 space-y-2.5",
-                changed.has(item.shot_id) && "border-primary/40 bg-accent/20",
+                changed.has(item.scene_id) && "border-primary/40 bg-accent/20",
               )}>
                 <header className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-bold text-sm text-foreground">{item.shot_id}</h3>
-                    {changed.has(item.shot_id) && <Badge variant="secondary" className="text-[10px]">本版重交</Badge>}
+                    {changed.has(item.scene_id) && <Badge variant="secondary" className="text-[10px]">本版重交</Badge>}
                   </div>
                   <Button
                     type="button"

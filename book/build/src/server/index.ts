@@ -1,3 +1,4 @@
+import { ProjectFormatUnsupported } from "../project/format.js";
 import { authenticate, hostingFromEnv, publicData, TenantQuota, validateHosting, type HostingOptions } from "./hosting.js";
 import { createServer } from "node:http";
 import { ProjectStore } from "../project/store.js";
@@ -9,6 +10,7 @@ import { body, guardLocalRequest, HttpError, json, validation } from "./http.js"
 import { StageRuns, type SessionFactory } from "./runs.js";
 import { ProjectTimeline } from "./timeline.js";
 import { scrubSecrets } from "../agent/model.js";
+import { renderBoardMarkdown } from "../contracts/board-export.js";
 
 export interface ServerOptions {
   root: string;
@@ -44,7 +46,8 @@ export function createLocalServer(options: ServerOptions) {
     const send = (status: number, data: unknown) => json(response, status, sanitize(data));
     void route().catch(error => {
       if (response.headersSent) { response.end(); return; }
-      if (error instanceof HttpError) send(error.status, { error: error.message });
+      if (error instanceof ProjectFormatUnsupported) send(409, { error: error.message, code: error.code });
+      else if (error instanceof HttpError) send(error.status, { error: error.message });
       else send(500, { error: "服务内部错误，请检查本地项目与会话记录" });
     });
     async function route() {
@@ -90,13 +93,6 @@ export function createLocalServer(options: ServerOptions) {
       }
       if (parts.length === 4 && parts[3] === "ratings" && method === "GET") return send(200, store.exportRatings(id));
       if (parts.length === 3 && method === "GET") return send(200, runs.detail(id));
-      if (parts.length === 3 && method === "PATCH") {
-        const input = await body(request);
-        if (typeof input.autopilot !== "boolean") throw new HttpError(400, "自动推进必须是布尔值");
-        store.setAutopilot(id, input.autopilot);
-        runs.notify(id);
-        return send(200, runs.detail(id));
-      }
       if (parts.length === 4 && parts[3] === "timeline" && method === "GET") return send(200, { items: runs.timeline.read(id) });
       if (parts.length === 4 && parts[3] === "messages" && method === "POST") {
         const input = await body(request);
@@ -136,15 +132,15 @@ export function createLocalServer(options: ServerOptions) {
           let reassembled: number | undefined;
           validation(() => {
             if (parts[5] === "reassemble") {
-              if (stage !== "prompts") throw new Error("只有提示词阶段可重新拼装");
-              reassembled = store.reassemblePrompts(id, input.confirmed === true);
+              if (stage !== "board") throw new Error("只有分镜板可重新拼装");
+              reassembled = store.reassembleBoard(id, input.confirmed === true);
             } else {
               if (typeof input.reason !== "string" || input.reason.length > 8000) throw new Error("请填写最多 8000 字的理由");
               store.confirmValid(id, stage, input.reason, input.confirmed === true);
             }
           });
           if (legacy !== null) store.appendConversation(id, legacy);
-          if (reassembled !== undefined) runs.timeline.add(id, { kind: "review_request", stage: "prompts", version: reassembled });
+          if (reassembled !== undefined) runs.timeline.add(id, { kind: "review_request", stage: "board", version: reassembled });
           runs.notify(id); return send(200, runs.detail(id));
         }
         if (parts.length === 6 && ["adopt", "discard", "request-changes"].includes(parts[5]) && method === "POST") {
@@ -156,7 +152,9 @@ export function createLocalServer(options: ServerOptions) {
           const note = input.note;
           if (note !== undefined && (typeof note !== "string" || note.length > 8000)) throw new HttpError(400, "审阅意见需为最多 8000 字文本");
           if (parts[5] === "request-changes" && (typeof note !== "string" || !note.trim())) throw new HttpError(400, "修改意见不能为空");
-          const wasAdopted = store.load(id).stages[stage].adopted_version === input.version && store.load(id).stages[stage].status === "adopted";
+          const previous = store.load(id).stages[stage];
+          const firstAdoption = previous.adopted_version === null;
+          const wasAdopted = previous.adopted_version === input.version && previous.status === "adopted";
           // 先持久化旧项目的最小时间线，避免审阅后合成重复的决定。
           const legacy = store.readConversation(id) === null ? runs.timeline.read(id) : null;
           validation(() => {
@@ -171,9 +169,25 @@ export function createLocalServer(options: ServerOptions) {
             decision: parts[5] === "adopt" ? "adopted" : parts[5] === "discard" ? "discarded" : "changes_requested",
             ...(typeof note === "string" ? { note } : {}),
           });
-          if (parts[5] === "adopt" && !wasAdopted) await runs.autoAdvance(id, stage);
+          if (parts[5] === "adopt" && firstAdoption) await runs.autoAdvance(id, stage);
           runs.notify(id);
           return send(200, runs.detail(id));
+        }
+        if (parts.length === 8 && parts[5] === "versions" && parts[7] === "export" && method === "GET") {
+          if (stage !== "board") throw new HttpError(400, "只有分镜板支持 Markdown 导出");
+          if (!/^[1-9][0-9]*$/.test(parts[6]) || !Number.isSafeInteger(Number(parts[6]))) throw new HttpError(400, "版本号必须为正整数");
+          if (url.searchParams.get("format") !== "markdown" || [...url.searchParams].length !== 1) throw new HttpError(400, "导出仅接受 format=markdown");
+          const version = Number(parts[6]);
+          const board = validation(() => store.readVersion(id, "board", version));
+          // 在渲染之前脱敏，以免敏感文本跨越 Markdown 围栏边界。
+          const markdown = renderBoardMarkdown(sanitize(board) as typeof board, version);
+          response.writeHead(200, {
+            "Content-Type": "text/markdown; charset=utf-8", "Cache-Control": "no-store",
+            "Content-Disposition": `attachment; filename="board-v${version}.md"`,
+            "X-Content-Type-Options": "nosniff",
+          });
+          response.end(scrubSecrets(markdown));
+          return;
         }
         if (parts.length === 7 && parts[5] === "versions" && method === "GET") {
           if (!/^[1-9][0-9]*$/.test(parts[6])) throw new HttpError(400, "版本号必须为正整数");

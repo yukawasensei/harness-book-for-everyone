@@ -2,10 +2,10 @@ import type { ProjectStore } from "../project/store.js";
 import { assertRunnable } from "../workflow/index.js";
 import { currentBasis, sameBasis, type Basis } from "../project/provenance.js";
 import type { ResumeChoice } from "../project/checkpoints.js";
-import type { Scene, SceneShots } from "../contracts/index.js";
+import type { Scene, BoardSceneInput } from "../contracts/index.js";
 
 /** 每次运行独立的暂存区；会话事件及结束快照负责审计，不是可采用版本。 */
-export class SceneDraft<T extends Scene | SceneShots> {
+export class SceneDraft<T extends Scene | BoardSceneInput> {
   private scenes = new Map<string, T>();
   private version: number | null = null;
   private warnings: string[] = [];
@@ -15,7 +15,7 @@ export class SceneDraft<T extends Scene | SceneShots> {
   private removed = new Set<string>();
   private basis: Basis = {};
 
-  constructor(private store: ProjectStore, private projectId: string, private stage: "script" | "storyboard", private config: {
+  constructor(private store: ProjectStore, private projectId: string, private stage: "script" | "board", private config: {
     validate: (value: unknown) => void;
     seed: (version: number) => T[];
     artifact: (scenes: T[]) => unknown;

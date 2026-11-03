@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import type { Stage } from "../../../../../src/contracts/index.js";
 import type { ProjectDetail, TimelineItem } from "../../../../../src/server/protocol.js";
 import type { TimelineRow } from "../lib/append-event.js";
+import { renderLiveRows, renderRunTranscript } from "../lib/render-timeline.js";
+import { progressChip } from "@/features/artifacts";
 import { EmptyState } from "./EmptyState";
-import { PlanCard } from "./PlanCard";
 import { UserMessage } from "./UserMessage";
 import { AssistantText } from "./AssistantText";
-import { ToolCallCard } from "./ToolCallCard";
 import { ReviewCard } from "./ReviewCard";
 import { SystemNotice } from "./SystemNotice";
 import { RunStatusBar } from "./RunStatusBar";
@@ -20,6 +20,16 @@ function findDecision(items: TimelineItem[], stage: Stage, version: number) {
     }
   }
   return undefined;
+}
+
+function openChipArtifact(
+  project: ProjectDetail,
+  onViewArtifact?: (stage: Stage, version: number) => void,
+) {
+  const chip = progressChip(project);
+  const state = project.stages[chip.stage];
+  const version = state.adopted_version ?? state.versions[state.versions.length - 1] ?? 1;
+  onViewArtifact?.(chip.stage, version);
 }
 
 export function ChatPane({
@@ -68,6 +78,7 @@ export function ChatPane({
   }
 
   const isEmpty = !loading && !items.length && !liveRows.length;
+  const chip = project ? progressChip(project) : null;
 
   return (
     <section className="flex h-full min-h-0 min-w-0 flex-col" aria-label="对话">
@@ -78,9 +89,16 @@ export function ChatPane({
         )}
       </div>
 
-      {project && (
-        <div className="border-border/60 bg-muted/20 border-b px-4 py-2">
-          <PlanCard project={project} />
+      {project && chip && (
+        <div className="border-border/60 bg-muted/20 border-b px-4 py-2 lg:hidden">
+          <button
+            type="button"
+            onClick={() => openChipArtifact(project, onViewArtifact)}
+            className="hover:bg-accent/70 border-border/70 bg-background/80 text-foreground inline-flex max-w-full items-center rounded-md border px-2.5 py-1 text-xs transition-colors"
+            aria-label={`打开产物：${chip.text}`}
+          >
+            <span className="truncate">{chip.text}</span>
+          </button>
         </div>
       )}
 
@@ -102,19 +120,12 @@ export function ChatPane({
             return <AssistantText key={item.id} text={item.text} at={item.at} />;
           }
           if (item.kind === "run") {
-            const transcript = item.transcript ?? [];
             return (
               <div key={item.id} className="space-y-3">
                 {item.status === "failed" && (
                   <SystemNotice type="error" title={`${item.stage} 运行失败`} message={item.stop_reason} />
                 )}
-                {transcript.map((t, idx) =>
-                  t.type === "tool" ? (
-                    <ToolCallCard key={`${item.id}:tool:${idx}`} name={t.name} label={t.label} status={t.ok ? "success" : "error"} args_summary={t.args_summary} error={t.error} />
-                  ) : (
-                    <AssistantText key={`${item.id}:text:${idx}`} text={t.text} />
-                  ),
-                )}
+                {renderRunTranscript(item.id, item.transcript ?? [])}
               </div>
             );
           }
@@ -125,6 +136,7 @@ export function ChatPane({
                 key={item.id}
                 stage={item.stage}
                 version={item.version}
+                projectId={project?.id}
                 decision={decision?.decision}
                 note={decision?.note}
                 onViewArtifact={onViewArtifact}
@@ -138,31 +150,7 @@ export function ChatPane({
           return null;
         })}
 
-        {liveRows.map(row => {
-          if (row.kind === "text") return <AssistantText key={row.id} text={row.text} streaming />;
-          if (row.kind === "tool") {
-            return (
-              <ToolCallCard
-                key={row.id}
-                name={row.name}
-                status={row.status}
-                args={row.args}
-                result={row.result}
-              />
-            );
-          }
-          if (row.kind === "note") {
-            return (
-              <SystemNotice
-                key={row.id}
-                type="info"
-                title={row.text}
-                message={row.details?.join("\n")}
-              />
-            );
-          }
-          return null;
-        })}
+        {renderLiveRows(liveRows)}
 
         {running && (
           <RunStatusBar

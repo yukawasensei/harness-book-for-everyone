@@ -12,7 +12,7 @@ import { fixture, packageRoot, sample } from "./testing/fixtures.js";
 const scene = (id = "S01") => ({ ...sample("script").scenes[0], scene_id: id });
 async function setup(turns: Turn[]) {
   const f = fixture();
-  for (const stage of ["topic", "synopsis"] as const) {
+  for (const stage of ["story"] as const) {
     f.store.writeDraft(f.project.id, stage, sample(stage));
     f.store.adopt(f.project.id, stage, 1);
   }
@@ -37,7 +37,7 @@ test("单场拒绝空行、坏编号、dialogue 缺角色、action 带角色，�
 test("script 只见四工具；坏场修正、同编号覆盖、乱序拼装，finalize 才出待审版本及警告", async () => {
   const corrected = { ...scene(), summary: "修正后的摘要" };
   const f = await setup([
-    { call: "read_upstream", args: { stage: "synopsis" } },
+    { call: "read_upstream", args: { stage: "story" } },
     { call: "write_scene", args: { scene: { ...scene(), lines: [{ kind: "dialogue", text: "漏了角色" }] } } },
     { call: "write_scene", args: { scene: scene("S02") } },
     { call: "write_scene", args: { scene: scene() } },
@@ -114,7 +114,7 @@ test("script 轮数预算为 20，超过八轮仍可分场，达到预算不出�
   try {
     const result = await runStage(f.session, f.store, f.project.id, "script");
     assert.equal(STAGE_TURN_LIMITS.script, 20);
-    assert.equal(STAGE_TURN_LIMITS.topic, 8);
+    assert.equal(STAGE_TURN_LIMITS.story, 8);
     assert.equal(result.stop_reason, "max_turns");
     assert.equal(f.fake.contexts.length, 20);
     assert.deepEqual(f.store.load(f.project.id).stages.script.versions, []);
@@ -137,7 +137,7 @@ test("单场写入后中断，摘要保留进行中场且不生成版本", async
 test("存储层拒绝缺首场、重复编号与缺场，不写版本", () => {
   const f = fixture();
   try {
-    for (const stage of ["topic", "synopsis"] as const) {
+    for (const stage of ["story"] as const) {
       f.store.writeDraft(f.project.id, stage, sample(stage)); f.store.adopt(f.project.id, stage, 1);
     }
     for (const scenes of [[scene("S02")], [scene(), scene()], [scene(), scene("S03")]]) {

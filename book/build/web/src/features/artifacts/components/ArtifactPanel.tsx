@@ -14,6 +14,7 @@ import { RunSummaryCard } from "./RunSummaryCard";
 import { ExpandedPreview } from "./ExpandedPreview";
 import { useArtifactPreview } from "../hooks/use-artifact-preview";
 import { artifactGuidance, readerMessage, stageNames, type LiveRow } from "../lib/presentation.js";
+import { downloadBoard } from "../lib/download-board";
 
 export function ArtifactPanel({
   id, project, config, stage, onStageChange, version, onVersionChange,
@@ -58,7 +59,7 @@ export function ArtifactPanel({
   }
 
   const isStale = state?.status === "stale";
-  const reassembleReason = stage === "prompts" ? readerMessage(project?.reassemble_reason ?? "") || null : "仅分镜提示词支持重新拼装。";
+  const reassembleReason = stage === "board" ? readerMessage(project?.reassemble_reason ?? "") || null : "仅分镜提示词支持重新拼装。";
   const currentRating = version !== null && project ? project.ratings?.[stage]?.[version] : undefined;
 
   return (
@@ -71,7 +72,7 @@ export function ArtifactPanel({
 
       {project && allStagesAdopted(project) && (
         <p className="text-success border-border/60 bg-success/10 border-b px-4 py-1.5 text-xs font-medium" role="status">
-          全流程已完成 · 六阶段产物均已采用
+          全流程已完成 · 四阶段产物均已采用
         </p>
       )}
 
@@ -84,16 +85,17 @@ export function ArtifactPanel({
             runReason={blockedReason} reassembleReason={reassembleReason} hasRating={Boolean(currentRating)}
             onOpenRating={() => setRatingOpen(true)} onRun={() => requestRun()}
             onConfirmValid={() => openConfirm("confirm-valid")} onReassemble={() => openConfirm("reassemble")}
+            onExport={() => { if (version !== null) void onAction(() => downloadBoard(id, version)); }}
           />
         }
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3">
-        <ArtifactStaleNotice isStale={isStale} />
+        <ArtifactStaleNotice isStale={isStale && stage !== "board"} />
         {!implemented && <p className="bg-warning/15 text-warning rounded-md px-3 py-2 text-xs">{stageNames[stage]}暂未开放运行。</p>}
         {project?.staging?.[stage] && (
           <p className="bg-warning/15 text-warning rounded-md px-3 py-2 text-xs">
-            存在未汇总暂存：{project.staging[stage]!.count} {stage === "prompts" ? "镜" : "场"}。运行时可选择继续或重新开始。
+            存在未汇总暂存：{project.staging[stage]!.count} 场。运行时可选择继续或重新开始。
             {project.staging[stage]!.revise_from !== null ? ` 请从 v${project.staging[stage]!.revise_from} 的按意见修改入口继续。` : ""}
           </p>
         )}
@@ -103,7 +105,20 @@ export function ArtifactPanel({
           {preview.previewError ? (
             <p className="text-destructive text-xs" role="alert">{preview.previewError}</p>
           ) : preview.visiblePreview ? (
-            <ArtifactPreview stage={stage} value={preview.visiblePreview.value} bible={preview.bible} script={preview.script} revision={revision} />
+            <ArtifactPreview
+              stage={stage}
+              value={preview.visiblePreview.value}
+              bible={preview.bible}
+              script={preview.script}
+              revision={revision}
+              projectId={id}
+              version={version}
+              isStale={isStale}
+              onReassemble={() => openConfirm("reassemble")}
+              reassembleDisabled={busy || Boolean(reassembleReason)}
+              reassembleReason={busy ? "项目正在运行或提交操作，请稍候。" : reassembleReason}
+              onExport={version !== null ? () => { void onAction(() => downloadBoard(id, version)); } : undefined}
+            />
           ) : (
             <p className="text-muted-foreground text-xs">{version === null ? guidance.empty : "正在读取版本…"}</p>
           )}
@@ -120,16 +135,19 @@ export function ArtifactPanel({
               ...(note === undefined ? {} : { note }),
             });
           })}
-          onRevise={() => { if (version !== null) requestRun(version); }}
+          onRevise={() => {
+            if (version === null) return;
+            // 审阅弹窗已一键开跑；已采用时带 confirmed，不再弹「确认运行」。有暂存仍需选继续/重开。
+            if (project?.staging?.[stage]) {
+              requestRun(version);
+              return;
+            }
+            void onExecuteRun(version, undefined, true);
+          }}
         />
 
         <RunSummaryCard project={project} stage={stage} running={running} implemented={implemented} rows={rows} />
 
-        {stage === "storyboard" && project?.stages.prompts.status === "ready" && (
-          <p className="bg-warning/15 text-warning rounded-md px-3 py-2 text-xs">
-            分镜已采用，分镜提示词已解锁（依赖已满足）；可切换到分镜提示词运行。
-          </p>
-        )}
         <p className="text-muted-foreground text-[11px] leading-relaxed">{guidance.footer}</p>
       </div>
 

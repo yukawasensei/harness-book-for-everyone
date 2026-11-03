@@ -9,13 +9,35 @@ export type LiveRow =
   | { kind: "tool"; id: string; name: string; args: unknown; status: "running" | "success" | "error" | "unknown"; result?: unknown };
 
 export const stageNames: Record<Stage, string> = {
-  topic: "选题", synopsis: "梗概", script: "剧本", bible: "设定集", storyboard: "分镜脚本", prompts: "分镜提示词",
+  story: "故事", script: "剧本", bible: "设定集", board: "分镜板",
 };
+export * from "./review-copy.js";
+
+/** 交稿摘要用的条目数：剧本数场，分镜板数镜头。 */
+export function countSubmissionItems(stage: Stage, value: unknown): number | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  if (stage === "script") {
+    const scenes = (value as { scenes?: unknown }).scenes;
+    return Array.isArray(scenes) ? scenes.length : undefined;
+  }
+  if (stage === "board") {
+    const shots = (value as { shots?: unknown }).shots;
+    return Array.isArray(shots) ? shots.length : undefined;
+  }
+  return undefined;
+}
+
+/** 对话流 · 自我修正说明（文案稿第 3 节）。 */
+export const SELF_CORRECTION_TITLE = "首次提交未通过检查，已自动补全并重新交稿";
+export function selfCorrectionDetail(reason: string): string {
+  const trimmed = reason.trim() || "格式检查未通过";
+  return `第 1 次提交因「${trimmed}」被系统拦下；助手已按规则修正并完成第 2 次提交。`;
+}
 export function composerGuidance(project: Pick<ProjectDetail, "stages">, stage: Stage) {
   if (Object.values(project.stages).every(state => state.status === "adopted")) return "全流程已完成 · 可查看产物或确认返工";
   if (project.stages[stage].status === "stale") return "本阶段待更新，请选择上方处理方式";
   if (project.stages[stage].adopted_version !== null) return "本阶段已采用 · 可查看产物或确认返工";
-  return stage === "prompts" ? "审阅并采用后完成六阶段" : "采用后才能继续下一步";
+  return stage === "board" ? "审阅并采用后完成四阶段" : "采用后才能继续下一步";
 }
 export const reviewLabels: Record<ReviewStatus, string> = {
   pending: "待审阅", adopted: "已采用", discarded: "已丢弃", changes_requested: "要求修改",
@@ -52,7 +74,7 @@ export function projectHasProgress(project: Pick<ProjectDetail, "stages" | "runn
 export function nextActionStage(
   project: Pick<ProjectDetail, "stages" | "running">,
   runnableStages: readonly Stage[],
-  order: readonly Stage[] = ["topic", "synopsis", "script", "bible", "storyboard", "prompts"],
+  order: readonly Stage[] = ["story", "script", "bible", "board"],
 ): Stage | null {
   if (project.running) return project.running.stage;
   for (const priority of ["pending_review", "ready", "stale"] as const) {
@@ -86,7 +108,7 @@ export function readerMessage(text: string): string {
     .replace(/；(?:已采用阶段的)?返工留到 P\d+/g, "；已采用的版本暂不支持修改")
     .replace(/待采用|待确认/g, "待审阅").replaceAll("重交/新增", "重交")
     .replace(/；(?:重交|沿用|删除) 无(?=[；。]|$)/g, ""))
-    .replace(/\b(topic|synopsis|script|bible|storyboard|prompts)\b/g, key => stageNames[key as Stage])
+    .replace(/\b(story|script|bible|board)\b/g, key => stageNames[key as Stage])
     .replace(/(?:status=)?\b(pending_review|changes_requested|discarded|adopted|pending|locked|ready)\b/g,
       key => ({ ...stageLabels, ...reviewLabels } as Record<string, string>)[key.replace("status=", "")] ?? key);
 }
@@ -103,15 +125,15 @@ export function currentRunDisplay(running: RunInfo | null | undefined, last: Run
 }
 
 export function scriptProgress(running: RunInfo | null | undefined, rows: LiveRow[]): string | null {
-  if (running?.stage !== "script" && running?.stage !== "storyboard" && running?.stage !== "prompts") return null;
+  if (running?.stage !== "script" && running?.stage !== "board") return null;
   for (const row of [...rows].reverse()) {
-    if (row.kind !== "tool" || !row.id.startsWith(`${running.id}:`) || row.status !== "success" || !["write_scene", "remove_scene", "write_scene_shots", "remove_scene_shots", "write_shot_prompt"].includes(row.name)) continue;
+    if (row.kind !== "tool" || !row.id.startsWith(`${running.id}:`) || row.status !== "success" || !["write_scene", "remove_scene", "write_scene_shots", "remove_scene_shots"].includes(row.name)) continue;
     const result = row.result;
     if (!result || typeof result !== "object" || !("details" in result)) continue;
     const details = result.details;
     if (!details || typeof details !== "object") continue;
-    const count = "shot_count" in details ? details.shot_count : "scene_count" in details ? details.scene_count : null;
-    if (typeof count === "number" && Number.isSafeInteger(count) && count >= 0) return `已暂存 ${count} ${running.stage === "prompts" ? "镜" : "场"}`;
+    const count = "scene_count" in details ? details.scene_count : null;
+    if (typeof count === "number" && Number.isSafeInteger(count) && count >= 0) return `已暂存 ${count} 场`;
   }
   return "等待暂存进度";
 }
@@ -120,10 +142,9 @@ export const DEMO_CHANGE_NOTE = "把孩子换成一位老站长，保留空白�
 export const DEMO_SCRIPT_CHANGE_NOTE = "只修改 S02：让程禾先询问陆岑是否愿意讲述，其他场保持原样。";
 export const DEMO_BIBLE_CHANGE_NOTE = "保留角色与出场场次，只把程禾外套改为深灰色。";
 export const DEMO_STORYBOARD_CHANGE_NOTE = "只修改 S02：首镜缓慢推近程禾，先征求陆岑讲述意愿，其余场保持原样。";
-export const DEMO_PROMPTS_CHANGE_NOTE = "只修改 S02-01：动作之后停顿，构图留白，其他镜头保持原样。";
-export const demoChangeNote = (stage: Stage) => stage === "prompts" ? DEMO_PROMPTS_CHANGE_NOTE : stage === "storyboard" ? DEMO_STORYBOARD_CHANGE_NOTE : stage === "script" ? DEMO_SCRIPT_CHANGE_NOTE : stage === "bible" ? DEMO_BIBLE_CHANGE_NOTE : DEMO_CHANGE_NOTE;
+export const demoChangeNote = (stage: Stage) => stage === "board" ? DEMO_STORYBOARD_CHANGE_NOTE : stage === "script" ? DEMO_SCRIPT_CHANGE_NOTE : stage === "bible" ? DEMO_BIBLE_CHANGE_NOTE : DEMO_CHANGE_NOTE;
 export const DEMO_REVISION_NOTICE = "离线演示的修改结果为预设内容";
-export function demoRevisionNotice(demo: boolean, note: string, stage: Stage = "topic"): string | null {
+export function demoRevisionNotice(demo: boolean, note: string, stage: Stage = "story"): string | null {
   return demo && note !== demoChangeNote(stage) ? DEMO_REVISION_NOTICE : null;
 }
 
