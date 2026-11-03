@@ -179,8 +179,13 @@ export function createLocalServer(options: ServerOptions) {
           if (url.searchParams.get("format") !== "markdown" || [...url.searchParams].length !== 1) throw new HttpError(400, "导出仅接受 format=markdown");
           const version = Number(parts[6]);
           const board = validation(() => store.readVersion(id, "board", version));
+          const project = store.load(id);
+          const source = project.provenance?.board?.[version];
           // 在渲染之前脱敏，以免敏感文本跨越 Markdown 围栏边界。
-          const markdown = renderBoardMarkdown(sanitize(board) as typeof board, version);
+          const markdown = validation(() => renderBoardMarkdown(sanitize(board) as typeof board, version, {
+            title: sanitize(project.title) as string,
+            basedOn: source?.original_based_on ?? source?.based_on ?? {},
+          }));
           response.writeHead(200, {
             "Content-Type": "text/markdown; charset=utf-8", "Cache-Control": "no-store",
             "Content-Disposition": `attachment; filename="board-v${version}.md"`,

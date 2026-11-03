@@ -1,8 +1,15 @@
 import { readableError, readerMessage, toolErrorText } from "@/features/artifacts";
 import type { TimelineRow } from "./append-event.js";
 
-const DRAFT_TOOLS = new Set(["write_draft", "finalize_draft", "write_scene_shots", "remove_scene_shots"]);
-const SCENE_TOOLS = new Set(["write_scene_shots", "remove_scene_shots"]);
+const DRAFT_TOOLS = new Set([
+  "write_draft",
+  "finalize_draft",
+  "write_scene",
+  "remove_scene",
+  "write_scene_shots",
+  "remove_scene_shots",
+]);
+const SCENE_TOOLS = new Set(["write_scene", "remove_scene", "write_scene_shots", "remove_scene_shots"]);
 
 export type TranscriptLike =
   | { type: "text"; text: string }
@@ -10,7 +17,7 @@ export type TranscriptLike =
 
 export type FoldSegment<T> =
   | { kind: "plain"; items: T[] }
-  | { kind: "self_correction"; reason: string; items: T[] };
+  | { kind: "self_correction"; reason: string; attempts: number; items: T[] };
 
 function draftReason(error: string | undefined): string {
   if (!error?.trim()) return "格式检查未通过";
@@ -69,9 +76,19 @@ function foldByDraftIndexes<T>(
     });
     if (successAfter === undefined) continue;
 
+    const sameKeyInWindow = draftIndexes.filter(
+      index => index >= firstFail && index <= successAfter && keyAt(index) === failKey,
+    );
+    const lastFail = [...sameKeyInWindow].reverse().find(index => isFail(index)) ?? firstFail;
+    const attempts = sameKeyInWindow.length;
     const segments: FoldSegment<T>[] = [];
     if (firstFail > 0) segments.push({ kind: "plain", items: items.slice(0, firstFail) });
-    segments.push({ kind: "self_correction", reason: reasonAt(firstFail), items: items.slice(firstFail, successAfter + 1) });
+    segments.push({
+      kind: "self_correction",
+      reason: reasonAt(lastFail),
+      attempts,
+      items: items.slice(firstFail, successAfter + 1),
+    });
     if (successAfter + 1 < items.length) {
       const rest = items.slice(successAfter + 1);
       const restDraftIndexes = rest

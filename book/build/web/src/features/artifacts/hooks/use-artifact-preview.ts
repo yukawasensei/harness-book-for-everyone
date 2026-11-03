@@ -3,6 +3,7 @@ import type { Artifacts, Stage } from "../../../../../src/contracts/index.js";
 import type { ProjectDetail } from "../../../../../src/server/protocol.js";
 import { api } from "@/lib/api";
 import { readerMessage } from "../lib/presentation.js";
+import { boardReferenceVersions, loadBoardReferences } from "../lib/board-references.js";
 import type { ReworkOperation } from "../components/ReworkPanel";
 
 /** 产物预览加载、放大对话框与返工确认状态。 */
@@ -11,8 +12,10 @@ export function useArtifactPreview(id: string, project: ProjectDetail | null, st
   const [preview, setPreview] = useState<{ version: number; stage: Stage; value: unknown } | null>(null);
   const [previewError, setPreviewError] = useState("");
   const [expanded, setExpanded] = useState(false);
-  const [script, setScript] = useState<Artifacts["script"] | null>(null);
-  const [bible, setBible] = useState<Artifacts["bible"] | null>(null);
+  const [references, setReferences] = useState<{
+    path: string; version: number; bibleVersion: number; scriptVersion: number;
+    script: Artifacts["script"] | null; bible: Artifacts["bible"] | null;
+  } | null>(null);
   const [confirm, setConfirm] = useState<{ operation: ReworkOperation; reviseFrom?: number } | null>(null);
   const previewDialog = useRef<HTMLDialogElement>(null);
 
@@ -36,25 +39,25 @@ export function useArtifactPreview(id: string, project: ProjectDetail | null, st
     return () => controller.abort();
   }, [path, stage, version]);
 
-  const adoptedBible = project?.stages.bible.adopted_version;
-  const adoptedScript = project?.stages.script.adopted_version;
+  const basis = boardReferenceVersions(project, version);
+  const bibleVersion = basis?.bible;
+  const scriptVersion = basis?.script;
   useEffect(() => {
-    setBible(null); setScript(null);
-    if (stage !== "board" || !adoptedBible || !adoptedScript) return;
+    setReferences(null);
+    if (stage !== "board" || version === null || !bibleVersion || !scriptVersion) return;
     const controller = new AbortController();
-    void Promise.all([
-      api<Artifacts["bible"]>(`${path}/stages/bible/versions/${adoptedBible}`, undefined, controller.signal),
-      api<Artifacts["script"]>(`${path}/stages/script/versions/${adoptedScript}`, undefined, controller.signal),
-    ]).then(([nextBible, nextScript]) => {
-      if (!controller.signal.aborted) { setBible(nextBible); setScript(nextScript); }
+    void loadBoardReferences(path, { bible: bibleVersion, script: scriptVersion }, controller.signal).then(value => {
+      if (!controller.signal.aborted) setReferences({ path, version, bibleVersion, scriptVersion, ...value });
     }).catch(() => {});
     return () => controller.abort();
-  }, [path, stage, adoptedBible, adoptedScript]);
+  }, [path, stage, version, bibleVersion, scriptVersion]);
 
   const visiblePreview = preview?.stage === stage && preview.version === version ? preview : null;
+  const visibleReferences = stage === "board" && references?.path === path && references.version === version
+    && references.bibleVersion === bibleVersion && references.scriptVersion === scriptVersion ? references : null;
 
   return {
-    path, preview, previewError, expanded, setExpanded, script, bible,
+    path, preview, previewError, expanded, setExpanded, script: visibleReferences?.script ?? null, bible: visibleReferences?.bible ?? null,
     confirm, setConfirm, previewDialog, versions, visiblePreview,
   };
 }

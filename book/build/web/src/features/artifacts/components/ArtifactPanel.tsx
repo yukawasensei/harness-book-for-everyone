@@ -180,7 +180,7 @@ export function ArtifactPanel({
 
       {preview.expanded && preview.visiblePreview && (
         <ExpandedPreview
-          dialogRef={preview.previewDialog} stage={stage} version={version}
+          dialogRef={preview.previewDialog} stage={stage} version={version} projectId={id}
           value={preview.visiblePreview.value} bible={preview.bible} script={preview.script}
           revision={revision} onClose={() => preview.setExpanded(false)}
         />

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import type { Board } from "../../../../../../src/contracts/index.js";
-import { renderBoardMarkdown } from "../../../../../../src/contracts/board-export.js";
 import { Button } from "@/components/ui/button";
 import { downloadBoard } from "../../lib/download-board";
 
@@ -20,6 +19,7 @@ export function BoardToolbar({
 }) {
   const [exporting, setExporting] = useState(false);
   const totalDuration = board.shots.reduce((sum, shot) => sum + shot.duration_s, 0);
+  const canExport = Boolean(onExport || (projectId && version != null));
 
   async function handleExport() {
     setExporting(true);
@@ -28,18 +28,6 @@ export function BoardToolbar({
         onExport();
       } else if (projectId && version !== undefined && version !== null) {
         await downloadBoard(projectId, version);
-      } else {
-        const targetVersion = version ?? 1;
-        const md = renderBoardMarkdown(board, targetVersion);
-        const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `board-v${targetVersion}.md`;
-        document.body.append(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
     } finally {
       setExporting(false);
@@ -56,10 +44,10 @@ export function BoardToolbar({
           type="button"
           size="sm"
           variant="outline"
-          disabled={exporting}
+          disabled={exporting || !canExport}
           onClick={() => void handleExport()}
           className="h-8 gap-1.5 px-3 text-xs"
-          title="导出包含全部镜头的景别、动作、对白、时长与完整画面提示词。"
+          title={canExport ? "导出包含全部镜头的景别、动作、对白、时长与完整画面提示词。" : "请先选择项目中的分镜板版本再导出。"}
         >
           <Download className="size-3.5 shrink-0" />
           <span>{exporting ? "正在导出…" : "导出分镜板"}</span>

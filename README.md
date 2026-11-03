@@ -15,7 +15,7 @@
 
 ## 快速入口 / Start here
 
-**主线：跟着一个 harness 从零长大**（practice-first）。全书只有一个代码库 [`book/harness/`](./book/harness/)，每章打一个 git tag，`git checkout chNN` 就能看到那一章结束时的代码。
+**主线：跟着一个 harness 从零长大**（practice-first）。第一篇使用代码库 [`book/harness/`](./book/harness/)，每章打一个 git tag，`git checkout chNN` 就能看到那一章结束时的代码。
 
 1. **跟做主线** → [`book/harness/README.md`](./book/harness/README.md)（每章加了什么、怎么跑）
 2. **PM 验收清单** → [`book/harness/chapters/appendix-pm-checklist.md`](./book/harness/chapters/appendix-pm-checklist.md)
@@ -88,23 +88,23 @@ Host Ollama  ·  local qwen (e.g. qwen3.8:27b)
 | 10 | [综合项目：片场场记（精简版）](./book/harness/chapters/ch10.md) | tag `ch10` |
 | 11 | [从失败到修复](./book/harness/chapters/ch11.md) | tag `ch11` |
 
-### 第二篇（实操，已完结）：book/build · 分镜工坊
+### 第二篇（实操）：book/build · 织影 Reelloom
 
-用 pi SDK 做一个真正能用的文本内容生产 harness：选题 → 梗概 → 剧本 → 设定集 → 分镜 → 分镜提示词。外层由程序状态机管阶段，内层由受限 agent 写草稿，人决定采用哪一版。入口：[`book/build/README.md`](./book/build/README.md)。
+用 pi SDK 做一个短片文本创作工具：故事 → 剧本 → 设定集 → 分镜板。程序管理工序、引用和版本，人逐道审阅采用；最终交付含完整画面提示词的分镜板，支持零模型重新拼装与 Markdown 导出。入口：[`book/build/README.md`](./book/build/README.md)。
 
-| 章 | 主题 | 状态 |
-|---:|---|---|
-| P00 | [拆流水线：先定产物，再请模型](./book/build/chapters/p00.md) | tag `p2-01` |
-| P01 | [搭骨架：程序管阶段，模型写草稿](./book/build/chapters/p01.md) | tag `p2-01` |
-| P02 | [接上 Web：事件流与指令](./book/build/chapters/p02.md) | tag `p2-02` |
-| P03 | [选题与梗概：采用之前的审阅门](./book/build/chapters/p03.md) | tag `p2-03` |
-| P04 | [剧本：把输出预算变成产品规则](./book/build/chapters/p04.md) | tag `p2-04` |
-| P05 | [从剧本抽取设定集](./book/build/chapters/p05.md) | tag `p2-05` |
-| P06 | [分镜脚本与引用一致性](./book/build/chapters/p06.md) | tag `p2-06` |
-| P07 | [模型写镜头，程序注入设定](./book/build/chapters/p07.md) | tag `p2-07` |
-| P08 | [版本与返工：改上游，下游怎么办](./book/build/chapters/p08.md) | tag `p2-08` |
-| P09 | [评测与签收：结构能签，质量要人评](./book/build/chapters/p09.md) | tag `p2-09` |
-| P10 | [上云：需不需要沙盒？隔离、权限与配额](./book/build/chapters/p10.md) | tag `p2-10` |
+| 章 | 主题 |
+|---:|---|
+| 1 | [先看成品](./book/build/chapters/p01.md) |
+| 2 | [跑出第一份稿](./book/build/chapters/p02.md) |
+| 3 | [让人签字把关](./book/build/chapters/p03.md) |
+| 4 | [长剧本拆开写](./book/build/chapters/p04.md) |
+| 5 | [角色道具先对上号](./book/build/chapters/p05.md) |
+| 6 | [外貌不用每次重写](./book/build/chapters/p06.md) |
+| 7 | [改一处，不用推倒重来](./book/build/chapters/p07.md) |
+| 8 | [验好货再交稿](./book/build/chapters/p08.md) |
+| 附录 | [搬上云端之前](./book/build/chapters/appendix-cloud.md) |
+
+各章共用当前代码，不再对应章节标签；旧六工序版本可在 `p2-*` 标签查看。
 
 ## 安全基线 / Safety baseline
 

@@ -6,10 +6,12 @@ import { cn } from "@/lib/utils";
 
 export function SelfCorrectionCard({
   reason,
+  attempts = 2,
   children,
   className,
 }: {
   reason: string;
+  attempts?: number;
   children?: ReactNode;
   className?: string;
 }) {
@@ -38,7 +40,7 @@ export function SelfCorrectionCard({
       <CollapsibleContent>
         <div className="border-t border-warning/20 px-3.5 py-3 space-y-3">
           <p className="text-muted-foreground text-xs leading-relaxed">
-            {selfCorrectionDetail(reason)}
+            {selfCorrectionDetail(reason, attempts)}
           </p>
           {children && <div className="space-y-2">{children}</div>}
         </div>

@@ -7,6 +7,7 @@ import { stageNames } from "../lib/presentation.js";
 export function ExpandedPreview({
   dialogRef,
   stage,
+  projectId,
   version,
   value,
   bible,
@@ -16,6 +17,7 @@ export function ExpandedPreview({
 }: {
   dialogRef: RefObject<HTMLDialogElement | null>;
   stage: Stage;
+  projectId?: string;
   version: number | null;
   value: unknown;
   bible?: Artifacts["bible"] | null;
@@ -39,7 +41,7 @@ export function ExpandedPreview({
         </Button>
       </header>
       <div className="max-h-[calc(90dvh-4rem)] overflow-y-auto p-4">
-        <ArtifactPreview stage={stage} value={value} bible={bible} script={script} revision={revision} />
+        <ArtifactPreview stage={stage} value={value} bible={bible} script={script} revision={revision} projectId={projectId} version={version} />
       </div>
     </dialog>
   );

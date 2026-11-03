@@ -27,11 +27,15 @@ export function countSubmissionItems(stage: Stage, value: unknown): number | und
   return undefined;
 }
 
-/** 对话流 · 自我修正说明（文案稿第 3 节）。 */
+/** 对话流 · 自我修正说明（文案稿第 3 节）。n 为含成功在内的提交次数，默认 2。 */
 export const SELF_CORRECTION_TITLE = "首次提交未通过检查，已自动补全并重新交稿";
-export function selfCorrectionDetail(reason: string): string {
+export function selfCorrectionDetail(reason: string, attempts = 2): string {
   const trimmed = reason.trim() || "格式检查未通过";
-  return `第 1 次提交因「${trimmed}」被系统拦下；助手已按规则修正并完成第 2 次提交。`;
+  const n = Number.isSafeInteger(attempts) && attempts >= 2 ? attempts : 2;
+  if (n === 2) {
+    return `第 1 次提交因「${trimmed}」被系统拦下；助手已按规则修正并完成第 2 次提交。`;
+  }
+  return `前 ${n - 1} 次提交因「${trimmed}」被系统拦下；助手已按规则修正并完成第 ${n} 次提交。`;
 }
 export function composerGuidance(project: Pick<ProjectDetail, "stages">, stage: Stage) {
   if (Object.values(project.stages).every(state => state.status === "adopted")) return "全流程已完成 · 可查看产物或确认返工";

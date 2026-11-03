@@ -51,6 +51,10 @@ test("自我修正折叠卡外露标题与展开详情句式", () => {
     selfCorrectionDetail("缺少第 4 幕结局走向"),
     "第 1 次提交因「缺少第 4 幕结局走向」被系统拦下；助手已按规则修正并完成第 2 次提交。",
   );
+  assert.equal(
+    selfCorrectionDetail("引用了未出场角色", 3),
+    "前 2 次提交因「引用了未出场角色」被系统拦下；助手已按规则修正并完成第 3 次提交。",
+  );
   assert.ok(html.includes(selfCorrectionDetail("缺少第 4 幕结局走向")));
   assert.ok(html.includes("工具卡占位"));
 });
@@ -68,6 +72,7 @@ test("transcript 首次草稿失败后成功时收进自我修正段", () => {
   assert.equal(segments[1].kind, "self_correction");
   if (segments[1].kind === "self_correction") {
     assert.match(segments[1].reason, /缺少第 4 幕结局走向/);
+    assert.equal(segments[1].attempts, 2);
     assert.equal(segments[1].items.length, 3);
   }
   assert.equal(segments[2].kind, "plain");
@@ -79,7 +84,7 @@ test("transcript 分镜板同场多次失败后成功时按场收进自我修正
   const segments = foldSelfCorrectionTranscript([
     { type: "tool", name: "write_scene_shots", args_summary: s01, ok: false, error: "引用了未出场角色" },
     { type: "text", text: "我改掉错误引用" },
-    { type: "tool", name: "write_scene_shots", args_summary: s01, ok: false, error: "引用了未出场角色" },
+    { type: "tool", name: "write_scene_shots", args_summary: s01, ok: false, error: "镜头描写过短" },
     { type: "tool", name: "write_scene_shots", args_summary: s01, ok: true },
     { type: "tool", name: "write_scene_shots", args_summary: s02, ok: false, error: "道具编号不存在" },
     { type: "tool", name: "write_scene_shots", args_summary: s02, ok: true },
@@ -88,11 +93,39 @@ test("transcript 分镜板同场多次失败后成功时按场收进自我修正
   assert.equal(segments[0].kind, "self_correction");
   assert.equal(segments[1].kind, "self_correction");
   if (segments[0].kind === "self_correction") {
-    assert.match(segments[0].reason, /引用了未出场角色/);
+    assert.match(segments[0].reason, /镜头描写过短/);
+    assert.equal(segments[0].attempts, 3);
     assert.equal(segments[0].items.length, 4);
   }
   if (segments[1].kind === "self_correction") {
     assert.match(segments[1].reason, /道具编号不存在/);
+    assert.equal(segments[1].attempts, 2);
+    assert.equal(segments[1].items.length, 2);
+  }
+});
+
+test("transcript 剧本同场多次失败后成功时按场收进自我修正段", () => {
+  const s01 = JSON.stringify({ scene: { scene_id: "S01", title: "站台", summary: "到站", lines: [] } });
+  const s02 = JSON.stringify({ scene: { scene_id: "S02", title: "车内", summary: "启程", lines: [] } });
+  const segments = foldSelfCorrectionTranscript([
+    { type: "tool", name: "write_scene", args_summary: s01, ok: false, error: "台词缺少说话人" },
+    { type: "text", text: "我补上说话人" },
+    { type: "tool", name: "write_scene", args_summary: s01, ok: false, error: "场景标题不能为空" },
+    { type: "tool", name: "write_scene", args_summary: s01, ok: true },
+    { type: "tool", name: "write_scene", args_summary: s02, ok: false, error: "场号不连续" },
+    { type: "tool", name: "write_scene", args_summary: s02, ok: true },
+  ]);
+  assert.equal(segments.length, 2);
+  assert.equal(segments[0].kind, "self_correction");
+  assert.equal(segments[1].kind, "self_correction");
+  if (segments[0].kind === "self_correction") {
+    assert.match(segments[0].reason, /场景标题不能为空/);
+    assert.equal(segments[0].attempts, 3);
+    assert.equal(segments[0].items.length, 4);
+  }
+  if (segments[1].kind === "self_correction") {
+    assert.match(segments[1].reason, /场号不连续/);
+    assert.equal(segments[1].attempts, 2);
     assert.equal(segments[1].items.length, 2);
   }
 });

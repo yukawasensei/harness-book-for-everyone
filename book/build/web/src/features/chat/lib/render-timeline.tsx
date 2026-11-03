@@ -30,7 +30,7 @@ export function renderRunTranscript(runId: string, transcript: TranscriptItem[])
         renderTranscriptItem(runId, item as TranscriptItem, segIdx * 1000 + idx));
     }
     return [
-      <SelfCorrectionCard key={`${runId}:repair:${segIdx}`} reason={segment.reason}>
+      <SelfCorrectionCard key={`${runId}:repair:${segIdx}`} reason={segment.reason} attempts={segment.attempts}>
         {segment.items.map((item, idx) =>
           renderTranscriptItem(runId, item as TranscriptItem, segIdx * 1000 + idx))}
       </SelfCorrectionCard>,
@@ -62,7 +62,7 @@ export function renderLiveRows(liveRows: TimelineRow[]): Array<ReactElement | nu
     if (segment.kind === "plain") return segment.items.map(renderLiveRow);
     const key = segment.items.find(row => row.kind === "tool")?.id ?? `live-repair:${segIdx}`;
     return [
-      <SelfCorrectionCard key={`live-repair:${key}`} reason={segment.reason}>
+      <SelfCorrectionCard key={`live-repair:${key}`} reason={segment.reason} attempts={segment.attempts}>
         {segment.items.map(renderLiveRow)}
       </SelfCorrectionCard>,
     ];
