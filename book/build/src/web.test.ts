@@ -3,7 +3,7 @@ import { setTimeout } from "node:timers/promises";
 import { test } from "node:test";
 import { connectProject, type EventConnection, type Connection } from "../web/src/live.js";
 import { appendEvent } from "../web/src/timeline.js";
-import { missingEventsNotice, runSummary, toolErrorText, toolResultText, stageBadge, readerMessage, runRequestText, DEMO_CHANGE_NOTE, DEMO_SCRIPT_CHANGE_NOTE, demoChangeNote, demoRevisionNotice, reviewLabels } from "../web/src/presentation.js";
+import { missingEventsNotice, nextActionStage, projectHasProgress, runSummary, toolErrorText, toolResultText, stageBadge, stageNames, stageStatusHelp, readerMessage, runRequestText, DEMO_CHANGE_NOTE, DEMO_SCRIPT_CHANGE_NOTE, demoChangeNote, demoRevisionNotice, reviewLabels } from "../web/src/presentation.js";
 import { rememberSelectedProject, restoreSelectedProject } from "../web/src/project-selection.js";
 import type { ProjectDetail, ProjectEvent, RunResult } from "./server/protocol.js";
 import { assertRunnable, initialWorkflow } from "./workflow/index.js";
@@ -225,6 +225,24 @@ test("阶段与版本统一待审阅，运行徽标跟随实际运行阶段", ()
   assert.equal(stageBadge("pending_review", "topic", null).text, reviewLabels.pending);
   assert.deepEqual(stageBadge("pending_review", "topic", { ...completed(), stage: "topic" }), { text: "运行中", className: "running" });
   assert.equal(stageBadge("locked", "synopsis", { ...completed(), stage: "topic" }).text, "锁定");
+});
+
+test("状态词有大白话说明；无进度时引导下一步为选题", () => {
+  assert.match(stageStatusHelp("锁定") ?? "", /上一道还没采用/);
+  assert.match(stageStatusHelp("可运行") ?? "", /可以开始运行/);
+  assert.match(stageStatusHelp("待审阅") ?? "", /采用/);
+  assert.equal(stageStatusHelp("不存在的状态"), null);
+  const fresh = snapshot();
+  assert.equal(projectHasProgress(fresh), false);
+  assert.equal(nextActionStage(fresh, ["topic", "synopsis", "script", "bible", "storyboard", "prompts"]), "topic");
+  fresh.stages.topic.versions = [1];
+  fresh.stages.topic.status = "pending_review";
+  assert.equal(projectHasProgress(fresh), true);
+  assert.equal(nextActionStage(fresh, ["topic", "synopsis", "script", "bible", "storyboard", "prompts"]), "topic");
+  assert.equal(
+    Object.values(stageNames).join(" → "),
+    "选题 → 梗概 → 剧本 → 设定集 → 分镜脚本 → 分镜提示词",
+  );
 });
 
 test("采用阶段可返工，待更新徽标中文显示；修改消息逐字显示意见", () => {

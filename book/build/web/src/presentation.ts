@@ -19,10 +19,45 @@ export const reviewLabels: Record<ReviewStatus, string> = {
 const stageLabels: Record<StageStatus, string> = {
   locked: "锁定", ready: "可运行", pending_review: reviewLabels.pending, adopted: reviewLabels.adopted, stale: "待更新",
 };
+const statusHelpText: Record<string, string> = {
+  锁定: "上一道还没采用，这一道先不能跑。",
+  可运行: "这一道可以开始运行了。",
+  待审阅: "AI 已交稿，等你采用、丢弃或要求修改。",
+  已采用: "这道已经定稿；采用后下一道才会解锁。",
+  待更新: "上游改过了，这一道需要你再处理一下。",
+  运行中: "正在生成这一道，请稍等。",
+  暂未开放: "这一道还没开放运行。",
+  加载中: "正在读取这一道的状态。",
+};
+export function stageStatusHelp(label: string): string | null {
+  return statusHelpText[label] ?? null;
+}
 export function stageBadge(status: StageStatus | undefined, stage: Stage, running: Pick<RunInfo, "stage"> | null, implemented = true) {
   if (!implemented) return { text: "暂未开放", className: "unavailable" };
   return running?.stage === stage ? { text: "运行中", className: "running" }
     : { text: status ? stageLabels[status] : "加载中", className: status ?? "" };
+}
+
+/** 是否已跑过任一阶段（有版本、在跑、或留下次运行记录）。 */
+export function projectHasProgress(project: Pick<ProjectDetail, "stages" | "running" | "last_run">): boolean {
+  return !!project.running || !!project.last_run
+    || Object.values(project.stages).some(state => state.versions.length > 0);
+}
+
+/** 一眼该点的下一步：运行中 > 待审阅 > 可运行 > 待更新。 */
+export function nextActionStage(
+  project: Pick<ProjectDetail, "stages" | "running">,
+  runnableStages: readonly Stage[],
+  order: readonly Stage[] = ["topic", "synopsis", "script", "bible", "storyboard", "prompts"],
+): Stage | null {
+  if (project.running) return project.running.stage;
+  for (const priority of ["pending_review", "ready", "stale"] as const) {
+    for (const stage of order) {
+      if (!runnableStages.includes(stage)) continue;
+      if (project.stages[stage].status === priority) return stage;
+    }
+  }
+  return null;
 }
 
 /** 当前阶段的引导必须与可运行状态、人工采用状态一致。 */

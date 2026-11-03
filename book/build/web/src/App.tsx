@@ -5,7 +5,7 @@ import type { ProjectDetail, ServerConfig } from "../../src/server/protocol.js";
 import { api, ApiError, getAccessToken, setAccessToken, submitRun } from "./api";
 import { connectProject, type Connection } from "./live";
 import { appendEvent, type TimelineRow } from "./timeline";
-import { artifactGuidance, demoRevisionNotice, missingEventsNotice, readerMessage, reviewLabels, runRequestText, currentRunDisplay, scriptProgress, stageBadge, stageNames, toolErrorText, toolResultText } from "./presentation";
+import { artifactGuidance, demoRevisionNotice, missingEventsNotice, nextActionStage, projectHasProgress, readerMessage, reviewLabels, runRequestText, currentRunDisplay, scriptProgress, stageBadge, stageNames, toolErrorText, toolResultText, composerGuidance } from "./presentation";
 import { rememberSelectedProject, restoreSelectedProject, rememberSelectedStage, restoreSelectedStage } from "./project-selection";
 import { ReviewPanel } from "./ReviewPanel";
 import { ArtifactPreview } from "./ArtifactPreview";
@@ -13,7 +13,8 @@ import { ErrorDetails } from "./ErrorDetails";
 import { TechnicalDetails } from "./TechnicalDetails";
 import { formatLocalDateTime } from "./date-time";
 import { ProvenancePanel, ReworkActions, ReworkDialog, InterruptedRunNotice, type ReworkOperation } from "./ReworkPanel";
-import { composerGuidance } from "./presentation";
+import { GettingStarted } from "./GettingStarted";
+import { StatusHelp } from "./StatusHelp";
 
 const stages: [Stage, string][] = [
   ["topic", "选题"], ["synopsis", "梗概"], ["script", "剧本"],
@@ -82,7 +83,10 @@ export function App() {
     </div>
     {error && <p className="error-banner" role="alert">{error}</p>}
     {id && config ? <ProjectWorkspace key={`${authRevision}:${id}`} id={id} config={config} />
-      : <main className="empty">{config ? "创建一个项目，从选题开始。" : authRequired ? "请填写访问令牌连接工作区。" : "正在连接服务…"}</main>}
+      : <main className="empty">
+        {config ? <GettingStarted layout="hero" />
+          : authRequired ? "请填写访问令牌连接工作区。" : "正在连接服务…"}
+      </main>}
   </div>;
 }
 
@@ -188,9 +192,13 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
   const revision = version === null ? undefined : project?.version_metadata?.[stage]?.[version]?.revision;
   const progress = scriptProgress(running, rows);
   const visiblePreview = preview?.stage === stage && preview.version === version ? preview : null;
+  const hasProgress = project ? projectHasProgress(project) : false;
+  const nextStage = project ? nextActionStage(project, config.runnable_stages) : null;
+  const emphasizeRun = runnable && !running && nextStage === stage && state?.status !== "stale";
   return <main className="workspace">
     <section className="conversation" aria-label="对话和工具调用">
       <div className="panel-heading"><h2>对话与工具</h2><span className={`connection ${connection}`}>{connectionLabel[connection]}</span></div>
+      {project && (hasProgress ? <GettingStarted compact /> : <GettingStarted />)}
       <InterruptedRunNotice run={project?.last_run} />
       {connection === "polling" && <p className="notice">断线期间文本与工具事件可能缺失；阶段、版本和运行结论以轮询快照为准。连接会自动重试。</p>}
       <div className="timeline" aria-label="运行事件">
@@ -206,7 +214,7 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
         <div className="composer-actions">
           <span id="run-reason" className="muted">{running ? `正在运行${stageNames[running.stage]}${running.abort_requested ? " · 正在中断…" : ""}` : blockedReason ?? (project ? composerGuidance(project, stage) : "正在读取项目…")}</span>
           {running ? <button type="button" className="danger" disabled={submitting || running.abort_requested} onClick={() => void action(async () => { await api(`${path}/abort`, {}); })}>中断</button>
-            : state?.status !== "stale" && <button className="primary" aria-describedby="run-reason" title={blockedReason ?? undefined} disabled={!runnable || submitting}>{submitting ? "正在提交…" : state?.adopted_version != null ? "返工运行" : "运行阶段"}</button>}
+            : state?.status !== "stale" && <button className={`primary${emphasizeRun ? " next-action" : ""}`} aria-describedby="run-reason" title={blockedReason ?? undefined} disabled={!runnable || submitting}>{submitting ? "正在提交…" : state?.adopted_version != null ? "返工运行" : "运行阶段"}</button>}
         </div>
         {progress && <p className="scene-progress" role="status">{progress}</p>}
       </form>
@@ -217,10 +225,13 @@ function ProjectWorkspace({ id, config }: { id: string; config: ServerConfig }) 
         {stages.map(([key, label], index) => {
           const status = project?.stages[key].status;
           const badge = stageBadge(status, key, running ?? null, config.runnable_stages.includes(key));
-          return <button key={key} className={stage === key ? "selected" : ""} aria-current={stage === key ? "step" : undefined} onClick={() => setStage(key)}>
-            <span>{index + 1}. {label}</span>
-            <span className={`badge ${badge.className}`}>{badge.text}</span>
-          </button>;
+          const isNext = nextStage === key;
+          return <div key={key} className={`stage-item${stage === key ? " selected" : ""}${isNext ? " next-step" : ""}`}>
+            <button type="button" aria-current={stage === key ? "step" : undefined} onClick={() => setStage(key)}>
+              <span className="stage-nav-title">{index + 1}. {label}{isNext ? <span className="next-step-tag">下一步</span> : null}</span>
+            </button>
+            <StatusHelp text={badge.text} className={badge.className} />
+          </div>;
         })}
       </nav>
       {project && stages.every(([key]) => project.stages[key].status === "adopted") && <p className="pipeline-complete" role="status">全流程已完成 · 六阶段产物均已采用</p>}
