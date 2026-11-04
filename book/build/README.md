@@ -199,6 +199,8 @@ MODEL_ID=ollama/qwen3.8:27b NO_PROXY=127.0.0.1,localhost npm run eval
 
 拒绝后修正仍可通过；参数容错解码次数包含随后被闸门拒绝的提交，不代表创作质量提升。普通评测不修改基线。`UPDATE_BASELINE=1` 仅允许真实默认 Qwen、全量、repeat=1、全部正常完成且无回归时更新；fake、其他模型与重复评测不得更新。旧 `evals/baseline.json` 仅供历史查阅，不参与当前系列比较。具体规则见 [`src/eval/report.ts`](./src/eval/report.ts)。
 
+2026-11-04 另用 `ollama/qwen3.8:27b` 与 `deepseek/deepseek-flash` 各真实运行一次，均为 4/4 结构通过，逐工序拒绝原因、耗时与 token 见 [四工序 Qwen 与 DeepSeek 真实评测对照](./evals/runs/compare-4stage-qwen-vs-deepseek.md)。
+
 右栏“评分（可选）”按[五档锚点](./evals/rubric.md)记录人工评分，绑定具体版本，刷新保留；“导出评分汇总”包含逐版本评分及各指标均分。评分不改变采用状态，也不参与结构放行。原理见[第八章](./chapters/p08.md)。
 
 ## 多用户与云端边界
