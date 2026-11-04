@@ -30,7 +30,7 @@
 ```bash
 git clone https://github.com/yukawasensei/harness-book-for-everyone.git
 cd harness-book-for-everyone/book/harness
-npm install
+npm ci            # 按 lockfile 安装
 npm test            # 离线全绿，不需要 Ollama
 npm run typecheck
 

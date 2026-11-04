@@ -2,9 +2,14 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const cwd = fileURLToPath(new URL("..", import.meta.url));
+const env = {
+  ...process.env,
+  WEB_PORT: process.env.WEB_PORT ?? "5173",
+  API_PORT: process.env.API_PORT ?? "3001",
+};
 const children = [
-  spawn(process.execPath, ["--import", "tsx", "src/server/main.ts"], { cwd, stdio: "inherit" }),
-  spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--config", "web/vite.config.ts"], { cwd, stdio: "inherit" }),
+  spawn(process.execPath, ["--import", "tsx", "src/server/main.ts"], { cwd, stdio: "inherit", env }),
+  spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--config", "web/vite.config.ts"], { cwd, stdio: "inherit", env }),
 ];
 let stopping = false;
 function stop() {

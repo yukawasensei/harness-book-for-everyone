@@ -1,0 +1,35 @@
+name: book-build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "book/build/**"
+      - ".github/workflows/book-build.yml"
+  pull_request:
+    paths:
+      - "book/build/**"
+      - ".github/workflows/book-build.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: offline test + typecheck + lint + build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: book/build
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: book/build/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build

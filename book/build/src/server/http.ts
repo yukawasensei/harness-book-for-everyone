@@ -10,12 +10,15 @@ export function json(response: ServerResponse, status: number, data: unknown) {
   response.end(scrubSecrets(JSON.stringify(data)));
 }
 
+export function localAllowedOrigins(host: string, webPort = process.env.WEB_PORT ?? "5173") {
+  return [`http://${host}`, `http://127.0.0.1:${webPort}`, `http://localhost:${webPort}`];
+}
+
 export function guardLocalRequest(request: IncomingMessage) {
   const host = request.headers.host ?? "";
   if (!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(host)) throw new HttpError(403, "只接受本机 Host");
   const origin = request.headers.origin;
-  const allowed = [`http://${host}`, "http://127.0.0.1:5173", "http://localhost:5173"];
-  if (origin && !allowed.includes(origin)) throw new HttpError(403, "拒绝其他站点的请求");
+  if (origin && !localAllowedOrigins(host).includes(origin)) throw new HttpError(403, "拒绝其他站点的请求");
 }
 
 export async function body(request: IncomingMessage): Promise<Record<string, unknown>> {

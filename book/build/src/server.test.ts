@@ -5,12 +5,21 @@ import { setTimeout } from "node:timers/promises";
 import { test } from "node:test";
 import type { TranscriptContext } from "@earendil-works/pi-ai";
 import { createLocalServer } from "./server/index.js";
+import { localAllowedOrigins } from "./server/http.js";
 import { createStageSession } from "./agent/session.js";
 import { createDemoSession } from "./server/demo.js";
 import { fakeStream, type Turn } from "./testing/fake-model.js";
 import { fixture, packageRoot, sample } from "./testing/fixtures.js";
 import type { ProjectDetail, ProjectEvent } from "./server/protocol.js";
 import type { SessionFactory } from "./server/runs.js";
+
+test("localAllowedOrigins 使用自定义 WEB_PORT", () => {
+  assert.deepEqual(localAllowedOrigins("127.0.0.1:3101", "5273"), [
+    "http://127.0.0.1:3101",
+    "http://127.0.0.1:5273",
+    "http://localhost:5273",
+  ]);
+});
 
 async function setup(options: { script?: Turn[]; waitForAbort?: boolean; beforeSession?: () => Promise<void>; factory?: SessionFactory } = {}) {
   const f = fixture();

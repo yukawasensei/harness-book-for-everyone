@@ -7,6 +7,8 @@ import { defineConfig } from "vite";
 const root = fileURLToPath(new URL(".", import.meta.url));
 const srcDir = path.resolve(root, "src");
 const packageRoot = path.resolve(root, "..");
+const webPort = Number(process.env.WEB_PORT ?? 5173);
+const apiPort = Number(process.env.API_PORT ?? 3001);
 
 export default defineConfig({
   root,
@@ -22,14 +24,14 @@ export default defineConfig({
   },
   server: {
     host: "127.0.0.1",
-    port: 5173,
+    port: webPort,
     strictPort: true,
     fs: {
       strict: true,
       allow: [root, path.resolve(packageRoot, "node_modules"), path.resolve(packageRoot, "src")],
     },
-    proxy: { "/api": { target: "http://127.0.0.1:3001", changeOrigin: true } },
+    proxy: { "/api": { target: `http://127.0.0.1:${apiPort}`, changeOrigin: true } },
   },
-  preview: { host: "127.0.0.1", port: 5173, strictPort: true },
+  preview: { host: "127.0.0.1", port: webPort, strictPort: true },
   build: { outDir: "dist" },
 });

@@ -8,7 +8,7 @@
 - [ ] 文档与已提交 trace 中无本机绝对家目录；统一用 `<repo-root>` / `workspaceRoot`
 - [ ] 无私人称呼、公司产品名、内部代号、私人邮箱
 - [ ] 硬件与训练相关表述已泛化（例如「example local GPU ≈24GB VRAM」），不写具体显卡型号
-- [ ] 图解为 **中英文配套**；资产在 `book/harness/assets/`
+- [ ] 图解为 **中英文配套**；资产在第一篇 `book/harness/assets/`、第二篇 `book/build/assets/`
 - [ ] 根目录 `LICENSE`（MIT，copyright 年与 contributors 行正确）
 - [ ] 密钥、cookie、SSH、浏览器配置等均未入库（`.env` 勿提交）
 - [ ] 远程仓库可见性与发布渠道符合预期
@@ -21,7 +21,7 @@
 
 ## Diagram style locked / 图解风格锁定
 
-书稿配图（`book/harness/assets/harness-*.jpg`）统一为：
+书稿配图（第一篇 `book/harness/assets/harness-*.jpg`、第二篇 `book/build/assets/reelloom-*.jpg`）统一为：
 
 - 纯白底（`#FFFFFF`），禁止奶油/米黄/深色底
 - 中英双语标签、16:9、扁平教材矢量

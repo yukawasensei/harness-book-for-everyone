@@ -11,7 +11,7 @@ const app = createLocalServer({
   root: resolve(dirname(fileURLToPath(import.meta.url)), "../.."),
   hosting, demo, sessionFactory: demo ? createDemoSession : undefined,
 });
-const address = await app.listen();
+const address = await app.listen(Number(process.env.API_PORT ?? 3001));
 if (hosting.mode === "hosted") console.log("托管模式：需置于 HTTPS 反向代理之后；静态站点只提供 web/dist，不公开项目存储");
 console.log(`API：${address} · ${demo ? "离线演示（假模型）" : "真实模型（仅在点击运行后请求）"}`);
 
